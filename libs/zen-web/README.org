@@ -1,8 +1,0 @@
-#TITLE: Zen.Http
-
-Web component for zen system
-
- *  http server (httpkit)
- *  routing
- *  middleware
- 

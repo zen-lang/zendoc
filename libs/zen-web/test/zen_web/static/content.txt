@@ -1,2 +1,0 @@
-file for serve static middleware test
-look at middlewares_test
