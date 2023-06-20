@@ -1,0 +1,68 @@
+{:ns zen-web.engines
+
+ middleware
+ {:zen/tags #{zen/tag zen/schema}
+  :zen/desc "tag for middleware engine"
+  :type zen/map
+  :require #{:dir}
+  ;; TODO change to enum
+  :keys {:dir {:type zen/set :every {:type zen/keyword}}}}
+
+ op
+ {:zen/tags #{zen/tag zen/schema}
+  :type zen/map}
+
+ one-of
+ {:zen/tags #{middleware zen/schema}
+  :zen/desc "execute mws with logical or"
+  :type zen/map
+  :dir #{:in}
+  :keys {:mws {:type zen/vector
+               :every {:type zen/symbol
+                       :tags #{zen-web/middleware}}}}}
+
+ all-of
+ {:zen/tags #{middleware zen/schema}
+  :zen/desc "executes all mws one by one"
+  :type zen/map
+  :dir #{:in :out}
+  :keys {:mws {:type zen/vector
+               :every {:type zen/symbol
+                       :tags #{zen-web/middleware}}}}}
+
+ basic-auth
+ {:zen/tags #{middleware zen/schema}
+  :dir #{:in}
+  :type zen/map
+  :keys {:user {:type zen/string}
+         :password {:type zen/string}}}
+
+ serve-static
+ {:zen/tags #{op zen/schema}
+  :type zen/map
+  :keys {:serve {:type zen/vector :every {:type zen/string}}}}
+
+ redirect
+ {:zen/tags #{op zen/schema}
+  :type zen/map
+  :require #{:to}
+  :keys {:to {:type zen/string}}}
+
+ formats
+ {:zen/tags #{op middleware zen/schema}
+  :type zen/map
+  :require #{:formats}
+  :dir #{:out}
+  :keys {:formats {:type zen/set
+                   :every {:type zen/keyword}}}}
+
+ response
+ {:zen/tags #{op zen/schema}
+  :type zen/map
+  :keys {:response {:type zen/map
+                    :validation-type :open
+                    :keys {:status {:type zen/integer}
+                           :body {:validation-type :open}}}
+         :select {:type zen/case
+                  :case [{:when {:type zen/keyword}}
+                         {:when {:type zen/vector}}]}}}}

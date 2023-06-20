@@ -1,0 +1,86 @@
+{:ns zen-web.oauth
+ :import #{zen-web zen-web.engines}
+
+ middleware {:zen/tags #{zen/tag}}
+
+ provider
+ {:zen/tags #{zen/tag zen/schema}
+  :type zen/map
+  :require #{:client-id :client-secret
+             :authorize-endpoint :token-endpoint
+             :scopes :id
+             :userinfo-endpoint :system}
+  :keys {:id {:zen/desc "provider id to use in uris"
+              :type zen/string}
+         :client-id {:type zen/string}
+         :client-secret {:type zen/string}
+         :userinfo-endpoint {:type zen/string}
+         :token-endpoint {:type zen/string}
+         :authorize-endpoint {:zen/desc "provider's initial oauth endpoint"
+                              :type zen/string}
+         :org-endpoint {:zen/desc "endpoint to fetch user organizations. optional"
+                        :type zen/string}
+         :display {:zen/desc "provider name for display"
+                   :type zen/string}
+         :system {:zen/desc "logical identity system"
+                  :type zen/string}
+         :user-email-endpoint {:zen/desc "uri to retrieve user email. optional"}
+         :scopes {:type zen/vector
+                  :minItems 1
+                  :every {:type zen/string}}}}
+
+ config
+ {:zen/tags #{zen/tag zen/schema}
+  :type zen/map
+  :require #{:providers :base-uri :cookie :secret}
+  :keys {:providers {:type zen/vector
+                     :every {:type zen/symbol
+                             :tags #{provider}}}
+         :zen/bind {:type zen/symbol :tags #{zen/binding}}
+         :organizations {:zen/desc "list of user organizations"}
+         :public {:zen/desc "vector of public endpoints"
+                  :type zen/vector
+                  :every {:type zen/string}}
+         ;; TODO add uri regex
+         :base-uri {:zen/desc "application base uri for oauth redirects"
+                    :type zen/string}
+         :cookie {:zen/desc "cookie name for JWT"
+                  :type zen/string}
+         :secret {:zen/desc "secret string for JWT HMAC sig"
+                  :type zen/string}}}
+
+ config-binding
+ {:zen/tags #{zen/tag zen/binding}}
+
+ index
+ {:zen/tags #{zen/op zen-web/op}}
+
+ callback
+ {:zen/tags #{zen/op zen-web/op}}
+
+ redirect
+ {:zen/tags #{zen/op zen-web/op}}
+
+ verify-jwt
+ {:zen/tags #{zen-web/middleware middleware zen/op}
+  :config config-binding
+  :dir #{:in}}
+
+ snap-config
+ {:zen/tags #{zen-web/middleware middleware zen/op}
+  :zen/desc "resolves provider refs in oauth config for ops"
+  :config config-binding
+  :dir #{:in}}
+
+ test-token
+ {:zen/tags #{zen/op}
+  :zen/desc "use to obtain auth token for tests"
+  :config config-binding}
+
+ api
+ {:zen/tags #{zen-web/api zen/tag zen-web.oauth/api}
+  :engine zen-web/routemap
+  :mw [snap-config verify-jwt]
+  "auth" {:GET index
+          "callback" {[:provider-id] {:GET callback}}
+          [:provider-id] {:GET redirect}}}}

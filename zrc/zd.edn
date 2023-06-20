@@ -1,0 +1,88 @@
+{:ns zd
+ :import #{zen-web zd.engines zd.events}
+
+ remote
+ {:zen/tags #{zen/schema}
+  :type zen/map
+   ;; TODO use zen-web/url
+  :require #{:from}
+  :keys {:from {:type zen/string}
+         :to {:type zen/string}
+         :branch {:type zen/string}}}
+
+ zendoc
+ {:zen/tags #{zen/tag zen/schema}
+  :type zen/map
+  :keys {:root {:type zen/string}
+         :paths {:type zen/vector
+                 :every {:type zen/string}}
+         :pull-rate {:type zen/integer}
+         :remote {:confirms #{remote}}
+         :remotes {:type zen/vector
+                   :every {:confirms #{remote}}}}}
+
+ query
+ {:zen/tags #{zen/op}
+  :zen/desc "datalog query"}
+
+ submit
+ {:zen/tags #{zen/op}
+  :zen/desc "datalog document submit operation"}
+
+ gitsync-doc
+ {:zen/tags #{zen/op}
+  :zen/desc "commits doc to its remote"}
+
+ gitsync-delete-doc
+ {:zen/tags #{zen/op}
+  :zen/desc "removes document from index and pushes to a remote"}
+
+ serve-static
+ {:zen/tags #{zen/op zen-web/op}
+  :engine zen-web.engines/serve-static
+  :serve ["src"]}
+
+ render-doc
+ {:zen/tags #{zen/op zen-web/op}}
+
+ delete-doc
+ {:zen/tags #{zen-web/op zen/op}}
+
+ append-doc
+ {:zen/tags #{zen-web/middleware zen/op zen-web/op}
+  :zen/desc "resolve page from route-params to zen document"
+  :dir #{:in}}
+
+ layout
+ {:zen/tags #{zen-web/op zen/op zen-web/middleware}
+  :zen/desc "wrap response in standard zd layout"
+  :dir #{:out}}
+
+ save-doc
+ {:zen/tags #{zen-web/op zen/op}}
+
+ render-editor
+ {:zen/tags #{zen-web/op zen/op}}
+
+ render-widget
+ {:zen/tags #{zen-web/op zen/op}}
+
+ render-preview
+ {:zen/tags #{zen-web/op zen/op}}
+
+ api
+ {:zen/tags #{zen-web/api}
+  :engine zen-web/routemap
+  ;; TODO move zen web defaults to zen web core
+  :mw [zen-web/defaults]
+  :GET render-doc
+  [:id] {:mw [append-doc layout]
+         :DELETE delete-doc
+         :POST save-doc
+         :GET render-doc
+         "preview" {:POST render-preview}
+         "widgets" {[:widget-id]
+                    {:GET render-widget}}
+         "edit" {:PUT save-doc
+                 :GET render-editor}}
+  "static" {:* {:GET serve-static}}}}

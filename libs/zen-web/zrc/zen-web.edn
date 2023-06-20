@@ -1,0 +1,153 @@
+{:ns zen-web
+ :import #{zen-web.engines}
+
+ middleware
+ {:zen/tags #{zen/tag zen/schema zen/op}
+  :type zen/map
+  :schema-key {:key :engine}
+  :keys {:engine {:type zen/symbol :tags #{zen-web.engines/middleware}}
+         :dir {:type zen/set :every {:type zen/keyword}}}}
+
+ op
+ {:zen/tags #{zen/tag zen/schema}
+  :type zen/map
+  :schema-key {:key :engine}
+  :keys {:engine {:type zen/symbol :tags #{zen-web.engines/op}}}}
+
+ api-engine
+ {:zen/tags #{zen/tag}
+  :zen/desc "API engine"}
+
+ routemap
+ {:zen/tags #{zen/schema api-engine}
+  :type zen/map
+  :key {:type zen/case
+        :case [{:when {:type zen/keyword}}
+               {:when {:type zen/vector}
+                :then {:type zen/vector
+                       :every {:type zen/keyword}}}
+               {:when {:type zen/string}}]}
+  :keys {:apis {:type zen/vector
+                :every {:type zen/symbol
+                        :tags #{zen-web/api}}}
+         ;; TODO implement in engine
+         :middlewares {:type zen/vector
+                       :every {:type zen/symbol
+                               :tags #{zen-web/middleware}}}
+         :mw {:type zen/vector
+              :every {:type zen/symbol
+                      :tags #{zen-web/middleware}}}}}
+
+ api
+ {:zen/tags #{zen/tag zen/schema}
+  :zen/desc "API interface"
+  :type zen/map
+  :schema-key {:key :engine}
+  :keys {:engine {:type zen/symbol :tags #{api-engine}}}}
+
+ http-engine
+ {:zen/tags #{zen/tag}
+  :zen/desc "HTTP Server engine"}
+
+ format
+ {:zen/tags #{zen/tag zen/schema}}
+
+ http
+ {:zen/tags #{zen/tag zen/schema}
+  :zen/desc "HTTP server interface"
+  :type zen/map
+  :require #{:port}
+  :schema-key {:key :engine}
+  :keys {:engine {:type zen/symbol :tags #{http-engine}}
+         :port   {:type zen/integer}
+         :api    {:type zen/symbol :tags #{api}}
+         :formats {:type zen/set
+                   :every {:type zen/symbol :tags #{format}}}}}
+
+ httpkit
+ {:zen/tags #{zen/schema zen/engine http-engine}
+  :zen/desc "HTTP Server implementation by httpkit"
+  :zen/state-key :http
+  :type zen/map
+  :keys
+  {:httpkit
+   ;; TODO apply ws settings on http start
+   {:type zen/map
+    :keys {:ip                 {:type zen/string
+                                :zen/desc "Which ip (if has many ips) to bind"}
+           :thread             {:type zen/integer
+                                :zen/desc "Http worker thread count"}
+           :queue-size         {:type zen/integer
+                                :zen/desc "Max job queued before reject to project self"}
+           :max-body           {:type zen/integer
+                                :zen/desc "Max http body: 8m"}
+           :max-ws             {:type zen/integer
+                                :zen/desc "Max websocket message size"}
+           :max-line           {:type zen/integer
+                                :zen/desc "Max http inital line length"}
+           :proxy-protocol     {:type zen/keyword
+                                :zen/desc "Proxy protocol e/o #{:disable :enable :optional}"
+                                :enum [{:value :disable}
+                                       {:value :enable}
+                                       {:value :optional}]}}}}}
+
+ request
+ {:zen/tags #{zen/schema}
+  :type zen/map
+  :zen/desc "HTTP Request"
+  :keys {:request-method {:type zen/keyword}
+         :uri {:type zen/string}
+         :headers {:type zen/map
+                   :values {:type zen/any}}
+         :params {:type zen/map
+                  :values {:type zen/any}}
+         :query-string {:type zen/string}
+         :body {:type zen/any}}}
+
+ response
+ {:zen/tags #{zen/schema}
+  :type zen/map}
+
+ rpc
+ {:zen/tags #{zen/op op}}
+
+ resolve-route
+ {:zen/tags #{zen/op}
+  :zen/desc "Resolve route. Get request and return op, middlewares and route-params"}
+
+ dispatch
+ {:zen/tags #{zen/op}
+  :zen/desc "Dispatch request to op"}
+
+ rpc-api
+ {:zen/tags #{api}
+  :engine routemap
+  :zen/desc "Default RPC API - POST /"
+  :POST rpc}
+
+ debug-middleware
+ {:zen/tags #{zen/op middleware zen/schema}
+  :zen/desc "prints request into stdout"
+  :dir #{:in}}
+
+ cors
+ {:zen/tags #{zen/op middleware zen/schema}
+  :dir #{:out}}
+
+ parse-params
+ {:zen/tags #{zen/op middleware zen/schema}
+  :dir #{:in}}
+
+ cookies
+ {:zen/tags #{zen/op middleware zen/schema}
+  :dir #{:in :out}}
+
+ formats
+ {:zen/tags #{zen/op middleware zen/schema}
+  :engine zen-web.engines/formats
+  :formats #{:html}}
+
+ defaults
+ {:zen/tags #{zen/op middleware zen/schema}
+  :engine zen-web.engines/all-of
+  :mws [cors parse-params cookies formats]}}

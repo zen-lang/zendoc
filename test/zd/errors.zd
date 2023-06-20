@@ -1,0 +1,37 @@
+:ti tle "my title"
+
+^ badge babadge
+:desc "my desc"
+
+_^_table [:name ] :age]
+
+:query-map MAP edn///
+
+{:where []
+ :limit 100}
+
+~:errorpath
+
+;; ;; ;; invalid edn
+:map-inline {:mykey {:myval 1}
+
+just a string block
+
+:text-wrong-multiline / my content
+
+:edn-wrong-multiline #{1} /
+
+:wrong-multiline {:a "value"
+:b "another value"}
+
+:no-edn edn/
+ just some
+ random words
+        with strange offsets
+
+:invalid-edn #{'invalid-set
+
+:invalid-multiline edn/
+{:key "value"
+
+^hanging-ann

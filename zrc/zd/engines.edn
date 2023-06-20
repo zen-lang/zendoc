@@ -1,0 +1,35 @@
+{:ns zd.engines
+
+ http
+ {:zen/tags #{zen/tag zen/schema}
+  :type zen/map
+  :require #{:zendoc}
+  :keys {:zendoc {:type zen/symbol}}}
+
+ fs
+ {:zen/tags #{zen/schema zen/tag zen/engine}
+  :zen/state-key :zd.fs
+  :require #{:engine :zendoc}
+  :type zen/map
+  :keys {:engine {:type zen/symbol}
+         ;; TODO implement confirms for symbols?
+         :zendoc {:type zen/symbol #_:confirms #_#{zd/zendoc}}}}
+
+ datalog
+ {:zen/tags #{zen/schema zen/engine zen/tag}
+  :zen/desc "Datalog engine"
+  :zen/state-key :datalog
+  :require #{:engine :zendoc}
+  :keys {:engine {:type zen/symbol
+                  :tags #{zen/engine}}
+         :zendoc {:type zen/symbol}}
+  :type zen/map}
+
+ web-ui
+ {:zen/tags #{zen/schema zen/engine zen/tag}
+  :zen/state-key :javafx-web-ui
+  :type zen/map
+  ;; TODO set to zen-web/uri
+  :keys {:uri {:type zen/string}
+         :engine {:type zen/symbol
+                  :tags #{zen/engine}}}}}

@@ -1,0 +1,87 @@
+;; just a string block
+:title "my title"
+
+;; namespaced key
+:myservice/api-endpoint "id=128"
+
+;; empty key
+:myemptykey
+
+;; a string block with annotation
+^badge {:text-size :large}
+;; a comment between !!
+:desc "my desc"
+
+;; a block with inline edn
+:map-inline {:mykey {:myval 1}}
+
+;; a macro block with annotation and vector param
+^table [:name :age]
+:query (load "file.json")
+
+;; empty edn value multiline
+:empty-edn edn/
+
+;; edn nil value :)
+:nil-edn edn/
+nil
+
+;; edn value multiline
+:query-map edn/
+{:where []
+:limit 100}
+
+;; another edn value multiline
+:another-query edn/
+{:one-line :edn}
+
+:edn-vector edn/
+[first-symbol,
+second-symbol
+{:key "value"}
+third-symbol]
+
+;; key with trailing whitespace after /
+:w-key / 
+my zentext value
+
+;; a zentext block
+:text /
+
+It is truly multiline
+
+* and
+** has
+*** lists
+
+;; a datalog query
+^table-of [:xd/id :rel]
+:customers datalog/
+
+{:find [(pull e [:xt/id :rel :needs :tags])]
+:where [[e :parent "organizations"]
+         [e :rel "rel.lead"]
+         [e :title et]]
+ :sort-by [[et :desc]]}
+
+;; an empty datalog query
+:clients datalog/
+
+;; a sub document
+&nested
+:mykey "myvalue"
+:another-key "another value"
+
+;; fish content type
+:fish-key fish/
+
+;; another sub document
+&.nested-2
+:super-key "value"
+
+;; sub document with compound path
+&.nested.path
+:some-edn edn/
+{:a 1
+ :b [1 2 3]}
+:mykey "mysupervalue"

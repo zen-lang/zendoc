@@ -1,0 +1,10 @@
+.cpcache
+.nrepl-port
+.DS_Store
+.idea
+*.iml
+.clj-kondo/.cache
+.clj-kondo/
+.calva
+.lsp
+.vscode
