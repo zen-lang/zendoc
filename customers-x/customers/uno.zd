@@ -1,5 +1,6 @@
-:rel #{rel.client}
-:desc "best client!"
-:title "uno inc."
-&partners
-:rel #{rel.unknown}
+:title "uno inc"
+:desc "uno incorporated"
+:rel #{}
+&mydoc
+:rel #{tags.client}
+:title "mytitle"
