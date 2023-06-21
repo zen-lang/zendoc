@@ -1,0 +1,4 @@
+:title "zero inc"
+:rel #{rel.partner}
+:techs #{techs.clojure}
+:desc "mydesc"
