@@ -1,4 +1,4 @@
 :title "my cust"
 :desc ""
 :rel #{}
-:first-contact people.john
+:discovered-by people.john
