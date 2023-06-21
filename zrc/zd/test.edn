@@ -3,15 +3,15 @@
 
  zendoc
  {:zen/tags #{zd/zendoc}
-  ;; TODO make fs,api ops work w multiple docdirs
+  ;; TODO make fs, api ops work w multiple docdirs
   :paths ["customers-x" #_"examples/docs"]
   :root "index"
   ;; TODO make it in seconds
   :pull-rate 32400
   :remote
   ;; TODO think about how to make the test reproducible
-  {:from "git@github.com:carbon-hvze/zendoc-gitsync.git"
-   :to "customers-x"}}
+  {:from "git@github.com:zen-lang/zendoc.git"
+   :to "."}}
 
  datalog
  {:zen/tags #{zen/start zd.engines/datalog}

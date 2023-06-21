@@ -5,26 +5,28 @@
 ### pre
 
 1. java 8+
-2. babashka
-3. git
+2. clojure
+3. babashka (optional)
 
-### clojure cli
-
-1. create a document file
+### run with clojure cli
 
 ```
-echo ':title "My first zd/note 🙂"' > docs/readme.zd
+clojure -M:run
 ```
 
-2. run zendoc engine
+### run with babashka
 
 ```
-clojure -Sdeps '{:deps {zen-lang/zd {:git/url "git@github.com:zen-lang/zd.git" :sha "53ca914e73ff9cf6db75434d5d6dafe425e2b057"}}}' -M -m zd.dev docs zrc
+bb run
 ```
 
-Open http://localhost:8080
+### getting started
 
-## tutorial
+Open http://localhost:4444
+
+check tutorial and customers-x knowledge base examples
+
+## intro
 
 Semantic knowledge base
 
@@ -60,6 +62,4 @@ Here is some zentext
 * item 1
 
 :another-key "..."
-
-
 ```
