@@ -3,13 +3,11 @@
 
 :menu-order 2
 
-:icon [:fa-regular :fa-file-chart-pie]
-
 :desc /
 
 this document sets the knowledge base structure
 
-:tags #{builtin}
+:icon [:fa-regular :fa-file-chart-pie]
 
 // require :tags and :title keys for all documents in the knowledge base
 :schema {:type zen/map :require #{:title :desc}}
