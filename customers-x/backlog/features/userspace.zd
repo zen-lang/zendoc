@@ -1,4 +1,5 @@
 :title "User space"
+:tags #{backlog.tags.business-features}
 :desc /
 tools that are local to user knowledge base
 
