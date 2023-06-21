@@ -4,8 +4,8 @@
 
 (defn start [ztx]
   (zen/read-ns ztx 'zd)
-  (zen/read-ns ztx 'zd.test)
-  (zen/start-system ztx 'zd.test/system)
+  (zen/read-ns ztx 'zd.demo)
+  (zen/start-system ztx 'zd.demo/system)
   (println :started)
   (println "http://localhost:4444"))
 

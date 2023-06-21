@@ -1,42 +1,28 @@
 {:ns zd.test
  :import #{zen-web zd}
 
- zendoc
+ zendoc-local
  {:zen/tags #{zd/zendoc}
-  ;; TODO make fs, api ops work w multiple docdirs
-  :paths ["customers-x" #_"examples/docs"]
-  :root "index"
-  ;; TODO make it in seconds
-  :pull-rate 32400
-  :remote
-  ;; TODO think about how to make the test reproducible
-  {:from "git@github.com:zen-lang/zendoc.git"
-   :to "."}}
+  :paths ["customers-x"]
+  :root "index"}
 
  datalog
  {:zen/tags #{zen/start zd.engines/datalog}
   :engine zd.engines/datalog
-  :zendoc zendoc}
+  :zendoc zendoc-local}
 
  fs
  {:zen/tags #{zen/start zd.engines/fs}
   :engine zd.engines/fs
-  :zendoc zendoc}
+  :zendoc zendoc-local}
 
  http
  {:zen/tags #{zen/start zen-web/http zd.engines/http}
   :engine zen-web/httpkit
   :port 4444
-  :zendoc zendoc
+  :zendoc zendoc-local
   :api zd/api}
-
- ;; TODO rename to desktop ui
- ;; TODO use java fx to launch app status window or full UI
- web-ui
- {:zen/tags #{zen/start zd.engines/web-ui}
-  :engine zd.engines/web-ui
-  :uri "localhost:4444"}
 
  system
  {:zen/tags #{zen/system}
-  :start [datalog fs http #_web-ui]}}
+  :start [datalog fs http]}}
