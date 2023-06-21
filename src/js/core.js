@@ -224,10 +224,8 @@ var on_link_click = (ev) => {
     try {
         if (res.href) {
             var l = new URL(res.href);
-            var href = res.href;
-            var parts = href.split('/');
-            if (!l.hash && parts.length == 4) {
-                load_page(href, true);
+            if (!l.hash && res.href.includes('localhost')) {
+                load_page(res.href, true);
                 ev.preventDefault();
                 ev.stopPropagation();
                 ev.stopImmediatePropagation();
@@ -289,19 +287,17 @@ var create_redirect = (e) => {
 main(() => {
     update_widgets();
 
-    // TODO init tabs only if current page is not editor
-
     // TODO move to nav widget init, use dom model
-
-    document.getElementById('zd-search-input').addEventListener('input', on_search_input);
-
-    var sp = new URLSearchParams(window.location.search);
 
     var search_input = document.getElementById('zd-search-input');
 
-    if (sp.get('search')){
-        search_input.focus();
-        search_input.selectionStart = search_input.selectionEnd = search_input.value.length;
+    if(search_input){
+        search_input.addEventListener('input', on_search_input);
+        var sp = new URLSearchParams(window.location.search);
+        if (sp.get('search')){
+            search_input.focus();
+            search_input.selectionStart = search_input.selectionEnd = search_input.value.length;
+        }
     }
 
     window.addEventListener('popstate', (ev) => {
