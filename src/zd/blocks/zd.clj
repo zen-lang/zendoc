@@ -27,7 +27,7 @@
                      :doc d
                      :parent (when (str/includes? (str d) ".")
                                (str/join "." (butlast (str/split (str d) #"\."))))
-                     :path (->> (map name p)
+                     :path (->> (map (fn [f] (if (keyword? f) (name f) (str f))) p)
                                 (str/join ".")
                                 (str ":"))}))
              (sort-by (juxt :parent :path :doc))
@@ -53,8 +53,8 @@
              [:div {:class (c [:pt 4] :flex :flex-col)}
               [:div {:class (c :inline-flex :items-center)}
                [:a {:href (str "/" docname)
-                   :class (c :inline-flex :items-center [:text "#4B5BA0"]
-                             [:hover [:underline]] :whitespace-no-wrap)}
+                    :class (c :inline-flex :items-center [:text "#4B5BA0"]
+                              [:hover [:underline]] :whitespace-no-wrap)}
                 (:title doc)]
                #_[:span {:class (c :text-xs [:pl 2])} p]
                [:div {:class (c :flex :self-center)}

@@ -26,8 +26,14 @@
   [:div {:class (c :border [:m 1]  :inline-flex :rounded [:p 0])}
    [:a {:href data
         :target "_blank"
-        :class (c :inline-block [:px 2] [:bg :gray-100] [:py 0.5] :text-sm [:text :blue-600] {:font-weight "400"}
-                  [:hover [:bg :gray-200]])}
+        :class (c :inline-block
+                  [:bg :gray-100]
+                  [:hover [:bg :gray-200]]
+                  [:px 2]
+                  [:py 0.5]
+                  [:text "#4B5BA0"]
+                  :text-sm
+                  {:font-weight "400"})}
     k]])
 
 (defmethod methods/renderkey :title

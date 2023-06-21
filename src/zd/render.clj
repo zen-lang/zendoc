@@ -177,7 +177,6 @@
                             :flex-grow
                             [:flex-shrink 0]
                             {:flex-basis "16rem"})}
-
    [:div {:class (c :flex :flex-row :items-baseline)}
     #_[:span {:class (c :relative [:right -5])}
        [:i.fas.fa-regular.fa-search]]
@@ -231,7 +230,8 @@
                      :class (c [:w "100%"] :flex :flex-row :items-baseline)}
                  [:div {:class (c [:text :gray-700] [:w 6])}
                   (link/icon ztx doc)]
-                 [:span {:class (c :capitalize [:pl 1])} d]]
+                 [:span {:class (c :capitalize [:pl 1])}
+                  (or (:title doc) d)]]
                 [:a {:class (c :cursor-pointer :text-lg [:text :gray-500] :hidden [:hover [:text :green-600]])
                      :href (str d "." "_draft/edit")}
                  [:i.fas.fa-plus]]]))
