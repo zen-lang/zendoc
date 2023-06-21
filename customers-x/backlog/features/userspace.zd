@@ -1,0 +1,8 @@
+:title "User space"
+:desc /
+tools that are local to user knowledge base
+
+:feature-desc /
+
+* implement _sketch document that is easily accessible from the kb root. no gitsync
+* implement autosave of _draft documents so that they are not synced into git (related to #backlog.features.editor)
