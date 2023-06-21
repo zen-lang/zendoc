@@ -1,5 +1,0 @@
-:title "Schema"
-:desc /
-schema
-:tags #{}
-:schema {:require #{:category}}
