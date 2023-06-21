@@ -224,7 +224,7 @@ var on_link_click = (ev) => {
     try {
         if (res.href) {
             var l = new URL(res.href);
-            if (!l.hash && res.href.includes('localhost')) {
+            if (!l.hash && res.href.includes('localhost') && !res.href.includes('/edit')) {
                 load_page(res.href, true);
                 ev.preventDefault();
                 ev.stopPropagation();
