@@ -1,6 +1,0 @@
-:title "uno inc"
-:desc "uno incorporated"
-:rel #{}
-&mydoc
-:rel #{tags.client}
-:title "mytitle"
