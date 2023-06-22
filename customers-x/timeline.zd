@@ -1,4 +1,5 @@
 :title "Timeline"
+:menu-order 99
 :desc /
 shows history of changes in zendoc repo
 :git/timeline
