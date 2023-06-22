@@ -1,4 +1,4 @@
 :title "People template"
 :tags #{}
-:role #{}
+:role #{"myrole"}
 :desc /
