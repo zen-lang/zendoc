@@ -4,9 +4,16 @@
 
 ### pre
 
-1. java 8+
-2. clojure
-3. babashka (optional)
+#### mac
+1. install java 8+
+2. get (brew)[https://brew.sh/] package manager
+3. install clojure with brew
+```
+brew install clojure/tools/clojure
+```
+#### windows
+1. install java 8+
+2. refer to (this)[https://github.com/clojure/tools.deps.alpha/wiki/clj-on-Windows] article to install clj and clojure
 
 ### run with clojure cli
 
