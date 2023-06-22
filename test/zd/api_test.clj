@@ -4,23 +4,14 @@
    [clojure.string :as str]
    [zd.api]
    [matcho.core :as matcho]
-   [clojure.java.io :as io]
    [clojure.test :refer [deftest is testing]]
    [zen.core :as zen]
    [zen-web.core :as web]
    [zd.memstore :as memstore]
+   [zd.test-utils :as tutils]
    [zd.fs :as fs]))
 
 (defonce ztx (zen/new-context {}))
-
-(defn req-body [s]
-  (io/input-stream (.getBytes s)))
-
-;; TODO use path prefix from test.edn
-(defn read-doc [s]
-  (let [f (io/file (str "customers-x/" s))]
-    (when (.exists f)
-      (slurp f))))
 
 (deftest doc-creation-test
 
@@ -48,30 +39,30 @@
      (web/handle ztx 'zd/api
                  {:uri "/testdoc/edit"
                   :request-method :put
-                  :body (req-body ":zd/docname testdoc._draft\n:desc /\n no docname present")}))
+                  :body (tutils/req-body ":zd/docname testdoc._draft\n:desc /\n no docname present")}))
 
     (matcho/assert
      {:status 422 :body {:message string?}}
      (web/handle ztx 'zd/api
                  {:uri "/testdoc/edit"
                   :request-method :put
-                  :body (req-body ":desc /\n no docname present")}))
+                  :body (tutils/req-body ":desc /\n no docname present")}))
 
     (matcho/assert
      {:status 200 :body string?}
      (web/handle ztx 'zd/api
                  {:uri "/testdoc/edit"
                   :request-method :put
-                  :body (req-body ":zd/docname testdoc\n:title \"testdoc\"\n:tags #{}\n:desc /")}))
+                  :body (tutils/req-body ":zd/docname testdoc\n:title \"testdoc\"\n:tags #{}\n:desc /")}))
 
-    (is (not (str/blank? (read-doc "testdoc.zd")))))
+    (is (not (str/blank? (tutils/read-doc "testdoc.zd")))))
 
   (testing "delete document"
     (matcho/assert
      {:status 200 :body string?}
      (web/handle ztx 'zd/api {:uri "/testdoc" :request-method :delete}))
 
-    (is (nil? (read-doc "testdoc.zd"))))
+    (is (nil? (tutils/read-doc "testdoc.zd"))))
 
   (zen/stop-system ztx))
 
@@ -116,7 +107,7 @@
      (web/handle ztx 'zd/api
                  {:uri "/customers._draft/edit"
                   :request-method :put
-                  :body (req-body invalid-doc)})))
+                  :body (tutils/req-body invalid-doc)})))
 
   (testing "extra key :techs is allowed, required keys pass validation"
     (matcho/assert
@@ -124,9 +115,9 @@
      (web/handle ztx 'zd/api
                  {:uri "/customers._draft/edit"
                   :request-method :put
-                  :body (req-body doc)}))
+                  :body (tutils/req-body doc)}))
 
-    (is (read-doc "customers/zero.zd"))
+    (is (tutils/read-doc "customers/zero.zd"))
 
     (is (= 200 (:status (web/handle ztx 'zd/api {:uri "/customers.zero"
                                                  :request-method :delete})))))
@@ -143,7 +134,7 @@
      (web/handle ztx 'zd/api
                  {:uri "/customers._draft/edit"
                   :request-method :put
-                  :body (req-body doc)}))
+                  :body (tutils/req-body doc)}))
 
     (def doc ":zd/docname customers.uno\n:rel #{rel.client}\n:desc \"best client!\"\n:title \"uno inc.\"\n&partners \n:rel #{rel.unknown}")
 
@@ -152,9 +143,9 @@
      (web/handle ztx 'zd/api
                  {:uri "/customers._draft/edit"
                   :request-method :put
-                  :body (req-body doc)}))
+                  :body (tutils/req-body doc)}))
 
-    (is (read-doc "customers/uno.zd"))
+    (is (tutils/read-doc "customers/uno.zd"))
 
     (testing ":schema defined for a subdocument &mydoc in _schema.zd"
 
@@ -172,7 +163,7 @@
        (web/handle ztx 'zd/api
                    {:uri "/customers.uno/edit"
                     :request-method :put
-                    :body (req-body doc)})))
+                    :body (tutils/req-body doc)})))
 
     (def doc ":zd/docname customers.uno\n:title \"uno inc\"\n:desc \"uno incorporated\"\n:rel #{}\n&mydoc\n:rel #{tags.client}\n:title \"mytitle\"")
 
@@ -181,7 +172,7 @@
      (web/handle ztx 'zd/api
                  {:uri "/customers.uno/edit"
                   :request-method :put
-                  :body (req-body doc)})))
+                  :body (tutils/req-body doc)})))
 
   (testing "cleanup and check"
     (matcho/assert
@@ -189,7 +180,7 @@
      (web/handle ztx 'zd/api {:uri "/customers.uno"
                               :request-method :delete}))
 
-    (is (nil? (read-doc "customers/uno.zd"))))
+    (is (nil? (tutils/read-doc "customers/uno.zd"))))
 
   (zen/stop-system ztx))
 
@@ -211,7 +202,7 @@
      (web/handle ztx 'zd/api
                  {:uri "/partners._draft/edit"
                   :request-method :put
-                  :body (req-body doc)})))
+                  :body (tutils/req-body doc)})))
 
   (def sch ":zd/docname partners._schema\n:title \"Schema\"\n:desc /\nschema\n:tags #{}\n:schema {:require #{:category}}")
 
@@ -221,8 +212,8 @@
      (web/handle ztx 'zd/api
                  {:uri "/partners._draft/edit"
                   :request-method :put
-                  :body (req-body sch)}))
-    (is (string? (read-doc "partners/_schema.zd"))))
+                  :body (tutils/req-body sch)}))
+    (is (string? (tutils/read-doc "partners/_schema.zd"))))
 
   (testing ":category is now required in partners._schema"
     (def doc ":zd/docname partners.boom\n:title \"boom industries\"\n:tags #{}")
@@ -232,7 +223,7 @@
      (web/handle ztx 'zd/api
                  {:uri "/partners._draft/edit"
                   :request-method :put
-                  :body (req-body doc)}))
+                  :body (tutils/req-body doc)}))
 
     (def doc ":zd/docname partners.boom\n:title \"boom industries\"\n:desc \"mydesc\"\n:category \"E-commerce\"")
 
@@ -241,8 +232,8 @@
      (web/handle ztx 'zd/api
                  {:uri "/partners._draft/edit"
                   :request-method :put
-                  :body (req-body doc)}))
-    (is (string? (read-doc "partners/boom.zd"))))
+                  :body (tutils/req-body doc)}))
+    (is (string? (tutils/read-doc "partners/boom.zd"))))
 
   (testing "delete created docs"
     (matcho/assert
@@ -250,13 +241,13 @@
      (web/handle ztx 'zd/api {:uri "/partners._schema"
                               :request-method :delete}))
 
-    (is (nil? (read-doc "partners/_schema.zd")))
+    (is (nil? (tutils/read-doc "partners/_schema.zd")))
 
     (matcho/assert
      {:status 200 :body string?}
      (web/handle ztx 'zd/api {:uri "/partners.boom"
                               :request-method :delete}))
-    (is (nil? (read-doc "partners/boom.zd"))))
+    (is (nil? (tutils/read-doc "partners/boom.zd"))))
 
   (zen/stop-system ztx))
 
@@ -282,9 +273,9 @@
      (web/handle ztx 'zd/api
                  {:uri "/customers._draft/edit"
                   :request-method :put
-                  :body (req-body doc)}))
+                  :body (tutils/req-body doc)}))
 
-    (is (string? (read-doc "customers/newcust.zd"))))
+    (is (string? (tutils/read-doc "customers/newcust.zd"))))
 
   ;; TODO think about awaits in zd.fs
   (await fs/ag)
@@ -303,11 +294,11 @@
      (web/handle ztx 'zd/api
                  {:uri "/customers._draft/edit"
                   :request-method :put
-                  :body (req-body doc)}))
+                  :body (tutils/req-body doc)}))
 
     (await fs/ag)
 
-    (is (string? (read-doc "customers/newcust.zd")))
+    (is (string? (tutils/read-doc "customers/newcust.zd")))
 
     (is (not (contains? (:backlinks (:zd/meta (memstore/get-doc ztx 'people.john)))
                         {:to 'people.john :path [:first-contact] :doc 'customers.newcust})))
@@ -321,7 +312,7 @@
        (web/handle ztx 'zd/api {:uri "/customers.newcust"
                                 :request-method :delete}))
 
-      (is (nil? (read-doc "testdoc.zd")))
+      (is (nil? (tutils/read-doc "testdoc.zd")))
 
       (is (not (contains? (:backlinks (:zd/meta (memstore/get-doc ztx 'people.john)))
                           {:to 'people.john :path [:first-contact] :doc 'customers.newcust}))))

@@ -26,6 +26,10 @@
  {:zen/tags #{zen/sub}
   :events #{on-doc-delete}}
 
+ datalog-delete
+ {:zen/tags #{zen/sub}
+  :events #{on-doc-delete}}
+
  datalog-sync
  {:zen/tags #{zen/sub}
   :events #{on-doc-load}}}

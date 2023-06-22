@@ -13,6 +13,11 @@
     (xt/submit-tx n [[::xt/put data]])
     :no/xtdb))
 
+(defn evict [ztx data]
+  (if-let [{n :node} (get-state ztx)]
+    (xt/submit-tx n [[::xt/evict data]])
+    :no/xtdb))
+
 (defn query [ztx query & params]
   (if-let [{n :node} (get-state ztx)]
     (apply xt/q (xt/db n) query params)
@@ -40,6 +45,11 @@
         result (submit ztx xtdb-doc)]
     ;; TODO und where does result go in pub/sub
     result))
+
+(defmethod zen/op 'zd.events/datalog-delete
+  [ztx _config {{dn :docname} :params} & [_session]]
+  (cond
+    (or (string? dn) (symbol? dn)) (evict ztx (str dn))))
 
 (defmethod zen/start 'zd.engines/datalog
   [ztx {zd-config :zendoc :as config} & opts]
