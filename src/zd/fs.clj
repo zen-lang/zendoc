@@ -6,8 +6,7 @@
    [zd.gitsync :as gitsync]
    [zd.utils :as utils]
    [clojure.java.io :as io]
-   [zen.core :as zen])
-  (:import [java.util Timer TimerTask]))
+   [zen.core :as zen]))
 
 (defn get-repo [ztx]
   (->> [:zen/state :zd.fs :state :remote :repo]
@@ -41,9 +40,9 @@
                                           :resource-path resource-path
                                           :content content})))))))
 
-(defonce ag (agent nil))
+(defonce queue (agent nil))
 
-(defonce ti (Timer.))
+(defonce syncer (agent nil))
 
 (defn reload [ztx root paths]
   (println :zd.fs/reload)
@@ -71,8 +70,8 @@
                                     ;; TODO implement deletion of a single document
                                     (reload ztx r pths))
                                   {:type 'zd.fs/delete-doc-error})]
-    (send-off ag fs-delete)
-    (await ag)))
+    (send-off queue fs-delete)
+    (await queue)))
 
 (defmethod zen/op 'zd.events/fs-save
   [ztx config {_ev :ev {docname :docname cnt :content} :params} & [_session]]
@@ -104,60 +103,57 @@
                                     (memstore/eval-macros! ztx)
                                     'ok)
                                   {:type :zd.fs/reload-error})]
-    (send-off ag fs-save)
-    (await ag)
-    (send-off ag fs-reload)))
+    (send-off queue fs-save)
+    (await queue)
+    (send-off queue fs-reload)))
 
 (defmethod zen/start 'zd.engines/fs
   [ztx {zd-config :zendoc :as config} & args]
-  ;; TODO process possible error and shutdown gracefully
-  ;; TODO emit zen event
-  (println :zd.fs/start)
+  ;; TODO impl graceful shutdown if start is not possible
   (let [{:keys [remote root paths pull-rate]} (zen/get-symbol ztx zd-config)
         repo
         (-> ((utils/safecall gitsync/init-remote {:type :gitsync/remote-init-error}) ztx remote)
             (:result))
-        load-result (reload ztx root paths)]
+        reload-fn
+        (utils/safecall (fn [ag]
+                          (let [{st :status}
+                                (-> ((utils/safecall gitsync/sync-remote {:type :gitsync/pull-remote-error}) ztx repo)
+                                    (:result))]
+                            (when (= :updated st)
+                              (reload ztx root paths))
+                            'ok))
+                        {:type :gitsync/pull-remote-error})]
+    (reload ztx root paths)
     (if (instance? org.eclipse.jgit.api.Git repo)
-      (let [sync-fn
-            (fn [ag]
-              (let [{st :status}
-                    (-> ((utils/safecall gitsync/sync-remote {:type :gitsync/pull-remote-error}) ztx repo)
-                        (:result))]
-                (when (= :updated st)
-                  (reload ztx root paths))))
-            task (proxy [TimerTask] []
-                   (run []
-                     (send-off ag sync-fn)))]
-        (.scheduleAtFixedRate ti task pull-rate pull-rate)
-        {:ag ag
-         :ti ti
-         :memstore load-result
+      (letfn [(sync-fn [ag]
+                (println :sync (:ag (get-state ztx)))
+                (when-let [q (:ag (get-state ztx))]
+                  (Thread/sleep pull-rate)
+                  (send-off q reload-fn)
+                  (send-off syncer sync-fn))
+                'ok)]
+        (send-off syncer sync-fn)
+        {:ag queue
          :paths paths
-         :task task
          :root root
          :remote (assoc remote :repo repo)})
-      ;; TODO if no git repo schedule retry
-      {:ag ag
+      ;; TODO if no git repo schedule init retry
+      {:ag queue
        :root root
-       :memstore load-result
-       :paths paths
-       :ti ti})))
+       :paths paths})))
 
 (defmethod zen/stop 'zd.engines/fs
   [ztx config {r :remote :as state} & args]
-  ;; TODO emit zen event
-  (println :zd.fs/stop)
-  (swap! ztx dissoc :zdb :zd/meta :zrefs :zd/macros)
-  (when (some? (:repo r))
-    (.cancel (:task state))
-    (.purge (:ti state))))
+  ;; TODO think about using shutdown agents
+  (swap! ztx dissoc :zdb :zd/meta :zrefs :zd/macros))
 
 (comment
-  (def ag (agent nil))
+  @queue
 
-  @ag
+  (agent-error queue)
+  (agent-error syncer)
 
-  (agent-error ag)
+  (restart-agent syncer nil)
 
-  (restart-agent ag nil))
+  (add-watch queue :mywatcher (fn [key atom old-state new-state]
+                                (println 'new-state old-state new-state))))

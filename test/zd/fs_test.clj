@@ -29,10 +29,7 @@
 (deftest document-tree-loaded
   (load! ztx)
 
-  (is (nil? (agent-errors fs/ag)))
-
-  (testing "loading is complete in sync mode"
-    (matcho/assert {:memstore 'ok} (fs/get-state ztx)))
+  (is (nil? (agent-errors fs/queue)))
 
   (def docs (->> ['customers 'customers.flame 'people.john 'people.todd]
                  (map #(memstore/get-doc ztx %))))
@@ -47,7 +44,7 @@
 (deftest macros-loaded
   (load! ztx)
 
-  (is (nil? (agent-errors fs/ag)))
+  (is (nil? (agent-errors fs/queue)))
 
   (matcho/assert
    {:macro-notfound
@@ -73,7 +70,7 @@
 (deftest referenced-loaded
   (load! ztx)
 
-  (is (nil? (agent-errors fs/ag)))
+  (is (nil? (agent-errors fs/queue)))
 
   (testing "edn links loaded"
     (:zrefs @ztx)
@@ -146,17 +143,13 @@
 
   (zen/read-ns ztx 'zd)
 
-  (zen/read-ns ztx 'zd.test)
+  (zen/read-ns ztx 'zd.demo)
 
-  (zen/start-system ztx 'zd.test/system)
+  (zen/start-system ztx 'zd.demo/system)
 
   (def st (fs/get-state ztx))
 
-  ;; timers are ready
-  (is (instance? java.util.Timer (:ti st)))
-  (is (instance? java.util.TimerTask (:task st)))
-
-  (is (nil? (agent-errors fs/ag)))
+  (is (nil? (agent-errors fs/queue)))
 
   ;; repo is ready
   (is (instance? org.eclipse.jgit.api.Git  (get-in st [:remote :repo])))
@@ -166,19 +159,21 @@
    (web/handle ztx 'zd/api
                {:uri "/_draft/edit"
                 :request-method :put
-                :body (req-body ":zd/docname example\n:desc /")}))
+                :body (req-body ":zd/docname example\n:title \"my title\"\n:desc /")}))
 
   (matcho/assert
    {:status 200}
    (web/handle ztx 'zd/api
                {:uri "/example/edit"
                 :request-method :put
-                :body (req-body ":zd/docname example\n:desc /\na description")}))
+                :body (req-body ":zd/docname example\n:title \"my title\"\n:desc /\na description")}))
 
   (matcho/assert
    {:status 200 :body "/index"}
    (web/handle ztx 'zd/api {:uri "/example" :request-method :delete}))
 
-  (is (nil? (agent-errors fs/ag)))
+  (await fs/queue)
+
+  (is (nil? (agent-errors fs/queue)))
 
   (zen/stop-system ztx))

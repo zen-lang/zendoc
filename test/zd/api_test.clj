@@ -278,7 +278,7 @@
     (is (string? (tutils/read-doc "customers/newcust.zd"))))
 
   ;; TODO think about awaits in zd.fs
-  (await fs/ag)
+  (await fs/queue)
 
   (testing "third backlink is added"
     (is (set/subset? #{{:to 'people.john :path [:founder] :doc 'customers.flame}
@@ -296,7 +296,7 @@
                   :request-method :put
                   :body (tutils/req-body doc)}))
 
-    (await fs/ag)
+    (await fs/queue)
 
     (is (string? (tutils/read-doc "customers/newcust.zd")))
 

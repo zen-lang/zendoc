@@ -26,6 +26,8 @@
 
   (zen/read-ns ztx 'zd)
 
+  (zen/read-ns ztx 'zd.events)
+
   (is (= :zen/loaded (zen/read-ns ztx 'zd.test)))
 
   (zen/start-system ztx 'zd.test/system)

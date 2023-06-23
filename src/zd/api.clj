@@ -119,3 +119,8 @@
    :body (-> (render/preview ztx {:request req :root r} (slurp (:body req)))
              (hiccup/html))
    :status 200})
+
+(defmethod zen/op 'zd.events/logger
+  [ztx config {ev-name :ev :as ev} & opts]
+  (when-not (= ev-name 'zd.events/on-doc-load)
+    (println ev)))

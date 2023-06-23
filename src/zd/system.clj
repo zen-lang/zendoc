@@ -15,3 +15,9 @@
   (let [ztx (zen/new-context {})]
     (reset! dtx ztx)
     (start ztx)))
+
+(comment
+
+  (-main)
+
+  (zen/stop-system @dtx))

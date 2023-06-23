@@ -1,9 +1,6 @@
 (ns zd.datalog
   (:require [zen.core :as zen]
-            [clojure.java.io :as io]
-            [xtdb.api :as xt]
-            [clojure.string :as str]
-            [clojure.walk :as walk]))
+            [xtdb.api :as xt]))
 
 (defn get-state [ztx]
   (get-in @ztx [:zen/state :datalog :state]))
@@ -53,9 +50,6 @@
 
 (defmethod zen/start 'zd.engines/datalog
   [ztx {zd-config :zendoc :as config} & opts]
-  ;; TODO add zen pub sub event
-  (println :zd.datalog/start)
-  ;; TODO use fs directory for lucene index
   (let [{r :root} (zen/get-symbol ztx zd-config)]
     {:config config
      :root r
@@ -63,5 +57,4 @@
 
 (defmethod zen/stop 'zd.engines/datalog
   [ztx config {n :node}]
-  (println :zd.datalog/stop)
   (.close n))

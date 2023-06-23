@@ -32,4 +32,8 @@
 
  datalog-sync
  {:zen/tags #{zen/sub}
-  :events #{on-doc-load}}}
+  :events #{on-doc-load}}
+
+ logger
+ {:zen/tags #{zen/sub}
+  :events #{zen/all-events}}}
