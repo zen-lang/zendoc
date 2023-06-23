@@ -1,19 +1,20 @@
 # zendoc
 
+Semantic knowledge base
+
 ## Setup
 
 ### pre
 
 #### mac
 1. install java 8+
-2. get [brew](https://brew.sh/) package manager
-3. install clojure with brew
+2. install git
+3. clone this repo
+4. get [brew](https://brew.sh/) package manager
+5. install clojure with brew
 ```
 brew install clojure/tools/clojure
 ```
-#### windows
-1. install java 8+
-2. refer to [this](https://github.com/clojure/tools.deps.alpha/wiki/clj-on-Windows) article to install clj and clojure
 
 ### run with clojure cli
 
@@ -31,42 +32,4 @@ bb run
 
 Open http://localhost:4444
 
-check tutorial and customers-x knowledge base examples
-
-## intro
-
-Semantic knowledge base
-
-* every document is an edn map with qualified name
-* documents are synced to a storage
-* access database in a document
-* annotate data for representation
-* add schemas to validate data
-
-Document is an ordered set of key-value pairs
-
-keys start with ':'
-
-```
-:this-is-a-key "value"
-```
-
-Each key may have an annotation.
-Annotation starts with a '^', following annotation name and optional edn value.
-
-```
-^table {:columns [:id]}
-:items [{:id "p1"}, {:id "p2"}]
-
-```
-
-multi-line values are supported with `:key [content-type]/` notation
-
-```
-:content zentext/
-
-Here is some zentext
-* item 1
-
-:another-key "..."
-```
+start with Zendoc Tutorial document

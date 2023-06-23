@@ -244,18 +244,25 @@
                          {:flex-basis "100%"})}
     (render-doc ztx ctx doc)]])
 
-(def default-tpl ":title \"\"")
+(defn safefile [path]
+  (if (.exists (io/file path))
+    (slurp path)
+    ""))
 
-;; TODO find template in memstore
 (defn find-template [ztx nm]
   (when nm
     (let [parts (str/split (str nm) #"\.")]
-      (loop [parts parts]
-        (when (seq parts)
-          (let [f (str "docs/" (str/join "/" (butlast parts)) "/_template.zd")]
-            (if (.exists (io/file f))
-              (slurp f)
-              (recur (butlast parts)))))))))
+      (loop [ps (butlast parts)]
+        (if (nil? ps)
+          (if-let [{{p :path} :zd/meta} (memstore/get-doc ztx '_template)]
+            (safefile p)
+            "")
+          (let [template-name (symbol (str (str/join "." ps)
+                                           "."
+                                           "_template"))]
+            (if-let [{{p :path} :zd/meta} (memstore/get-doc ztx template-name)]
+              (safefile p)
+              (recur (butlast ps)))))))))
 
 (defn preview [ztx ctx text]
   (let [parsed (reader/parse ztx ctx text)]
@@ -269,8 +276,7 @@
         text (str header
                   (if-let [pt (:path m)]
                     (slurp pt)
-                    (or (find-template ztx (:docname m))
-                        default-tpl)))
+                    (find-template ztx (:docname m))))
         symbols (->> (:zdb @ztx)
                      (mapv (fn [[k {ico :icon logo :logo tit :title}]]
                              {:title tit
@@ -284,9 +290,10 @@
         zendoc {:text text
                 :symbols symbols
                 :keys keypaths
+                ;; TODO remove this index, think about better search, html is bloated
                 :icons  icons/icons
                 ;; TODO add completion from blocks meta
                 :annotations anns
                 :preview (-> (preview ztx ctx text) (hiccup/html))
                 :doc (:docname m)}]
-    [:script "var zendoc=" (json/generate-string zendoc)]))
+    [:script#editor-config "var zendoc=" (json/generate-string zendoc)]))

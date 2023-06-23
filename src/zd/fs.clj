@@ -127,6 +127,7 @@
     (if (instance? org.eclipse.jgit.api.Git repo)
       (letfn [(sync-fn [ag]
                 (when-let [q (:ag (get-state ztx))]
+                  (zen/pub ztx 'zd.events/on-pull-remote {})
                   (Thread/sleep pull-rate)
                   (send-off q reload-fn)
                   (send-off syncer sync-fn))

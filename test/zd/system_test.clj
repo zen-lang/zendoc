@@ -37,3 +37,10 @@
   (zen/stop-system ztx)
 
   (is :system-stopped))
+
+(defn restart! [ztx]
+  (zen/stop-system ztx)
+  (zen/start-system ztx 'zd.test/system))
+
+(comment
+  (restart! ztx))

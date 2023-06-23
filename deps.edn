@@ -3,6 +3,7 @@
          com.xtdb/xtdb-core                                  {:mvn/version "1.23.2"}
          com.xtdb/xtdb-lucene                                {:mvn/version "1.23.2"}
          borkdude/edamame                                    {:mvn/version "0.0.18"}
+         hickory/hickory                                     {:mvn/version "0.7.1"}
          cheshire/cheshire                                   {:mvn/version "5.10.0"}
          clj-commons/clj-yaml                                {:mvn/version "0.7.106"}
          ;; 1.0.1 is fixed for now because it works on java < 11
