@@ -1,5 +1,6 @@
 (ns zd.api
   (:require
+   [clojure.pprint :as pprint]
    [zd.layout :as layout]
    [zd.memstore :as memstore]
    [zd.meta :as meta]
@@ -122,6 +123,8 @@
 
 (defmethod zen/op 'zd.events/logger
   [ztx config {ev-name :ev :as ev} & opts]
+  ;; TODO filter out
   (when-not (or (= ev-name 'zd.events/on-doc-save)
                 (= ev-name 'zd.events/on-doc-load))
-    (println ev)))
+    ;; TODO do not print large events
+    (pprint/pprint ev)))

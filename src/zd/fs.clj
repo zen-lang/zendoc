@@ -1,10 +1,11 @@
 (ns zd.fs
   (:require
+   [clojure.core.async :refer [<! timeout]]
    [zd.meta :as meta]
    [zd.memstore :as memstore]
    [clojure.string :as str]
    [zd.gitsync :as gitsync]
-   [zd.utils :as utils]
+   [zd.utils :as utils :refer [safecall]]
    [clojure.java.io :as io]
    [zen.core :as zen]))
 
@@ -63,7 +64,8 @@
              "/"
              (str/join "/" parts)
              ".zd")
-        fs-delete (utils/safecall (fn [ag]
+        fs-delete (utils/safecall ztx
+                                  (fn [ag]
                                     (io/delete-file filepath)
                                     (when-let [repo (get-repo ztx)]
                                       (gitsync/delete-doc ztx repo {:docpath filepath :docname docname}))
@@ -85,7 +87,8 @@
              (str (first pths) "/"))
         docpath (str (str/replace docname "." "/") ".zd")
         filepath (str (first pths) "/" docpath)
-        fs-save (utils/safecall (fn [ag]
+        fs-save (utils/safecall ztx
+                                (fn [ag]
                                   (.mkdirs (io/file dirname))
                                   (spit filepath cnt)
                                   (if (str/includes? docname "_schema")
@@ -94,12 +97,13 @@
                                                                   :root r
                                                                   :resource-path docpath
                                                                   :content cnt}))
+                                  (memstore/load-links! ztx)
                                   'ok)
                                 {:type :zd.fs/save-error})
-        fs-reload (utils/safecall (fn [ag]
+        fs-reload (utils/safecall ztx
+                                  (fn [ag]
                                     (when-let [repo (get-repo ztx)]
                                       (gitsync/commit-doc ztx repo {:docpath filepath :docname docname}))
-                                    (memstore/load-links! ztx)
                                     (memstore/eval-macros! ztx)
                                     'ok)
                                   {:type :zd.fs/reload-error})]
@@ -111,25 +115,25 @@
   [ztx {zd-config :zendoc :as config} & args]
   ;; TODO impl graceful shutdown if start is not possible
   (let [{:keys [remote root paths pull-rate]} (zen/get-symbol ztx zd-config)
-        repo
-        (-> ((utils/safecall gitsync/init-remote {:type :gitsync/remote-init-error}) ztx remote)
-            (:result))
-        reload-fn
-        (utils/safecall (fn [ag]
-                          (let [{st :status}
-                                (-> ((utils/safecall gitsync/sync-remote {:type :gitsync/pull-remote-error}) ztx repo)
-                                    (:result))]
-                            (when (= :updated st)
-                              (reload ztx root paths))
-                            'ok))
-                        {:type :gitsync/pull-remote-error})]
+        init-remote* (utils/safecall ztx gitsync/init-remote {:type :gitsync/remote-init-error})
+        repo (-> (init-remote* ztx remote) (:result))
+        reload-fn*
+        (fn [ag]
+          (let [pr* (utils/safecall ztx gitsync/sync-remote {:type :gitsync/pull-remote-error})
+                {st :status} (-> (pr* ztx repo) (:result))]
+            (when (= :updated st)
+              (reload ztx root paths))
+            'reload-complete))
+        reload-fn (utils/safecall ztx reload-fn* {:type :gitsync/pull-remote-error})]
     (reload ztx root paths)
     (if (instance? org.eclipse.jgit.api.Git repo)
       (letfn [(sync-fn [ag]
                 (when-let [q (:ag (get-state ztx))]
-                  (zen/pub ztx 'zd.events/on-pull-remote {})
+                  (zen/pub ztx 'zd.events/on-pull-remote {:rate pull-rate})
                   (Thread/sleep pull-rate)
-                  (send-off q reload-fn)
+                  ;; TODO also check pull remote error
+                  (when-not (= 'reload-complete (:result @q))
+                    (send-off q reload-fn))
                   (send-off syncer sync-fn))
                 'ok)]
         (send-off syncer sync-fn)
@@ -150,10 +154,15 @@
 (comment
   @queue
 
+  @syncer
+
+  (agent-error syncer)
+
   (agent-error queue)
   (agent-error syncer)
 
   (restart-agent syncer nil)
+  (restart-agent queue nil)
 
   (add-watch queue :mywatcher (fn [key atom old-state new-state]
                                 (println 'new-state old-state new-state))))

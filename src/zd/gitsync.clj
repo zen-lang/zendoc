@@ -35,7 +35,7 @@
                          (.getTrackingRefUpdates)
                          (.isEmpty)
                          (not))]
-        ;; TODO check the push status?
+        ;; TODO check index status?
         (git/git-push repo)
         (when updated?
           (println :zd.gitsync/sync-reload)
