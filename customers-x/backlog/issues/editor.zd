@@ -3,3 +3,4 @@
 * preview is not rendered on dropdown select
 * & notes as subdoc rendered incorrectly
 * docname can not start with _
+* sometimes strings are rendered with double padding
