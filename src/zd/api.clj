@@ -122,5 +122,6 @@
 
 (defmethod zen/op 'zd.events/logger
   [ztx config {ev-name :ev :as ev} & opts]
-  (when-not (= ev-name 'zd.events/on-doc-load)
+  (when-not (or (= ev-name 'zd.events/on-doc-save)
+                (= ev-name 'zd.events/on-doc-load))
     (println ev)))

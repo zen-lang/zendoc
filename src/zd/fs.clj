@@ -126,7 +126,6 @@
     (reload ztx root paths)
     (if (instance? org.eclipse.jgit.api.Git repo)
       (letfn [(sync-fn [ag]
-                (println :sync (:ag (get-state ztx)))
                 (when-let [q (:ag (get-state ztx))]
                   (Thread/sleep pull-rate)
                   (send-off q reload-fn)
