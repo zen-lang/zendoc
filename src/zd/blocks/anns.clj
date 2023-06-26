@@ -8,15 +8,7 @@
 (defmethod methods/renderann :title
   [ztx {doc :doc} {{title :title} :ann cnt :content :as block}]
   [:div {:class (c [:py 4])}
-   [:h2 {:class (c :flex :items-center [:m 0] [:py 4]) :id "title"}
-    (if-let [img (or (:avatar doc) (:logo doc))]
-      [:img {:src img
-             :class (c [:w 8] [:h 8] :inline-block [:mr 2] {:border-radius "100%"})}]
-      (when-let [icon (:icon doc)]
-        [:i {:class (str (str/join " " (map name icon))
-                         " "
-                         (name (c [:mr 2] [:text :gray-600])))}]))
-    title]
+   [:h2 {:class (c :flex :items-center [:m 0] [:py 4]) :id "title"} title]
    cnt])
 
 (defmethod methods/renderann :table

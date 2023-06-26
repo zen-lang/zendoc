@@ -125,7 +125,9 @@
                                         (get ka :badge
                                              (get ka :none))))))))
 
-             (map name))
+             (map (fn [k]
+                    {:display (or (get-in anns [k :title]) (name k))
+                     :href (name k)})))
         ;; TODO move backlinks processing to memstore
         doclinks (->> (:backlinks m)
                       (map (fn [{d :doc}]
@@ -146,8 +148,8 @@
        [:div {:class col}
         [:div {:class head} "document"]
         ;; TODO make items clickable
-        (for [k dockeys]
-          [:a {:href (str "#" k)} k])])
+        (for [{d :display h :href} dockeys]
+          [:a {:href (str "#" h)} d])])
      (when (seq subdocs)
        [:div {:class col}
         [:div {:class head} "subdocs"]
