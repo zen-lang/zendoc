@@ -19,7 +19,7 @@ there is also a link that includes hash char - [[a https://docs.google.com/sprea
 
 :product-champion people.john
 
-^table-of [:xt/id]
+^table [:xt/id]
 :customers datalog/
 {:find [(pull e [:xt/id])]
 :where [[e :parent customers]]

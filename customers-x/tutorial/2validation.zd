@@ -12,13 +12,13 @@ _schema documents allows constraints defined with zen schema on three levels:
 * a separate key
 * a subdocument
 
-^table-of [:xt/id]
+^table [:xt/id]
 :templates-defined datalog/
 {:find [(pull ?e [:xt/id])]
 :where [[?e :xt/id ?id]
 [(clojure.string/includes? ?id "_template")]]}
 
-^table-of [:xt/id]
+^table [:xt/id]
 :schemas-defined datalog/
 {:find [(pull ?e [:xt/id])]
 :where [[?e :xt/id ?id]
