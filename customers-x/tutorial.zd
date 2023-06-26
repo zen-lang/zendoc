@@ -2,6 +2,8 @@
 :section "second"
 :icon [:fa-brands :fa-dochub]
 :menu-order 1
+
+^title "About"
 :desc /
 
 zendoc tutorial as demo knowledge base
