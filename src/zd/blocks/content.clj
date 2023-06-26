@@ -21,35 +21,26 @@
          (into [:div {:class (c :flex [:space-x 1.5] {:flex-wrap "wrap"})}
                 [:div {:class (c [:text :gray-500] :text-sm)} "#"]]))
     :else
-    [:div.code-block
-     [:pre {:class (c :text-sm) :style {:white-space "pre-wrap"}}
+    [:div {:style {:background "white" :word-wrap "break-word"}}
+     (if (string? data)
+       data
+       (with-out-str (pprint/pprint data)))
+     ;; TODO fix clipboard copy
+     #_[:pre {:class (c :text-sm) :style {:white-space "pre-wrap"}}
       [:i.fas.fa-clipboard-list.copy-button
-       {:title "Click to Copy"
-        :style {:position  "relative"
-                :float     "right"
-                :top       "5px"
-                :right     "20px"}}]
-      ;; TODO fix edn display code block
-      [:code {:style {:background "white !important"
-                      :word-wrap "break-word"}}
-       [:span {:class (str (str "language-edn hljs ")  (c [:bg "white"]))}
-        (if (string? data)
-          data
-          (with-out-str (pprint/pprint data)))]]]]))
+         {:title "Click to Copy"
+          :style {:position  "relative"
+                  :float     "right"
+                  :top       "5px"
+                  :right     "20px"}}]]]))
 
 (defmethod methods/rendercontent :zentext
   [ztx ctx {:keys [data] :as block}]
   [:div (zentext/parse-block ztx data block)])
 
 (defmethod methods/rendercontent :datalog
-  ;; TODO rename table-of to :table for consistency
   [ztx ctx {{headers :table-of} :ann data :data :as block}]
-  (let [result (if-let [params (:in data)]
-                 (apply d/query ztx data params)
-                 (d/query ztx data))]
-    (if (and (seq result)
-             ;; TODO fix this check
-             (map? (ffirst result))
-             (seq headers))
-      (comp/table ztx ctx headers (map first result))
-      [:span (pr-str result)])))
+  (if-let [params (:in data)]
+    ;; TODO impl preprocess to remove :in from queries
+    (apply d/query ztx data params)
+    (d/query ztx data)))

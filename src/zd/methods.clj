@@ -2,8 +2,8 @@
   (:require
    [clojure.pprint :as pprint]
    [clojure.string :as str]
-   [zen.core :as zen]
-   [stylo.core :refer [c]]))
+   [stylo.core :refer [c]]
+   [zd.methods :as methods]))
 
 ;; renders content of a block with :zd/content-type annotation
 (defmulti rendercontent (fn [ztx ctx block]
@@ -17,34 +17,40 @@
 ;; renders key of a document with provided annotation
 ;; or by a block name
 (defmulti renderkey (fn [ztx ctx block]
-                      (if-let [[block-key _]
-                               (->> (:ann block)
-                                    (remove (fn [[k _]]
-                                              (= "zd" (namespace k))))
-                                    (first))]
-                        block-key
-                        (:key block))))
+                      (:key block)))
+
+(defn get-anns [block]
+  (->> (:ann block)
+       (remove (fn [[k _]]
+                 (= "zd" (namespace k)))) ))
+
+(defmulti renderann (fn [ztx ctx block]
+                      ;; TODO pub error if more then 1 ann?
+                      (when-let [[block-key _] (first (get-anns block))]
+                        block-key)))
 
 ;; by default add a header and renders content of a block
 (defmethod renderkey :default [ztx ctx {kp :key d :data anns :ann :as block}]
   ;; TODO fix render inline for bb run
+  ;; TODO think if render inline is usable at all
   (let [render-inline?
         (and (not (:zd/multiline anns))
              (= (:zd/content-type anns) :edn)
              (not (map? d)))
-        basic-style (c :flex :flex-row :items-center [:py 1] :border-b)
-        embedded-style (c :flex :flex-row :items-center [:py 1])]
-    [:div {:class (c [:py 4])}
-     [:div {:class (if (:zd/render-subdoc? anns)
-                     embedded-style
-                     basic-style)}
-      [:a {:id kp}
-       #_[:span {:class (c [:text :gray-600])} ":"]
-       [:span {:class (c :uppercase {:font-weight "600"})} kp]]
-      #_[:div {:class (c [:text :gray-500] :text-sm)}
-         (name (get-in block [:ann :zd/content-type]))]]
-     (when-not (and (string? d) (str/blank? d))
-       [:div (rendercontent ztx ctx block)])]))
+        basic-style (c [:py 1] :border-b)
+        embedded-style (c :flex :flex-row :items-center)
+        multiline-embedded (c :flex :flex-row :items-baseline [:py 4])
+        cnt (when-not (and (string? d) (str/blank? d))
+              (rendercontent ztx ctx block))]
+    (if (seq (get-anns block))
+      (methods/renderann ztx ctx (assoc block :content cnt))
+      [:div {:class (c [:py 4])}
+       [:div {:class (if (:zd/render-subdoc? anns)
+                       embedded-style
+                       basic-style)}
+        [:a {:id kp}
+         [:span {:class (c :uppercase {:font-weight "600"})} kp]]]
+       cnt])))
 
 ;; zentext methods
 (defmulti inline-method   (fn [ztx m arg ctx] (keyword m)))

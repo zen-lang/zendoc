@@ -136,6 +136,7 @@
                  (meta/append-meta ztx))
         links (collect-links ztx doc)
         macros (collect-macros ztx doc)]
+    ;; TODO move backlinks to toplevel and use merge
     (swap! ztx assoc-in [:zdb docname] doc)
     (swap! ztx update :zrefs patch-links links)
     (swap! ztx update :zd/keys (fnil into #{}) (keys doc))
