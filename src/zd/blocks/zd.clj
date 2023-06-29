@@ -77,6 +77,7 @@
                      [:div {:class (c [:mr 0.5])}
                       (str (name k) ":")]
                      (cond
+                       ;; render links collection
                        (or (set? v) (vector? v))
                        (into [:div {:class (c :flex [:space-x 1] :items-center)}]
                              (interpose
@@ -95,7 +96,7 @@
                                              (str s))]]
                                    [:span (pr-str s)]))
                                v)))
-
+                       ;; render single link
                        (symbol? v)
                        (let [res (memstore/get-doc ztx v)]
                          [:a {:href (str "/" v)
@@ -105,9 +106,6 @@
                                         :whitespace-no-wrap
                                         {:text-decoration-thickness "0.5px"})}
                           [:span (:title res)]])
-
-                       (string? v)
-                       (zentext/parse-block ztx v {:key k :data v :ann (get anns k)})
 
                        :else [:span (pr-str v)])])))]]))]))))
 
