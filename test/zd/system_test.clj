@@ -40,6 +40,8 @@
 
 (defn restart! [ztx]
   (zen/stop-system ztx)
+  (zen/read-ns ztx 'zd)
+  (zen/read-ns ztx 'zd.test)
   (zen/start-system ztx 'zd.test/system))
 
 (comment

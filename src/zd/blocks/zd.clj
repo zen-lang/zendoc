@@ -37,6 +37,8 @@
         [:div {:class (c [:py 4] #_[:text :gray-600])}
          [:div {:class (c :flex :flex-row :items-center :border-b :justify-between [:py 1])}
           [:div
+           [:span {:class (c :text-sm)}
+            [:i.fas.fa-regular.fa-link]]
            [:a {:id (str "backlinks-" *parent) :class (c :uppercase {:font-weight "600"})}
             *parent]
            [:span {:class (c [:pl 2] :text-sm [:text :gray-500])}

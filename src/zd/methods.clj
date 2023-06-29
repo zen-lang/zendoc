@@ -12,7 +12,7 @@
 ;; by default just pretty prints the content
 (defmethod rendercontent :default
   [ztx ctx {:keys [data] :as block}]
-  [:pre (with-out-str (pprint/pprint data))])
+  [:span (with-out-str (pprint/pprint data))])
 
 ;; renders key of a document with provided annotation
 ;; or by a block name
@@ -48,6 +48,7 @@
        [:div {:class (if (:zd/render-subdoc? anns)
                        embedded-style
                        basic-style)}
+        [:span {:class (c :uppercase)} ":"]
         [:a {:id kp}
          [:span {:class (c :uppercase {:font-weight "600"})} kp]]]
        cnt])))

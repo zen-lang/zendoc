@@ -88,7 +88,7 @@
            (methods/renderkey ztx ctx err-block)))))
 
 (defn render-blocks [ztx ctx {m :zd/meta subs :zd/subdocs :as doc} & [render-subdoc?]]
-  [:div {:class (c [:w "60vw"])}
+  [:div {:class (c [:w "60vw"] [:w-max "60rem"])}
    ;; TODO render errors in doc view
    (when-let [errs (seq (:errors m))]
      (methods/renderkey ztx ctx {:data errs :ann {} :key :zd/errors}))
@@ -108,7 +108,7 @@
          [:div {:class (c [:my 2])}
           [:div {:class (c :flex :flex-row :border-b)}
            [:a {:id (str "subdocs-" (name sub-key))}
-            #_[:span {:class (c [:text :gray-600])} "&"]
+            [:span "&"]
             [:span {:class (c :uppercase {:font-weight "600"})} (name sub-key)]]]
           (render-blocks ztx ctx (get-in doc [:zd/subdocs sub-key]) true)]))])])
 
@@ -139,14 +139,13 @@
         subdocs (->> order
                      (filter #(get subs %))
                      (distinct))
-
-        root (c :text-sm [:p 6] [:bg "white"])
+        root (c :flex :flex-col :text-sm [:p 6] [:bg "white"] [:w-max "16rem"])
         col  (c :flex :flex-col [:py 2])
         head (c :uppercase [:py 1])]
     [:div {:class root}
      (when (seq dockeys)
        [:div {:class col}
-        [:div {:class head} "document"]
+        [:div {:class head} "keys"]
         ;; TODO make items clickable
         (for [{d :display h :href} dockeys]
           [:a {:href (str "#" h)} d])])
@@ -163,9 +162,9 @@
           [:a {:href (str "#backlinks-" k)} k])])]))
 
 (defn render-doc [ztx ctx doc]
-  [:div
+  [:div {:class (c :flex :flex-col [:flex-grow 1])}
    (topbar ztx ctx doc)
-   [:div#blocks {:class (c :flex :flex-row [:w-max "60rem"])}
+   [:div#blocks {:class (c :flex :flex-row )}
     (render-blocks ztx ctx doc)
     (contents-sidebar ztx ctx doc)]])
 
@@ -184,6 +183,7 @@
        [:i.fas.fa-regular.fa-search]]
     [:input#zd-search-input
      {:type "search"
+      :placeholder ":title"
       :value search-text
       :class (c :border
                 :outline-none
