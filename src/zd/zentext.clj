@@ -123,11 +123,12 @@
 
 (defmethod apply-transition :p-end
   [ztx tr {lns :lines :as ctx} line]
-  (-> (update ctx :result conj (let [res (into [:p]
-                                               (mapcat (fn [l] (let [parsed (parse-inline ztx l ctx)]
-                                                                 (if-not (or (some #{"."} parsed) (some #{","} parsed))
-                                                                   (conj parsed "\n")
-                                                                   parsed))) lns))]
+  (-> (update ctx :result conj
+              (let [res (into [:p {:class (c [:pb 4])}]
+                              (mapcat (fn [l] (let [parsed (parse-inline ztx l ctx)]
+                                                (if-not (or (some #{"."} parsed) (some #{","} parsed))
+                                                  (conj parsed "\n")
+                                                  parsed))) lns))]
                                  res))
       (assoc :state :none :lines [] :push-back true)))
 

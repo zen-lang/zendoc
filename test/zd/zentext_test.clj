@@ -1,5 +1,6 @@
 (ns zd.zentext-test
   (:require
+   [zd.api]
    [zd.zentext :as zentext]
    [zen.core :as zen]
    [matcho.core :as matcho]
@@ -141,7 +142,7 @@ final paragraph [[src box/zrc/aidbox.edn#config]] ")
 
 (t/deftest test-parser
 
-  (match "paragraph" [:div [:p "\n" "paragraph"]])
+  (match "paragraph" [:div [:p {:class keyword?} "\n" "paragraph"]])
 
   (match
    "```code sql
@@ -241,7 +242,7 @@ select 1
 #team.vlad
 #team.imposter
 " [:div
-   [:p
+   [:p {:class keyword?}
     "\n"
     [:a {:href "/team.vlad"} "team.vlad"]
     "\n"
@@ -273,7 +274,7 @@ select 1
   (def ztx (zen/new-context))
   (match "@foo.bar"
     [:div
-     [:p
+     [:p {:class keyword?}
       "\n"
       [:a
        {:href "/people.foo.bar",
@@ -281,8 +282,8 @@ select 1
         :title "Broken Link"}
        'people.foo.bar]]])
 
-  (match "\\@foo.bar"    [:div [:p "\n" "@foo.bar"]])
-  (match "foo\\@foo.bar" [:div [:p "\n" "foo@foo.bar"]])
-  (match "\\"            [:div [:p "\n" "\\"]])
+  (match "\\@foo.bar"    [:div [:p {:class keyword?} "\n" "@foo.bar"]])
+  (match "foo\\@foo.bar" [:div [:p {:class keyword?} "\n" "foo@foo.bar"]])
+  (match "\\"            [:div [:p {:class keyword?} "\n" "\\"]])
 
-  (match "foo@foo.bar"   [:div [:p "\n" "foo@foo.bar"]]))
+  (match "foo@foo.bar"   [:div [:p {:class keyword?} "\n" "foo@foo.bar"]]))

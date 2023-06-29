@@ -44,3 +44,9 @@
     ;; TODO impl preprocess to remove :in from queries
     (apply d/query ztx data params)
     (d/query ztx data)))
+
+(defmethod methods/rendercontent :mm
+  [ztx ctx {d :data :as block}]
+  [:div.mermaid d])
+
+

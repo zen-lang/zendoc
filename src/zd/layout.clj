@@ -91,7 +91,7 @@
                               :transition "all 0.26s"}]]]])
 
 (defn sidebar [ztx {{{id :id} :route-params} :request} content]
-  [:html #_{:class (c {:font-size "14px"})}
+  [:html
    [:head
     [:style (stylo.core/compile-styles @stylo.core/styles)]
     [:style (garden.core/css common-style)]
@@ -103,6 +103,7 @@
     [:link {:href "//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/styles/default.min.css", :rel "stylesheet"}]
     [:link {:href "/static/js/fa/css/all.min.css", :rel "stylesheet"}]
     [:link  {:href "/static/js/spinner.css"  :rel "stylesheet"}]
+    ;; TODO move scripts from head to body
     [:script {:src "//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/highlight.min.js"}]
     [:script {:src "//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/languages/clojure.min.js"}]
     [:script {:src "//cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"}]
@@ -112,4 +113,6 @@
     [:script {:src "/static/js/editor.js"}]]
    [:body {:class (c :oveflow-hidden [:h "100vh"] [:text "#353B50"])}
     content
-    [:script "hljs.highlightAll()"]]])
+    [:script "hljs.highlightAll()"]
+    [:script {:src "https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"}]
+    [:script "mermaid.initialize({startOnLoad:true});"]]])
