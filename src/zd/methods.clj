@@ -1,5 +1,6 @@
 (ns zd.methods
   (:require
+   [hiccup.core :as hiccup]
    [clojure.pprint :as pprint]
    [clojure.string :as str]
    [stylo.core :refer [c]]
@@ -51,7 +52,10 @@
         [:span {:class (c :uppercase)} ":"]
         [:a {:id kp}
          [:span {:class (c :uppercase {:font-weight "600"})} kp]]]
-       cnt])))
+       ;; TODO think about rendering flow
+       (try (hiccup/html cnt)
+            (catch Exception e
+              (with-out-str (pprint/pprint cnt))))])))
 
 ;; zentext methods
 (defmulti inline-method   (fn [ztx m arg ctx] (keyword m)))

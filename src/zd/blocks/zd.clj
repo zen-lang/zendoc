@@ -69,7 +69,7 @@
                ;; TODO get last updated from git repo
                 #_[:div {:class (c [:text :gray-500])}
                    "upd: " lu]]]
-              [:div {:class (c :flex :flex-no-wrap :overflow-x-hidden)}
+              [:div {:class (c :flex :flex-wrap :overflow-x-hidden)}
                (doall
                 (for [[k v] (select-keys doc summary-keys)]
                   (when (and (some? v) (= (get-in anns [k :zd/content-type]) :edn))
