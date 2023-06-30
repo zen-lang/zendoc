@@ -106,7 +106,7 @@
     ;; TODO move scripts from head to body
     [:script {:src "//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/highlight.min.js"}]
     [:script {:src "/static/js/mindmap.js"}]
-    [:script {:src "/static/js/d3.js"}]
+    [:script {:src "https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"} #_{:src "/static/js/d3.js"}]
     [:script {:src "//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/languages/clojure.min.js"}]
     [:script {:src "//cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"}]
     [:script {:src "/static/js/core.js"}]
