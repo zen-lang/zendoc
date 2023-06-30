@@ -149,17 +149,17 @@
         ;; TODO make items clickable
         (for [{d :display h :href} dockeys]
           [:a {:href (str "#" h)} d])])
+     (when (seq doclinks)
+       [:div {:class col}
+        [:div {:class head} "backlinks"]
+        (for [k doclinks]
+          [:a {:href (str "#backlinks-" k)} k])])
      (when (seq subdocs)
        [:div {:class col}
         [:div {:class head} "subdocs"]
         (for [k subdocs]
           ;; TODO think about better convention?
-          [:a {:href (str "#subdocs-" (name k))} k])])
-     (when (seq doclinks)
-       [:div {:class col}
-        [:div {:class head} "backlinks"]
-        (for [k doclinks]
-          [:a {:href (str "#backlinks-" k)} k])])]))
+          [:a {:href (str "#subdocs-" (name k))} k])])]))
 
 (defn render-doc [ztx ctx doc]
   [:div {:class (c :flex :flex-col [:flex-grow 1])}

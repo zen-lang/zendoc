@@ -224,6 +224,7 @@ var on_link_click = (ev) => {
     try {
         if (res.href) {
             var l = new URL(res.href);
+            // TODO fix this in web version, add :self-uri to config
             if (!l.hash && res.href.includes('localhost') && !res.href.includes('/edit')) {
                 load_page(res.href, true);
                 ev.preventDefault();
@@ -301,18 +302,14 @@ main(() => {
     }
 
     window.addEventListener('popstate', (ev) => {
-        console.log('pop', ev.state, window.location.href);
+        console.log('pop', ev, window.location.href);
         var href = window.location.href;
         load_page(href, false);
     });
-    // TODO check what prefix is used in browser apps
-    document.addEventListener('keydown', on_hotkey);
-    document.addEventListener('click', on_link_click);
 
-    var in_chrome = (window.location.search || '').includes('chrome') || document.body.getBoundingClientRect().width < 800;
-    if (in_chrome) {
-        document.getElementById('left-nav').remove();
-    }
+    // TODO check prefix to use in browser app
+    // document.addEventListener('keydown', on_hotkey);
+    document.addEventListener('click', on_link_click);
 
     toa(document.getElementsByClassName("zd-toggle")).map(function(el){
         el.querySelector('.zd-block-title').addEventListener("click", function () {

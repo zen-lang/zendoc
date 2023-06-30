@@ -105,14 +105,14 @@
     [:link  {:href "/static/js/spinner.css"  :rel "stylesheet"}]
     ;; TODO move scripts from head to body
     [:script {:src "//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/highlight.min.js"}]
+    [:script {:src "https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"}]
     [:script {:src "/static/js/mindmap.js"}]
-    [:script {:src "https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"} #_{:src "/static/js/d3.js"}]
+    [:script {:src "https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"}]
     [:script {:src "//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/languages/clojure.min.js"}]
     [:script {:src "//cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"}]
     [:script {:src "/static/js/core.js"}]
-    [:script {:src "/static/js/vega.min.js"}]
+    #_[:script {:src "/static/js/vega.min.js"}]
     [:script {:src "/static/js/quick-score.min.js"}]
-    [:script {:src "https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"}]
     [:script {:src "/static/js/editor.js"}]]
    [:body {:class (c :oveflow-hidden [:h "100vh"] [:text "#353B50"])}
     content

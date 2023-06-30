@@ -55,13 +55,12 @@
 (defmethod methods/inline-method :md/link
   [ztx m s ctx]
   (let [[txt href] (str/split s #"\]\(" 2)]
-    [:a {:href href :class (c [:text "#4B5BA0"] [:hover [:underline]])} txt]))
+    [:a {:href href :target :_blank :class (c [:text "#4B5BA0"] [:hover [:underline]])} txt]))
 
 (defmethod methods/inline-method :md/img
   [ztx m s ctx]
   (let [[txt href] (str/split s #"\]\(" 2)]
     [:img {:src href :alt txt}]))
-
 
 (defmethod methods/inline-method :code
   [ztx m s ctx]
@@ -112,7 +111,7 @@
 (defmethod methods/inline-method :a
   [ztx m arg ctx]
   (let [[src text] (str/split arg #"\s+" 2)]
-    [:a {:href src :target :_blank :class (c [:text :blue-700] [:hover [:underline]])}
+    [:a {:href src :target :_blank :class (c [:text "#4B5BA0"] [:hover [:underline]])}
      " " (or text src)]))
 
 (defmethod methods/inline-method
