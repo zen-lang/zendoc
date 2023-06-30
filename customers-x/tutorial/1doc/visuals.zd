@@ -1,0 +1,25 @@
+
+:title "Visual ways to think in data"
+
+:desc /
+
+zendoc includes support for [mermaid](https://mermaid.js.org/) and mindmaps.
+
+:mindmap mindmap/
+
+zendoc
+ * Это внешний справочник?
+   * создать NamingSystem с kind = codesystem
+   * назначить значение системы
+   * внести в реестр систем кодирования
+ * Это внутренний справочник?
+   * создать CodeSystem
+   * назначить значение системы (CodeSystem.url)
+   * внести в реестр систем кодирования
+ * Это пространство идентификаторов?
+   * создать NamingSystem с kind = identifier
+   * назначить значение системы
+   * внести в реестр идентификаторов
+ * Это набор значений для элемента профиля?
+   * создать ValueSet
+   * внести в реестр наборов значений

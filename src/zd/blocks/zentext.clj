@@ -55,7 +55,7 @@
 (defmethod methods/inline-method :md/link
   [ztx m s ctx]
   (let [[txt href] (str/split s #"\]\(" 2)]
-    [:a {:href href :class (c [:text :blue-600] [:hover [:underline]])} txt]))
+    [:a {:href href :class (c [:text "#4B5BA0"] [:hover [:underline]])} txt]))
 
 (defmethod methods/inline-method :md/img
   [ztx m s ctx]

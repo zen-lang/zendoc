@@ -404,8 +404,13 @@ var editor = (zendoc) => {
                                       style: textarea_style},
                            pop: {tag: 'div', style: popup_style }}});
     hl(ctx, zendoc.text);
+
+
+    var preview = new DOMParser().parseFromString(zendoc.preview, "text/html");
+
+    // TODO think if in_chrome is still needed
     if(! in_chrome) {
-        ctx.preview = el({tag: 'div', html: zendoc.preview,
+        ctx.preview = el({tag: 'div', html: preview.documentElement.textContent,
                           style: {height: 'calc(100vh - 20px)',
                                   padding: 20,
                                   width: '60vw',

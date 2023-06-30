@@ -163,8 +163,9 @@
                        (keyword ann)))
                    :edn)
         lines (if multiline?
-                (apply str ls)
+                (str/join "\n" ls)
                 (apply str val))
+        ;; TODO add read multimethod ?
         cnt (cond (str/blank? lines) lines
                   (= cnt-type :edn) (saferead lines)
                   (= cnt-type :datalog) (saferead lines)

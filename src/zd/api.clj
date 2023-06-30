@@ -82,7 +82,6 @@
                      (StringReader.)
                      (io/reader)
                      (line-seq)
-                     (map str/trim)
                      (remove #(str/starts-with? % ":zd/docname"))
                      (str/join "\n"))
         doc (->> (reader/parse ztx {:req req} lines)

@@ -296,6 +296,6 @@
                 :icons  icons/icons
                 ;; TODO add completion from blocks meta
                 :annotations anns
-                :preview (-> (preview ztx ctx text) (hiccup/html))
+                :preview (-> (preview ztx ctx text) (hiccup/html) (hiccup.util/escape-html))
                 :doc (:docname m)}]
-    [:script#editor-config "var zendoc=" (json/generate-string zendoc)]))
+    [:script#editor-config (str "var zendoc=" (json/generate-string zendoc) ";")]))
