@@ -5,6 +5,10 @@
    [zd.methods :as methods]
    [zd.components :as comp]))
 
+(defmethod methods/renderann :yt
+  [ztx ctx {d :data :as block}]
+  (comp/render-yt d))
+
 (defmethod methods/renderann :title
   [ztx {doc :doc} {{title :title} :ann cnt :content k :key :as block}]
   [:div {:class (c [:py 4])}
@@ -19,7 +23,7 @@
            (map? (ffirst cnt))
            (seq headers))
     (comp/table ztx ctx headers (map first cnt))
-    [:pre (pr-str cnt)]))
+    [:span (pr-str cnt)]))
 
 (defmethod methods/renderann :link-badge
   [ztx ctx {data :data k :key}]

@@ -1,26 +1,31 @@
 (ns zd.blocks.zentext
   (:require
+   [zd.components :as cmp]
    [zd.link :as link]
    [stylo.core :refer [c]]
    [clojure.string :as str]
    [zd.methods :as methods]))
 
-(defn render-video [link & [opts]]
-  [:div {:class (c [:px 0] [:py 2] [:bg :white])}
-   (if (or (str/starts-with? link "https://youtu.be")
-           (str/starts-with? link "https://www.youtube.com"))
-     [:iframe {:src (str "https://www.youtube.com/embed/" (last (str/split link #"/")))
-               :width (or  (:width opts) "560")
-               :height (or (:height opts) "315")
-               :frameborder 0
-               :allow "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"}]
-     [:div
-      [:video {:width "100%" :height "300px" :controls "controls"}
-       [:source {:src link :type "video/mp4"}]]])])
+(defn github-disc [d]
+  [:a {:href (str "https://github.com/fhir-ru/core/discussions/" d)
+       :target "_blank"
+       ;; TODO make default color profile in macro css
+       :class (c [:text "#4B5BA0"] [:space-x 0.5])}
+   [:i.fa-regular.fa-comments
+    {:class (name (c [:text :blue-400] :text-sm))}]
+   [:span d]])
+
+(defmethod methods/inline-method :github/disc
+  [ztx m d ctx]
+  (github-disc d))
+
+(defmethod methods/inline-method :d
+  [ztx m d ctx]
+  (github-disc d))
 
 (defmethod methods/inline-method :youtube
   [ztx m d ctx]
-  (render-video d))
+  (cmp/render-yt d))
 
 (defmethod methods/inline-method :symbol-link
   [ztx m s ctx]
