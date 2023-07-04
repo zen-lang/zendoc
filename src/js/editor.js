@@ -30,7 +30,7 @@ var hl = (ctx, v)=>{
         .replace(/:[a-zA-Z0-9][-.:\/_a-zA-Z0-9]+/gi, (x)=> {return `<b style='color:gold'>${x}</b>`;})
         .replace(/#[-.:_a-zA-Z0-9]+/gi, (x)=> {return `<b style='color:blue'>${x}</b>`;})
         .replace(/\^[-_a-zA-Z0-9]+/gi, (x)=> {return `<b style='color:purple'>${x}</b>`;})
-        .replace(/("[^"]+")/gi, (x)=> { return `<b style='color:green'>${x}</b>`; })
+        //.replace(/("[^"]+")/gi, (x)=> { return `<b style='color:green'>${x}</b>`; })
         .replace(/(\(\([^\)]+\)\))/gi, (x)=> { return `<b style='color:purple'>${x}</b>`; })
         .replace(/(\[\[[^\]]+\]\])/gi, (x)=> { return `<b style='color:purple'>${x}</b>`; })
     ;

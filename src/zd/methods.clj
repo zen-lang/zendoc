@@ -38,7 +38,7 @@
         (and (not (:zd/multiline anns))
              (= (:zd/content-type anns) :edn)
              (not (map? d)))
-        basic-style (c [:py 1] :border-b)
+        basic-style (c [:py 1] [:mb "0.8rem"] :border-b)
         embedded-style (c :flex :flex-row :items-center)
         multiline-embedded (c :flex :flex-row :items-baseline [:py 4])
         cnt (when-not (and (string? d) (str/blank? d))
