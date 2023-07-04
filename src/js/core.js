@@ -172,6 +172,7 @@ var update_widgets = () => {
             });
         }
     }
+    //mermaid.initialize();
 };
 
 var load_page = (href, do_push) => {

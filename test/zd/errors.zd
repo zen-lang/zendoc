@@ -29,6 +29,15 @@ just a string block
  random words
         with strange offsets
 
+:text-field /
+
+my free text
+
+```code
+{:my-edn 1
+:with-multiline :hashmap}
+```
+
 :invalid-edn #{'invalid-set
 
 :invalid-multiline edn/

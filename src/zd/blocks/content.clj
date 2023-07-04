@@ -49,7 +49,7 @@
 
 (defmethod methods/rendercontent :mm
   [ztx ctx {d :data :as block}]
-  [:div.mermaid d])
+  [:pre.mermaid d])
 
 (defn mindmap-stack [stack lvl]
   (loop [[[slvl idx] & is :as st] stack]
