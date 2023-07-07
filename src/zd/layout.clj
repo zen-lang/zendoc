@@ -95,6 +95,7 @@
    [:head
     [:style (stylo.core/compile-styles @stylo.core/styles)]
     [:style (garden.core/css common-style)]
+    [:link {:rel "icon" :href "data:,"}]
     [:meta {:charset "UTF-8"}]
     ;; TODO think about title update on x-body doc re-render requests
     #_(when (not (str/blank? id))
@@ -110,11 +111,11 @@
     [:script {:src "//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/languages/clojure.min.js"}]
     [:script {:src "//cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"}]
     [:script {:src "/static/js/core.js"}]
+    [:script {:src "https://cdn.jsdelivr.net/npm/mermaid@10.2.4/dist/mermaid.min.js"}]
 
     #_[:script {:src "/static/js/vega.min.js"}]
     [:script {:src "/static/js/quick-score.min.js"}]
     [:script {:src "/static/js/editor.js"}]]
    [:body {:class (c :overflow-hidden [:h "100vh"] [:text "#353B50"])}
     content
-    [:script {:type "module"}
-     "import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';mermaid.initialize({ startOnLoad: true});"]]])
+    [:script "mermaid.initialize({ startOnLoad: false});"]]])

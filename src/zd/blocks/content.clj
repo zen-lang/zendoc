@@ -49,7 +49,19 @@
 
 (defmethod methods/rendercontent :mm
   [ztx ctx {d :data :as block}]
-  [:pre.mermaid d])
+  (let [id (str (gensym))
+        scr
+        (format
+         "var id = '%s';
+          var mm = document.getElementById(id).innerText;
+          mermaid.render('unexisting-id', mm).then((res)=>{
+           document.getElementById(id).innerHTML = res.svg;
+          });
+          "
+         id)]
+    [:div
+     [:pre {:id id} d]
+     [:script {:type "module"} scr]]))
 
 (defn mindmap-stack [stack lvl]
   (loop [[[slvl idx] & is :as st] stack]

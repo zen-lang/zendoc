@@ -269,6 +269,9 @@ var _render = (ev)=>  {
     fetch(`/${ctx.doc}/preview`, {method: 'POST', body: ev.target.value}).then((resp)=> {
         resp.text().then((txt)=> {
             ctx.preview.innerHTML = txt;
+            ctx.preview.querySelectorAll('script').forEach((x)=>{
+                eval(x.innerText);
+            });
             // reload widgets
             update_widgets();
         });
@@ -416,8 +419,13 @@ var editor = (zendoc) => {
                                   width: '60vw',
                                   overflow: 'auto'},
                           append: ctx.container});
+
+        ctx.preview.querySelectorAll('script').forEach((x)=>{
+            eval(x.innerText);
+        });
     }
     window.ctx = ctx;
+
     update_widgets();
     return ctx;
 };

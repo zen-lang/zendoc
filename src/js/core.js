@@ -192,7 +192,12 @@ var load_page = (href, do_push) => {
                         href: new_href
                     }, '', new_href);
                 }
+                // eval scripts manually
                 document.getElementById('page').innerHTML = txt;
+                var el = document.getElementById('page');
+                el.querySelectorAll('script').forEach((x)=>{
+                    eval(x.innerText);
+                });
                 update_widgets();
             });
         }

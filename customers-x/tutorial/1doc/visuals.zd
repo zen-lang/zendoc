@@ -6,12 +6,11 @@
 zendoc includes support for [mermaid](https://mermaid.js.org/) and mindmaps.
 
 :mermaid mm/
-
 ---
 title: Animal example
 ---
 classDiagram
-    note "From Duck till Zebra"
+    note "From Duck till Giraffe"
     Animal <|-- Duck
     note for Duck "can fly\ncan swim\ncan dive\ncan help in debugging"
     Animal <|-- Fish

@@ -53,7 +53,7 @@
 
       (get hs "x-body")
       {:status 200
-       :body (render/render-doc ztx {:request req :doc doc :root r} doc)}
+       :body (hiccup/html (render/render-doc ztx {:request req :doc doc :root r} doc))}
 
       :else
       {:status 200
