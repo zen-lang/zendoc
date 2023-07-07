@@ -80,11 +80,10 @@
   [:b s])
 
 (defn img-src [ctx src]
-  ;; TODO fix an image block
   (when src
     (cond (str/starts-with? src "http") src
-          (str/starts-with? src "/") src
-          :else (str "/" (get-in ctx  [:block :page :name]) "/" src))))
+          (str/starts-with? src "/") (str "/static" src)
+          :else (str "/static/" src))))
 
 (defmethod methods/inline-method
   :img
