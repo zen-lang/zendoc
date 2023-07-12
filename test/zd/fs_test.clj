@@ -152,7 +152,7 @@
   (is (nil? (agent-errors fs/queue)))
 
   ;; repo is ready
-  (is (instance? org.eclipse.jgit.api.Git  (get-in st [:remote :repo])))
+  (is (instance? org.eclipse.jgit.api.Git  (get-in st [:remote :gistate :repo])))
 
   (matcho/assert
    {:status 200}

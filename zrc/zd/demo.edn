@@ -11,6 +11,8 @@
   :remote
   ;; TODO think about how to make the test reproducible
   {:from "git@github.com:zen-lang/zendoc.git"
+   :key "pubkey"
+   :keystore "keystore"
    :to "."}}
 
  datalog

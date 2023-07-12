@@ -9,8 +9,8 @@
    [clojure.java.io :as io]
    [zen.core :as zen]))
 
-(defn get-repo [ztx]
-  (->> [:zen/state :zd.fs :state :remote :repo]
+(defn get-gistate [ztx]
+  (->> [:zen/state :zd.fs :state :remote :gistate]
        (get-in @ztx)))
 
 (defn get-state [ztx]
@@ -67,7 +67,7 @@
         fs-delete (utils/safecall ztx
                                   (fn [ag]
                                     (io/delete-file filepath)
-                                    (when-let [repo (get-repo ztx)]
+                                    (when-let [repo (get-gistate ztx)]
                                       (gitsync/delete-doc ztx repo {:docpath filepath :docname docname}))
                                     ;; TODO implement deletion of a single document
                                     (reload ztx r pths))
@@ -102,7 +102,7 @@
                                 {:type :zd.fs/save-error})
         fs-reload (utils/safecall ztx
                                   (fn [ag]
-                                    (when-let [repo (get-repo ztx)]
+                                    (when-let [repo (get-gistate ztx)]
                                       (gitsync/commit-doc ztx repo {:docpath filepath :docname docname}))
                                     (memstore/eval-macros! ztx)
                                     'ok)
@@ -115,12 +115,13 @@
   [ztx {zd-config :zendoc :as config} & args]
   ;; TODO impl graceful shutdown if start is not possible
   (let [{:keys [remote root paths pull-rate]} (zen/get-symbol ztx zd-config)
-        init-remote* (utils/safecall ztx gitsync/init-remote {:type :gitsync/remote-init-error})
-        repo (-> (init-remote* ztx remote) (:result))
+        {repo :repo :as gistate}
+        (-> ((utils/safecall ztx gitsync/init-remote {:type :gitsync/remote-init-error}) ztx remote)
+            (:result))
         reload-fn*
         (fn [ag]
-          (let [pr* (utils/safecall ztx gitsync/sync-remote {:type :gitsync/pull-remote-error})
-                {st :status} (-> (pr* ztx repo) (:result))]
+          (let [sync-fn* (utils/safecall ztx gitsync/sync-remote {:type :gitsync/pull-remote-error})
+                {st :status} (-> (sync-fn* ztx gistate) (:result))]
             (when (= :updated st)
               (reload ztx root paths))
             'reload-complete))
@@ -140,7 +141,7 @@
         {:ag queue
          :paths paths
          :root root
-         :remote (assoc remote :repo repo)})
+         :remote (assoc remote :gistate gistate)})
       ;; TODO if no git repo schedule init retry
       {:ag queue
        :root root

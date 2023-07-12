@@ -2,7 +2,8 @@
   (:require [zen.core :as zen]
             [zd.api :as api]))
 
-(defn start [ztx]
+(defn restart [ztx]
+  (zen/stop-system ztx)
   (zen/read-ns ztx 'zd)
   (zen/read-ns ztx 'zd.demo)
   (zen/start-system ztx 'zd.demo/system)
@@ -14,10 +15,12 @@
 (defn -main [& opts]
   (let [ztx (zen/new-context {})]
     (reset! dtx ztx)
-    (start ztx)))
+    (restart ztx)))
 
 (comment
 
   (-main)
+
+  (restart @dtx)
 
   (zen/stop-system @dtx))
