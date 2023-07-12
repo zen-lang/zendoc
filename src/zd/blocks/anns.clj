@@ -17,13 +17,27 @@
    cnt])
 
 (defmethod methods/renderann :table
-  [ztx ctx {{headers :table} :ann cnt :content :as block}]
-  (if (and (set? cnt)
-           (every? vector? cnt)
-           (map? (ffirst cnt))
-           (seq headers))
-    (comp/table ztx ctx headers (map first cnt))
-    [:span (pr-str cnt)]))
+  [ztx ctx {{headers :table} :ann k :key d :data cnt :content {cnt-type :zd/content-type} :ann :as block}]
+  (let [pull-query? (and (= :datalog cnt-type)
+                         (set? cnt)
+                         ;; TODO check every ?
+                         (vector? (first cnt))
+                         (map? (ffirst cnt))
+                         (seq headers))
+        edn-table? (and (= :edn cnt-type)
+                        (vector? d)
+                        (every? map? d))]
+
+    [:div {:class (c [:py 4])}
+     [:div {:class (c [:py 1] [:mb "0.8rem"] :border-b)}
+      [:span {:class (c :uppercase)} ":"]
+      [:a {:id k}
+       [:span {:class (c :uppercase {:font-weight "600"})} k]]]
+     (cond pull-query? (comp/table ztx ctx headers (map first cnt))
+           edn-table? (comp/table ztx ctx (set (mapcat keys d)) d)
+           :else [:div
+                  [:div (str "No table impl for " k ", " cnt-type)]
+                  [:div (pr-str d)]])]))
 
 (defmethod methods/renderann :link-badge
   [ztx ctx {data :data k :key}]

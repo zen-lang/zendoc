@@ -1,8 +1,7 @@
 (ns zd.runner
   (:require [clojure.java.io :as io]
             [clojure.string :as str])
-  (:import [java.lang ProcessBuilder])
-  (:gen-class))
+  (:import [java.lang ProcessBuilder]))
 
 (defn read-env  [override]
   (->
