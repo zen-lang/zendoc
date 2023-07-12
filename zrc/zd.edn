@@ -7,6 +7,10 @@
    ;; TODO use zen-web/url
   :require #{:from}
   :keys {:from {:type zen/string}
+         :key {:type zen/string
+               :zen/desc "private ssh key to use"}
+         :keystore {:type zen/string
+                    :zen/desc "ssh keys directory"}
          :to {:type zen/string}
          :branch {:type zen/string}}}
 

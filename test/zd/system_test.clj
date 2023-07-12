@@ -17,6 +17,7 @@
   (zen/read-ns ztx 'zd)
 
   (is (= :zen/loaded (zen/read-ns ztx 'zd.test)))
+  (is (= :zen/loaded (zen/read-ns ztx 'zd.demo)))
   ;; TODO think about resetting prev errors on reading ns?
   (is (empty? (zen/errors ztx))))
 
