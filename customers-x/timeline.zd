@@ -1,5 +1,5 @@
 :title "Timeline"
 :menu-order 99
 :desc /
-shows history of changes in zendoc repo
+shows history of changes in zendoc repo from git remote
 :git/timeline
