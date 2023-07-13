@@ -3,7 +3,7 @@
 :menu-order 3
 
 :desc /
-a list of people who are in contact with the X company
+a list of people who are in contact with X company
 
 :people-roles datalog/
 {:find [?role (count ?role)]
