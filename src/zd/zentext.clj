@@ -7,7 +7,7 @@
    [clojure.java.io :as io])
   (:import [java.io StringReader]))
 
-(def inline-regex #"((#|@)[_a-zA-Z][-./a-zA-Z0-9]+[_a-zA-Z]|\[\[[^\]]+\]\]|\(\([^)]+\)\))|`[^`]+`|\*\*[^*]+\*\*|\!?\[[^\]]*\]\([^)]+\)|__[^_]+__")
+(def inline-regex #"((#|@)[_a-zA-Z0-9][-./a-zA-Z0-9]+[_a-zA-Z0-9]|\[\[[^\]]+\]\]|\(\([^)]+\)\))|`[^`]+`|\*\*[^*]+\*\*|\!?\[[^\]]*\]\([^)]+\)|__[^_]+__")
 
 (defn call-inline-method [ztx s ctx]
   (let [[method arg] (str/split s #"\s+" 2)]
