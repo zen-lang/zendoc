@@ -31,7 +31,9 @@
 
 (defn sync-remote [ztx {repo :repo ident :ident}]
   (git/with-identity ident
-    (let [pull-result (git/git-pull repo)]
+    (let [pull-result (git/git-pull repo {:ff-mode :ff
+                                          :rebase-mode :none
+                                          :strategy :ours})]
       ;; TODO resolve merge conflicts
       (when (.isSuccessful pull-result)
         (let [updated? (-> (.getFetchResult pull-result)

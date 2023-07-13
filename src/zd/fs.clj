@@ -120,6 +120,7 @@
             (:result))
         reload-fn*
         (fn [ag]
+          (zen/pub ztx 'zd.events/on-pull-remote {:rate pull-rate})
           (let [sync-fn* (utils/safecall ztx gitsync/sync-remote {:type :gitsync/pull-remote-error})
                 {st :status} (-> (sync-fn* ztx gistate) (:result))]
             (when (= :updated st)
@@ -130,10 +131,10 @@
     (if (instance? org.eclipse.jgit.api.Git repo)
       (letfn [(sync-fn [ag]
                 (when-let [q (:ag (get-state ztx))]
-                  (zen/pub ztx 'zd.events/on-pull-remote {:rate pull-rate})
                   (Thread/sleep pull-rate)
                   ;; TODO also check pull remote error
-                  (when-not (= 'reload-complete (:result @q))
+                  (send-off q reload-fn)
+                  #_(when-not (= 'reload-complete (:result @q))
                     (send-off q reload-fn))
                   (send-off syncer sync-fn))
                 'ok)]
