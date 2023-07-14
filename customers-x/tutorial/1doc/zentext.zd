@@ -13,7 +13,7 @@ link to #tutorial.1doc
 Define list with dots and stars:
 
 * List item 1
-..* Sublist item 1 
+..* Sublist item 1
 ..* Sublist item 2
 ..* Sublist item 3
 * List item 2
