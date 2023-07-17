@@ -4,6 +4,7 @@
 :desc /
 live document editor
 :feature-spec /
+* rename with zd/docname. automatically re eval backlinks
 * auto save _draft documents
 * button to close editor
 * help widget with editor tutorial
