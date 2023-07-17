@@ -88,7 +88,9 @@
            (methods/renderkey ztx ctx err-block)))))
 
 (defn render-blocks [ztx ctx {m :zd/meta subs :zd/subdocs :as doc} & [render-subdoc?]]
-  [:div {:class (c [:w "60vw"] [:overflow-x-auto] [:w-max "60rem"])}
+  [:div {:class (if (:zd/render-preview? ctx)
+                  (c [:overflow-x-auto] [:w-max "50vw"])
+                  (c [:w "60vw"] [:overflow-x-auto] [:w-max "60rem"]))}
    ;; TODO render errors in doc view
    (when-let [errs (seq (:errors m))]
      (methods/renderkey ztx ctx {:data errs :ann {} :key :zd/errors}))
@@ -271,7 +273,7 @@
     (->> parsed
          (meta/append-meta ztx)
          (meta/validate-doc ztx)
-         (render-blocks ztx ctx))))
+         (render-blocks ztx (assoc ctx :zd/render-preview? true)))))
 
 (defn editor [ztx ctx {m :zd/meta :as doc}]
   (let [header (str ":zd/docname " (:docname m) "\n")
@@ -279,6 +281,7 @@
                   (if-let [pt (:path m)]
                     (slurp pt)
                     (find-template ztx (:docname m))))
+
         symbols (->> (:zdb @ztx)
                      (mapv (fn [[k {ico :icon logo :logo tit :title}]]
                              {:title tit

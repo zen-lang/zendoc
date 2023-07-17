@@ -216,8 +216,7 @@ var select = (ctx, dir) => {
 };
 
 var save = (ctx)=>{
-
-    var value = ctx.editor.els.textarea.value;
+    var value = sanitize(ctx.editor.els.textarea.value);
     var doc = ctx.doc;
     fetch(`/${doc}`, {method: 'POST', body: value}).then((resp)=> {
         if(resp.status == 200){
@@ -265,8 +264,13 @@ var on_editor_keydown = (ctx, ev) => {
     }
 };
 
+var sanitize = (s) => {
+    return s.replace(/[\u0020\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]+/g, " ");
+};
+
 var _render = (ev)=>  {
-    fetch(`/${ctx.doc}/preview`, {method: 'POST', body: ev.target.value}).then((resp)=> {
+    var content = sanitize(ev.target.value);
+    fetch(`/${ctx.doc}/preview`, {method: 'POST', body: content}).then((resp)=> {
         resp.text().then((txt)=> {
             ctx.preview.innerHTML = txt;
             ctx.preview.querySelectorAll('script').forEach((x)=>{
@@ -360,8 +364,7 @@ var editor = (zendoc) => {
                                               'font-size': 40, color: 'white'},
                                      on: {click: (ev)=> {
                                          ev.target.style.visibility = "hidden";
-                                         save(ctx);
-                                     }}}}
+                                         save(ctx);}}}}
                        });
 
     var on_paste = (evt) => {
@@ -407,7 +410,6 @@ var editor = (zendoc) => {
                                       style: textarea_style},
                            pop: {tag: 'div', style: popup_style }}});
     hl(ctx, zendoc.text);
-
 
     var preview = new DOMParser().parseFromString(zendoc.preview, "text/html");
 
