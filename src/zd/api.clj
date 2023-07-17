@@ -39,7 +39,7 @@
                uri :uri
                hs :headers
                doc :doc :as req} & opts]
-  (let [r (:root (zendoc-config ztx))]
+  (let [{r :root ps :paths} (zendoc-config ztx)]
     (cond
       (= uri "/")
       {:status 301
@@ -53,11 +53,11 @@
 
       (get hs "x-body")
       {:status 200
-       :body (hiccup/html (render/render-doc ztx {:request req :doc doc :root r} doc))}
+       :body (hiccup/html (render/render-doc ztx {:request req :paths ps :doc doc :root r} doc))}
 
       :else
       {:status 200
-       :body (render/doc-view ztx {:request req :doc doc :root r} doc)})))
+       :body (render/doc-view ztx {:request req :paths ps :doc doc :root r} doc)})))
 
 (defmethod web/middleware-out 'zd/layout
   [ztx config {page :page :as req} {bdy :body :as resp} & args]

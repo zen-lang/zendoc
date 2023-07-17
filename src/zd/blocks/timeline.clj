@@ -6,6 +6,8 @@
    [zd.link :as link]
    [clojure.string :as str]))
 
+;; TODO try to re impl using java git
+
 (defn create-timeline-data
   [[[_ author date] comment files]]
   (let [author (or author "")
@@ -40,7 +42,7 @@
   []
   (->> (runner/exec {:exec ["git" "log"
                             "--name-only"
-                            "--date=format:%Y-%m-%d %H:%M"
+                            "--date=format-local:%Y-%m-%d %H:%M"
                             "--no-merges"
                             "-n" "30"]})
        :stdout
@@ -68,7 +70,7 @@
     [:b (or (:user l) (:email l))]))
 
 (defmethod methods/renderkey :git/timeline
-  [ztx ctx block]
+  [ztx {ps :paths :as ctx} block]
   (let [gh-idx (gh-index ztx)]
     [:div
      (for [[date ls] (->> (get-history)
@@ -84,9 +86,21 @@
             [:div (:comment l)]]
            [:ul {:class (c [:ml 6])}
             (->> (:files l)
-                 (filter (fn [x] (str/starts-with? x "docs/")))
-                 (map (fn [x] (symbol (-> (str/replace x #"(^docs/|\.zd$)" "")
-                                          (str/replace #"/" ".")))))
+                 (filter (fn [x]
+                           (some #(str/starts-with? x %) ps)))
+                 (map (fn [x]
+                        (let [docname (->> ps
+                                           (map (fn [p]
+                                                  (let [to-replace
+                                                        (if (str/ends-with? p "/")
+                                                          p
+                                                          (str p "/"))]
+                                                    (str/replace x to-replace ""))))
+                                           (filter #(not= % x))
+                                           (first))]
+                          (symbol (-> docname
+                                      (str/replace "/" ".")
+                                      (str/replace ".zd" ""))))))
                  (sort)
                  (mapv (fn [x] [:li (link/symbol-link ztx x)]))
                  (apply conj [:div]))]])])]))
