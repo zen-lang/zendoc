@@ -47,10 +47,10 @@
             {:status :updated}))))))
 
 (defn init-remote [ztx {:keys [from branch keystore to] k :key :as remote}]
-  (let [ident {:name "pubkey"#_(or k ["id_rsa" "id_dsa" "id_ecdsa" "id_ed25519"])
+  (let [ident {:name (or k ["id_rsa" "id_dsa" "id_ecdsa" "id_ed25519"])
                ;; TODO support for other os
                :trust-all? true
-               :key-dir (or keystore "~/.ssh")}]
+               :key-dir (or keystore (str (System/getProperty "user.home") "/.ssh"))}]
     (when (string? to)
       (git/with-identity ident
         (let [pulled? (.exists (io/file to))

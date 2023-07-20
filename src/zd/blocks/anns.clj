@@ -12,7 +12,7 @@
 (defmethod methods/renderann :title
   [ztx {doc :doc} {{title :title} :ann cnt :content k :key :as block}]
   [:div {:class (c [:py 4])}
-   [:h2 {:class (c :flex :items-center [:m 0] [:py 4]) :id k}
+   [:h2 {:class (c :flex :items-center [:mb 0.8] [:py 4]) :id k}
     title]
    cnt])
 
