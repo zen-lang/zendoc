@@ -109,10 +109,11 @@
     {:status 200 :body redirect}))
 
 (defmethod zen/op 'zd/render-editor
-  [ztx _cfg {{id :id} :route-params r :zd/root :as req} & opts]
-  (let [doc (or (:doc req) {:zd/meta {:docname (symbol id)}})]
+  [ztx _cfg {{id :id} :route-params :as req} & opts]
+  (let [doc (or (:doc req) {:zd/meta {:docname (symbol id)}})
+        {r :root ps :paths :as config} (zendoc-config ztx)]
     {:status 200
-     :body (render/editor ztx {:root r :request req :doc doc} doc)}))
+     :body (render/editor ztx {:root r :paths ps :request req :doc doc :config config} doc)}))
 
 (defmethod zen/op 'zd/render-preview
   [ztx _ {{id :id} :route-params :as req} & opts]
@@ -128,4 +129,4 @@
   (when-not (or (= ev-name 'zd.events/on-doc-save)
                 (= ev-name 'zd.events/on-doc-load))
     ;; TODO do not print large events
-    (pprint/pprint ev)))
+    (pprint/pprint (assoc ev ::ts (.toString (java.util.Date.))))))

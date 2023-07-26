@@ -1,5 +1,15 @@
 {:ns zd.events
 
+ on-renderkey-error
+ {:zen/tags #{zen/event zen/schema}
+  :zen/desc "event when key rendering throws exception"
+  :type zen/map}
+
+ sub
+ {:zen/tags #{zen/tag zen/schema}
+  :type zen/map
+  :keys {:config {:type zen/symbol :tags #{zd/zendoc}}}}
+
  on-doc-save
  {:zen/tags #{zen/event zen/schema}
   :zen/desc "save document in an api"
@@ -12,6 +22,16 @@
   :zen/desc "Event on document load or reload from fs"
   :type zen/map
   :keys {:zd/meta {:type zen/map}}}
+
+ on-load-start
+ {:zen/tags #{zen/event zen/schema}
+  :zen/desc "fired when loading has started"
+  :type zen/map}
+
+ on-load-complete
+ {:zen/tags #{zen/event zen/schema}
+  :zen/desc "fired when loading is complete"
+  :type zen/map}
 
  on-doc-delete
  {:zen/tags #{zen/event zen/schema}

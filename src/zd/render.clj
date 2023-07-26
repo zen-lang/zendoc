@@ -1,5 +1,7 @@
 (ns zd.render
   (:require
+   [clojure.stacktrace :as trace]
+   [zen.core :as zen]
    [zd.link :as link]
    [zd.meta :as meta]
    [zd.reader :as reader]
@@ -79,12 +81,12 @@
   (try (methods/renderkey ztx ctx block)
        (catch Exception e
          (let [err {:message (str "error rendering " (.getMessage e))
+                    :trace (str/split (with-out-str (trace/print-stack-trace e))
+                                      #"\n")
                     :path [k]
                     :type :zd/renderkey-error}
                err-block {:data [err] :key :zd/errors}]
-                    ;; TODO add zen pub/sub event
-           #_(clojure.pprint/pprint e)
-           (println 'error-rendering-key k)
+           (zen/pub ztx 'zd.events/on-renderkey-error {:key k :error err})
            (methods/renderkey ztx ctx err-block)))))
 
 (defn render-blocks [ztx ctx {m :zd/meta subs :zd/subdocs :as doc} & [render-subdoc?]]
@@ -143,25 +145,27 @@
                      (distinct))
         root (c :flex :flex-col :text-sm [:p 6] [:bg "white"] [:w-max "16rem"])
         col  (c :flex :flex-col [:py 2])
-        head (c :uppercase [:py 1])]
+        head (c :uppercase [:py 1])
+        item (c [:py 0.6])]
     [:div {:class root}
      (when (seq dockeys)
        [:div {:class col}
         [:div {:class head} "keys"]
         ;; TODO make items clickable
         (for [{d :display h :href} dockeys]
-          [:a {:href (str "#" h)} d])])
+          [:a {:class item
+               :href (str "#" h)} d])])
      (when (seq doclinks)
        [:div {:class col}
         [:div {:class head} "backlinks"]
         (for [k doclinks]
-          [:a {:href (str "#backlinks-" k)} k])])
+          [:a {:class item :href (str "#backlinks-" k)} k])])
      (when (seq subdocs)
        [:div {:class col}
         [:div {:class head} "subdocs"]
         (for [k subdocs]
           ;; TODO think about better convention?
-          [:a {:href (str "#subdocs-" (name k))} k])])]))
+          [:a {:class item :href (str "#subdocs-" (name k))} k])])]))
 
 (defn render-doc [ztx ctx doc]
   [:div {:class (c :flex :flex-col [:flex-grow 1])}

@@ -46,11 +46,12 @@
 (defonce syncer (agent nil))
 
 (defn reload [ztx root paths]
-  (println :zd.fs/reload)
+  (zen/pub ztx 'zd.events/on-load-start {})
   (swap! ztx dissoc :zdb :zd/schema :zrefs :zd/macros)
   (load-docs! ztx root paths)
   (memstore/load-links! ztx)
   (memstore/eval-macros! ztx)
+  (zen/pub ztx 'zd.events/on-load-complete {})
   ;; TODO think about return value
   'ok)
 

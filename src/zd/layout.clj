@@ -10,6 +10,7 @@
 ;; TODO groom these global styles, delete unused css
 (def common-style
   [:body {:font-family "sohne, \"Helvetica Neue\", Helvetica, Arial, sans-serif;" :padding "0" :margin "0"}
+   [:img (c* {:display "inline-block"})]
    [:h1 (c* {:font-size "32px" :margin-top "10px" :margin-bottom "16px" :font-weight "600"})]
    [:h2 (c* :border-b {:font-size "24px" :margin-top "20px" :margin-bottom "14px" :font-weight "600" :line-height "30px"})]
    [:h3 (c* :border-b {:font-size "20px" :margin-top "20px" :margin-bottom "14px" :font-weight "600" :line-height "25px"})]
