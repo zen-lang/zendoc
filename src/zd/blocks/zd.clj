@@ -1,11 +1,50 @@
 (ns zd.blocks.zd
   (:require [zd.link :as link]
             [zd.zentext :as zentext]
+            [zd.datalog :as d]
             [zd.memstore :as memstore]
             [zd.meta :as meta]
             [clojure.string :as str]
             [stylo.core :refer [c]]
             [zd.methods :as methods]))
+
+(defn indent-item [pth]
+  (let [lvl (count pth)
+        scale 1]
+    [:div {:class (c :flex [:py 1] [:px 1] :items-center {:position "relative"})
+           :style (str "padding-left:" (* scale (- lvl 1)) "rem")}
+     (map-indexed (fn [i el]
+                    [:div
+                     {:style (when-not (= lvl 1)
+                               "border-left: 1px solid #ccc;")
+                      :class (c [:w 2] {:top "-0.3rem"
+                                        :position "absolute"
+                                        :bottom 0})}])
+                  pth)
+     (when-not (= lvl 1)
+       [:div {:style (str "left:" (* scale lvl) "rem")
+              :class (c {:border-top "1px solid #ccc"
+                         :width "0.5rem"
+                         :top "13px"})}])]))
+
+(defmethod methods/renderkey :zd/index
+  [ztx ctx block]
+  (let [docs (->> '{:find [?docname]
+                    :where [[?e :meta/docname ?docname]]
+                    :order-by [[?docname :asc]]}
+                  (d/query ztx)
+                  (map (fn [v] {:s (first v)
+                                :ps (str/split (str (first v)) #"\.")}))
+                  (partition-by #(= 1 (count (:ps %))))
+                  (partition 2)
+                  (map (fn [[h t]]
+                         (concat h t))))]
+    [:div {:class (c :flex :flex-wrap [:w "100%"])}
+     (for [gr docs]
+       [:div {:class (c [:py 2] :text-sm :flex-col :flex)}
+        (for [{:keys [s ps]} gr]
+          [:div (conj (indent-item ps)
+                      (link/symbol-link ztx s))])])]))
 
 (defmethod methods/renderkey :zd/docname
   [ztx ctx {data :data :as block}]
