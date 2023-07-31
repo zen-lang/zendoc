@@ -30,7 +30,8 @@
 (defmethod methods/renderkey :zd/index
   [ztx ctx block]
   (let [docs (->> '{:find [?docname]
-                    :where [[?e :meta/docname ?docname]]
+                    :where [[?e :meta/docname ?docname]
+                            [?e :title ?title]]
                     :order-by [[?docname :asc]]}
                   (d/query ztx)
                   (map (fn [v] {:s (first v)
@@ -41,7 +42,7 @@
                          (concat h t))))]
     [:div {:class (c :flex :flex-wrap [:w "100%"])}
      (for [gr docs]
-       [:div {:class (c [:py 2] :text-sm :flex-col :flex)}
+       [:div {:class (c [:py 2] [:pr 10] :text-sm :flex-col :flex)}
         (for [{:keys [s ps]} gr]
           [:div (conj (indent-item ps)
                       (link/symbol-link ztx s))])])]))
@@ -52,6 +53,15 @@
    [:div {:class (c :inline-block [:px 2] [:bg :gray-100] [:py 0.5] :text-sm [:text :gray-700]
                     {:font-weight "400" :padding-top ".3rem"})}
     [:i.fas.fa-file]]
+   [:div {:class (c [:px 2] [:py 0.5] :inline-block :text-sm)}
+    data]])
+
+(defmethod methods/renderkey :zd/rename
+  [ztx ctx {data :data :as block}]
+  [:div {:class (str "badge " (name (c :border [:my 1] [:mr 2]  :inline-flex :rounded [:p 0])))}
+   [:div {:class (c :inline-block [:px 2] [:bg :gray-100] [:py 0.5] :text-sm [:text :gray-700]
+                    {:font-weight "400" :padding-top ".3rem"})}
+    [:i.fas.fa-arrow-right]]
    [:div {:class (c [:px 2] [:py 0.5] :inline-block :text-sm)}
     data]])
 
@@ -70,7 +80,11 @@
                                 (str/join ".")
                                 (str ":"))}))
              (sort-by (juxt :parent :path :doc))
-             (group-by :parent))]
+             (group-by :parent)
+             (map (fn [[p links]]
+                    [p (sort-by (fn [{d :doc}]
+                                  (:title (memstore/get-doc ztx d)))
+                                links)])))]
     (for [[parent links] links]
       (let [*parent (or parent r)]
         [:div {:class (c [:py 4] #_[:text :gray-600])}
@@ -79,7 +93,7 @@
            [:span {:class (c :text-sm)}
             [:i.fas.fa-regular.fa-link]]
            [:a {:id (str "backlinks-" *parent) :class (c :uppercase {:font-weight "600"})}
-            *parent]
+            (str *parent ".*")]
            [:span {:class (c [:pl 2] :text-sm [:text :gray-500])}
             (str/join ", " (set (map :path links)))]]
           [:a {:class (c :block [:p 1] :text-lg :cursor-pointer [:hover [:text :green-600]])

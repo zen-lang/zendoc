@@ -28,6 +28,7 @@
         (merge meta)
         (assoc :xt/id (str (:docname m))))))
 
+;; TODO rename to zd.datalog
 (defmethod zen/op 'zd/query
   [ztx config params & [session]]
   (query ztx params))

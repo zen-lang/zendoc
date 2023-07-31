@@ -1,11 +1,12 @@
 (ns zd.fs
   (:require
-   [clojure.core.async :refer [<! timeout]]
+   [zd.datalog :as d]
    [zd.meta :as meta]
    [zd.memstore :as memstore]
    [clojure.string :as str]
    [zd.gitsync :as gitsync]
    [zd.utils :as utils :refer [safecall]]
+   [zd.fs.utils :as futils]
    [clojure.java.io :as io]
    [zen.core :as zen]))
 
@@ -55,6 +56,17 @@
   ;; TODO think about return value
   'ok)
 
+(defn fs-delete [ztx {:keys [filepath docname]}]
+  (let [{r :root pths :paths} (get-state ztx)
+        fs-delete*
+        (fn [ag]
+          (io/delete-file filepath)
+          (when-let [repo (get-gistate ztx)]
+            (gitsync/delete-doc ztx repo {:docpath filepath :docname docname}))
+          ;; TODO impl delta delete
+          (reload ztx r pths))]
+    (utils/safecall ztx fs-delete* {:type 'zd.fs/delete-doc-error})))
+
 (defmethod zen/op 'zd.events/fs-delete
   [ztx config {_ev :ev {docname :docname} :params} & [_session]]
   (println :zd.fs/delete docname)
@@ -64,53 +76,64 @@
         (str (first pths)
              "/"
              (str/join "/" parts)
-             ".zd")
-        fs-delete (utils/safecall ztx
-                                  (fn [ag]
-                                    (io/delete-file filepath)
-                                    (when-let [repo (get-gistate ztx)]
-                                      (gitsync/delete-doc ztx repo {:docpath filepath :docname docname}))
-                                    ;; TODO implement deletion of a single document
-                                    (reload ztx r pths))
-                                  {:type 'zd.fs/delete-doc-error})]
-    (send-off queue fs-delete)
+             ".zd")]
+    (send-off queue (fs-delete ztx {:filepath filepath :docname docname}))
+    ;; TODO remove await
     (await queue)))
 
+(defn fs-save [ztx {dn :docname cnt :content :keys [rename-to]} {:keys [resource-path dirname filepath prev-filepath]}]
+  (let [{r :root pths :paths :as st} (get-state ztx)
+        fs-save*
+        (fn [ag]
+          (.mkdirs (io/file dirname))
+          (spit filepath cnt)
+          ;; when rename delete old doc
+          (when (symbol? rename-to)
+            ((fs-delete ztx {:filepath prev-filepath :docname dn}) ag)
+            (d/evict ztx (str dn))
+            ;; TODO when awaits are gone
+            #_(zen/pub ztx 'zd.events/on-doc-delete {:docname dn :root r}))
+          ;; when schema edit initiate full reload
+          (if (str/includes? filepath "_schema")
+            (reload ztx r pths)
+            (do (memstore/load-document! ztx {:path filepath
+                                              :root r
+                                              :resource-path resource-path
+                                              :content cnt})
+                (memstore/load-links! ztx)))
+          'ok)]
+    (utils/safecall ztx fs-save* {:type :zd.fs/save-error})))
+
+(defn fs-commit [ztx {:keys [docname]} {:keys [filepath]}]
+  (let [fs-commit* (fn [ag]
+                     (when-let [repo (get-gistate ztx)]
+                       (gitsync/commit-doc ztx repo {:docpath filepath :docname docname}))
+                     (memstore/eval-macros! ztx)
+                     'ok)]
+    (utils/safecall ztx fs-commit* {:type :zd.fs/reload-error})))
+
 (defmethod zen/op 'zd.events/fs-save
-  [ztx config {_ev :ev {docname :docname cnt :content} :params} & [_session]]
-  ;; TODO emit zen event
-  (println :zd.fs/save docname)
-  (let [{r :root pths :paths} (get-state ztx)
-        dirname
-        (->> (str/split docname #"\.")
-             butlast
-             (str/join "/")
-             (str (first pths) "/"))
-        docpath (str (str/replace docname "." "/") ".zd")
-        filepath (str (first pths) "/" docpath)
-        fs-save (utils/safecall ztx
-                                (fn [ag]
-                                  (.mkdirs (io/file dirname))
-                                  (spit filepath cnt)
-                                  (if (str/includes? docname "_schema")
-                                    (reload ztx r pths)
-                                    (memstore/load-document! ztx {:path filepath
-                                                                  :root r
-                                                                  :resource-path docpath
-                                                                  :content cnt}))
-                                  (memstore/load-links! ztx)
-                                  'ok)
-                                {:type :zd.fs/save-error})
-        fs-reload (utils/safecall ztx
-                                  (fn [ag]
-                                    (when-let [repo (get-gistate ztx)]
-                                      (gitsync/commit-doc ztx repo {:docpath filepath :docname docname}))
-                                    (memstore/eval-macros! ztx)
-                                    'ok)
-                                  {:type :zd.fs/reload-error})]
-    (send-off queue fs-save)
+  [ztx config {_ev :ev {dn :docname rename :rename-to :as ev} :params} & [_session]]
+  (zen/pub ztx 'zd.events/fs-save {:docname dn :rename rename})
+  (let [{pths :paths :as st} (get-state ztx)
+        docname (if (symbol? rename)
+                  (str rename)
+                  (str dn))
+        ;; TODO scan multiple file paths
+        arg
+        {:filepath (str (first pths) "/" (futils/docpath docname))
+         :dirname (->> (str/split docname #"\.")
+                       butlast
+                       (str/join "/")
+                       (str (first pths) "/"))
+         ;; TODO check if resource path is needed
+         :resource-path (futils/docpath docname)
+         :prev-filepath (when (symbol? rename)
+                          (str (first pths) "/" (futils/docpath dn)))}]
+    (send-off queue (fs-save ztx ev arg))
+    ;; TODO remove await
     (await queue)
-    (send-off queue fs-reload)))
+    (send-off queue (fs-commit ztx ev arg))))
 
 (defmethod zen/start 'zd.engines/fs
   [ztx {zd-config :zendoc :as config} & args]

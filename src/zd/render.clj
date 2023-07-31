@@ -145,7 +145,7 @@
                      (distinct))
         root (c :flex :flex-col :text-sm [:p 6] [:bg "white"] [:w-max "16rem"])
         col  (c :flex :flex-col [:py 2])
-        head (c :uppercase [:py 1])
+        head (c :uppercase [:pb 3])
         item (c [:py 0.6])]
     [:div {:class root}
      (when (seq dockeys)

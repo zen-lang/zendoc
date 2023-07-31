@@ -16,9 +16,6 @@
 (comment
   (def ztx (zen/new-context {})))
 
-(defn req-body [s]
-  (io/input-stream (.getBytes s)))
-
 (defn load! [ztx]
   (zen/read-ns ztx 'zd.test)
   (get-in (zen/start-call ztx 'zd.test/fs) [:zen/state :zd.fs]))
@@ -136,44 +133,3 @@
 
   (is (contains? (:tags subdoc-ann) :badge))
   (is (contains? (:countries subdoc-ann) :badge)))
-
-(deftest ^:kaocha/pending gitsync
-
-  (zen/stop-system ztx)
-
-  (zen/read-ns ztx 'zd)
-
-  (zen/read-ns ztx 'zd.demo)
-
-  (zen/start-system ztx 'zd.demo/system)
-
-  (def st (fs/get-state ztx))
-
-  (is (nil? (agent-errors fs/queue)))
-
-  ;; repo is ready
-  (is (instance? org.eclipse.jgit.api.Git  (get-in st [:remote :gistate :repo])))
-
-  (matcho/assert
-   {:status 200}
-   (web/handle ztx 'zd/api
-               {:uri "/_draft/edit"
-                :request-method :put
-                :body (req-body ":zd/docname example\n:title \"my title\"\n:desc /")}))
-
-  (matcho/assert
-   {:status 200}
-   (web/handle ztx 'zd/api
-               {:uri "/example/edit"
-                :request-method :put
-                :body (req-body ":zd/docname example\n:title \"my title\"\n:desc /\na description")}))
-
-  (matcho/assert
-   {:status 200 :body "/index"}
-   (web/handle ztx 'zd/api {:uri "/example" :request-method :delete}))
-
-  (await fs/queue)
-
-  (is (nil? (agent-errors fs/queue)))
-
-  (zen/stop-system ztx))

@@ -73,6 +73,7 @@
   [ztx {ps :paths :as ctx} block]
   (let [gh-idx (gh-index ztx)]
     [:div
+     ;; TODO show file deletion separately
      (for [[date ls] (->> (get-history)
                           (sort-by first)
                           (reverse))]

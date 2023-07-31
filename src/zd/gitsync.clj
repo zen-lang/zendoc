@@ -11,7 +11,7 @@
       (doseq [m (into untracked modified)]
         (when (str/includes? p m)
           (let [uname (or (.getString git-config "user" nil "name") "unknown editor")
-                email (or (.getString git-config "user" nil "email") "unknown-editor@example.com")]
+                email (or (.getString git-config "user" nil "email") "unknown-editor@zendoc.me")]
             (git/git-add repo m)
             (let [msg (if (contains? untracked m)
                         (str "Create " d)

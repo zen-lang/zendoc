@@ -79,28 +79,34 @@
   ;; TODO emit zen event
   (println :zd.api/save-doc id)
   (let [lines (slurp (:body req))
-        content (->> lines
+        lineseq (->> lines
                      (StringReader.)
                      (io/reader)
-                     (line-seq)
+                     (line-seq))
+        content (->> lineseq
                      (remove #(str/starts-with? % ":zd/docname"))
+                     (remove #(str/starts-with? % ":zd/rename"))
                      (str/join "\n"))
         doc (->> (reader/parse ztx {:req req} lines)
                  (meta/append-meta ztx)
                  (meta/validate-doc ztx))
+        ;; TODO check if coerce is needed
         docname (str (:zd/docname doc))]
     (if-let [errs (seq (get-in doc [:zd/meta :errors]))]
       {:status 422 :body {:message "document validation failed"
                           :docname docname
                           :root r
                           :errors errs}}
-      (do (zen/pub ztx 'zd.events/on-doc-save {:docname docname :content content :root r})
-          {:status 200 :body (str "/" docname)}))))
+      (do (zen/pub ztx 'zd.events/on-doc-save {:docname docname
+                                               :rename-to (:zd/rename doc)
+                                               :content content
+                                               :root r})
+          {:status 200 :body (str "/" (or (:zd/rename doc) docname))}))))
 
 (defmethod zen/op 'zd/delete-doc
-  [ztx _cfg {{:keys [id]} :route-params r :zd/root :as req} & opts]
-  (println :delete id)
-  (let [parts (str/split id #"\.")
+  [ztx _cfg {{:keys [id]} :route-params :as req} & opts]
+  (let [{r :root} (zendoc-config ztx)
+        parts (str/split id #"\.")
         redirect
         (if-let [parent (seq (butlast parts))]
           (str "/" (str/join "." parent))
