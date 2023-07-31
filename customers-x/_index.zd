@@ -1,0 +1,5 @@
+:title "Index"
+:menu-order 98
+:desc /
+shows database structure in a compact format. folds documents which have >20 children.
+:zd/index
