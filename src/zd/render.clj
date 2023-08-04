@@ -92,7 +92,7 @@
 (defn render-blocks [ztx ctx {m :zd/meta subs :zd/subdocs :as doc} & [render-subdoc?]]
   [:div {:class (if (:zd/render-preview? ctx)
                   (c [:overflow-x-auto] [:w-max "50vw"])
-                  (c [:w "60vw"] [:overflow-x-auto] [:w-max "60rem"]))}
+                  (c [:w "60vw"] #_[:overflow-x-auto] [:w-max "60rem"]))}
    ;; TODO render errors in doc view
    (when-let [errs (seq (:errors m))]
      (methods/renderkey ztx ctx {:data errs :ann {} :key :zd/errors}))
@@ -170,7 +170,7 @@
 (defn render-doc [ztx ctx doc]
   [:div {:class (c :flex :flex-col [:flex-grow 1])}
    (topbar ztx ctx doc)
-   [:div#blocks {:class (c :flex :flex-row )}
+   [:div#blocks {:class (c :flex :flex-row :items-start)}
     (render-blocks ztx ctx doc)
     (contents-sidebar ztx ctx doc)]])
 

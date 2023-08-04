@@ -1,5 +1,7 @@
 (ns zd.datalog
   (:require [zen.core :as zen]
+            [clojure.walk]
+            [clojure.string :as str]
             [xtdb.api :as xt]))
 
 (defn get-state [ztx]
@@ -17,16 +19,21 @@
 
 (defn query [ztx query & params]
   (if-let [{n :node} (get-state ztx)]
-    (apply xt/q (xt/db n) query params)
+    (clojure.walk/postwalk
+     (fn [x] (if (and (string? x) (str/starts-with? x "'"))
+              (symbol (subs x 1))
+              x))
+     (apply xt/q (xt/db n) query params))
     :no/xtdb))
 
 (defn flatten-doc [ztx {{dn :docname :as m} :zd/meta :as doc}]
   (let [meta (->> m
                   (map (fn [[k v]] [(keyword "meta" (name k)) v]))
-                  (into {}))]
-    (-> (dissoc doc :zd/backlinks :zd/subdocs :zd/meta)
-        (merge meta)
-        (assoc :xt/id (str (:docname m))))))
+                  (into {}))
+        doc (-> (dissoc doc :zd/backlinks :zd/subdocs :zd/meta)
+            (merge meta)
+            (assoc :xt/id (str "'" (:docname m))))]
+    (clojure.walk/postwalk (fn [x] (if (symbol? x) (str "'" x) x)) doc)))
 
 ;; TODO rename to zd.datalog
 (defmethod zen/op 'zd/query

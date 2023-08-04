@@ -9,6 +9,8 @@
    [clojure.pprint :as pprint]
    [stylo.core :refer [c]]
    [zd.methods :as methods]
+   [clojure.walk]
+   [edamame.core]
    [zd.utils :as utils]))
 
 (defmethod methods/rendercontent :edn
@@ -46,6 +48,114 @@
     ;; TODO impl preprocess to remove :in from queries
     (apply d/query ztx data params)
     (d/query ztx data)))
+
+
+
+(defn parse-query [q]
+  (let [xs (->> (str/split q #"\n")
+                (remove (fn [s] (or (str/blank? s) (str/starts-with? s "\\")))))
+        columns   (->> xs
+                       (filterv #(re-matches #"^\s?>.*" %))
+                       (mapv #(subs % 1))
+                       (mapv str/trim)
+                       (filterv #(not (str/blank? %)))
+                       (mapv (fn [x]
+                               (if (str/starts-with? x "(")
+                                 ['expr (edamame.core/parse-string x)]
+                                 (let [[e k] (str/split x #":" 2)]
+                                   [(symbol e) (cond
+                                                 (= k "*") (symbol k)
+                                                 (nil? k) :meta/docname
+                                                 :else (keyword k))])))))
+        index (atom {})
+        find-items (->> (group-by first columns)
+                        (reduce (fn [acc [k xs]]
+                                  (if (= 'expr k)
+                                    (->> (mapv second xs)
+                                         (reduce (fn [acc e]
+                                                   (swap! index assoc e (count acc))
+                                                   (conj acc e))
+                                                 acc))
+                                    (let [cs (->> (mapv second xs) (dedupe) (into []))]
+                                      (swap! index assoc k (count acc))
+                                      (if (filter (fn [x] (contains? #{'x :?} x)) cs)
+                                        (conj acc (list 'pull k ['*]))
+                                        (if (seq cs)
+                                          (conj acc (list 'pull k cs))
+                                          (conj acc k))))))
+                                []))
+        where-items  (->> xs
+                          (filterv #(not (re-matches #"^\s?>.*" %)))
+                          (mapv (fn [x] (edamame.core/parse-string (str/replace (str "[" x "]") #"#"  ":symbol/")))))
+        where (->> where-items
+                   (mapv (fn [x]
+                           (clojure.walk/postwalk
+                            (fn [y]
+                              (if (and (keyword? y) (= "symbol" (namespace y)))
+                                (str "'" (name y))
+                                y)) x))))]
+    (into {:where where
+           :find find-items
+           :columns columns
+           :index @index} )))
+
+
+
+(def q
+  "
+e :parent #organizations
+e :rel #rel.partner
+p :organization e
+p :role #roles.cto
+> d
+> e:xt/id
+> e:rel
+> (count e)
+> (mean e)
+")
+
+;; (parse-query q)
+
+(defn render-table-value [ztx v block]
+  (cond
+    (symbol? v) (link/symbol-link ztx v)
+    (string? v) (zentext/parse-block ztx v block)
+    (number? v) v
+    (nil? v) "~"
+    (set? v) [:div {:class (c :flex :items-center [:space-x 2])}
+              (->> v (map (fn [x] [:div {:key (str x)} (render-table-value ztx x block)])))]
+    (keyword? v) (str v)
+    :else (with-out-str (clojure.pprint/pprint v))))
+
+(defmethod methods/rendercontent :?
+  [ztx ctx {{headers :table-of} :ann data :data :as block}]
+  (let [q (parse-query data)
+        idx (:index q)
+        res (d/query ztx (dissoc q :columns :index))
+        res (->> res
+                 (mapv (fn [x]
+                         (->> (:columns q)
+                              (mapv (fn [[e c]]
+                                      (cond
+                                        (list? c) (get-in x [(get idx c)])
+                                        (= c '*)  (get-in x [(get idx e)])
+                                        (= c :?)  (keys (get-in x [(get idx e)]))
+                                        :else     (get-in x [(get idx e) c]))))))))
+        cols (->> (:columns q) (mapv second))]
+    [:div
+     [:details {:class (c :text-xs [:mb 2])}
+      [:summary {:class (c [:text :gray-500]) }"query"]
+      [:pre {:class (c :border [:p 2] [:bg :gray-100])}
+       (with-out-str (clojure.pprint/pprint (dissoc q :columns :index :args)))]]
+     [:table
+      (into [:thead]
+            (->> cols (map (fn [col] [:th {:class (c [:py 1] [:bg :gray-100] :border {:font-weight "500"})} (str col)]))))
+      (into [:tbody]
+            (for [vs res]
+              [:tr {:key (hash vs)}
+               (for [v vs]
+                 [:td {:key v :class (c :border [:px 2] [:py 1] {:vertical-align "top"})}
+                  (render-table-value ztx v block)])]))]]))
 
 (defmethod methods/rendercontent :mm
   [ztx ctx {d :data :as block}]
