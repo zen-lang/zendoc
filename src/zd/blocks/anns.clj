@@ -56,7 +56,7 @@
 
 (defmethod methods/renderann :badge
   [ztx ctx {key :key cnt :content :as block}]
-  [:div {:class (c :border [:my 1] [:mr 2] :inline-flex :items-baseline :rounded)}
+  [:div {:class (c :border [:my 1] [:mr 2] :inline-flex :items-center :rounded)}
    [:div {:class (c :inline-block [:px 1] [:bg :gray-100] [:py 0.5] :text-sm [:text :gray-700] {:font-weight "400"})}
     key]
    [:div {:class (c [:px 1] [:py 0.5] :inline-block :text-sm)}
