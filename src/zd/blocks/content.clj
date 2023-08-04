@@ -61,7 +61,7 @@
                        (filterv #(not (str/blank? %)))
                        (mapv (fn [x]
                                (if (str/starts-with? x "(")
-                                 ['expr (edamame.core/parse-string x)]
+                                 ['expr (edamame.core/parse-string x {:regex true})]
                                  (let [[e k] (str/split x #":" 2)]
                                    [(symbol e) (cond
                                                  (= k "*") (symbol k)
@@ -84,17 +84,45 @@
                                           (conj acc (list 'pull k cs))
                                           (conj acc k))))))
                                 []))
-        where-items  (->> xs
-                          (filterv #(not (re-matches #"^\s?>.*" %)))
-                          (mapv (fn [x] (edamame.core/parse-string (str/replace (str "[" x "]") #"#"  ":symbol/")))))
+        where-items
+        (->> xs
+             (filterv (every-pred #(not (str/ends-with? % " :asc"))
+                                  #(not (str/ends-with? % " :desc"))
+                                  #(not (re-matches #"^\s?>.*" %))))
+             (mapv (fn [x] (let [res (edamame.core/parse-string (str/replace (str "[" x "]") #"#"  ":symbol/")
+                                                                {:regex true})]
+                             (cond
+                               (list? (get res 1))
+                               (vector res)
+
+                               :else
+                               res)
+                             ))))
         where (->> where-items
                    (mapv (fn [x]
                            (clojure.walk/postwalk
                             (fn [y]
                               (if (and (keyword? y) (= "symbol" (namespace y)))
                                 (str "'" (name y))
-                                y)) x))))]
+                                y)) x))))
+
+        order-items
+        (->> xs
+             (filterv (every-pred #(or (str/ends-with? % " :asc")
+                                       (str/ends-with? % " :desc"))
+                                  #(not (re-matches #"^\s?>.*" %))))
+             (mapv (fn [x] (edamame.core/parse-string (str/replace (str "[" x "]") #"#"  ":symbol/") {:regex true}))))
+
+        order
+        (->> order-items
+             (mapv (fn [x]
+                     (clojure.walk/postwalk
+                       (fn [y]
+                         (if (and (keyword? y) (= "symbol" (namespace y)))
+                           (str "'" (name y))
+                           y)) x))))]
     (into {:where where
+           :order order
            :find find-items
            :columns columns
            :index @index} )))
@@ -114,7 +142,27 @@ p :role #roles.cto
 > (mean e)
 ")
 
-;; (parse-query q)
+(def q2
+  "
+e :parent #customers
+e :category cat
+(clojure.string/starts-with? cat \"s\")
+e :customer-since since
+e :asc
+
+> e:name
+> (count e)
+"
+  )
+
+(def q3
+  "
+e :parent #customers
+e asc
+> e
+")
+
+(parse-query q3)
 
 (defn render-table-value [ztx v block]
   (cond
