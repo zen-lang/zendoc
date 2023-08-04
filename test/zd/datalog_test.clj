@@ -169,7 +169,10 @@ e :title t
 
 
   (datalog/parse-query q)
-  (datalog/sugar-query ztx q)
+
+  (datalog/sugar-query ztx "
+e :parent #people
+> e:* ")
 
 
   )
