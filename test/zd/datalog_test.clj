@@ -12,7 +12,8 @@
 (defonce ztx (zen/new-context {}))
 
 (comment
-  (def ztx (zen/new-context {})))
+  (def ztx (zen/new-context {}))
+  )
 
 (deftest datalog-engine
   (zen/stop-system ztx)
@@ -25,14 +26,15 @@
 
   (xtdb/sync (:node (datalog/get-state ztx)))
 
+  (datalog/query ztx '{:find [?id ?e]
+                       :where [[?e :xt/id ?id]]})
+
   (testing "metadata is loaded into xtdb"
     (matcho/assert
      #{["customers"]}
      (datalog/query ztx '{:find [?id]
-                          :where [[?e :meta/docname docname]
-                                  [?e :xt/id ?id]]
-                          :in [docname]}
-                    'customers)))
+                          :where [[?e :meta/docname "'customers"]
+                                  [?e :xt/id ?id]]})))
 
   (matcho/assert
    #{["customers.flame"] ["customers._schema"]}
@@ -112,3 +114,50 @@
 
   (zen/stop-system ztx))
 
+
+(deftest datalog-sugar
+
+
+
+
+
+  (def q
+    "
+e :parent #organizations
+e :rel #rel.partner
+p :organization e
+p :role #roles.cto
+> d
+> e:xt/id
+> e:rel
+> (count e)
+> (mean e)
+")
+
+  (def q2
+    "
+e :parent #customers
+e :category cat
+(clojure.string/starts-with? cat \"s\")
+e :customer-since since
+e :asc
+
+> e:name
+> (count e)
+"
+    )
+
+  (def q3
+    "
+e :type #customers
+> e
+")
+
+  (matcho/match
+      (datalog/parse-query q3)
+    '{:where [[e :type "'customers"]],
+      :order []
+      :find [e]})
+
+
+  )

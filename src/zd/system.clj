@@ -1,5 +1,6 @@
 (ns zd.system
   (:require [zen.core :as zen]
+            [zd.datalog]
             [zd.api :as api]))
 
 (defn restart [ztx]
@@ -17,10 +18,18 @@
     (reset! dtx ztx)
     (restart ztx)))
 
+(defn query [q]
+  (zd.datalog/query @dtx q))
+
 (comment
 
   (-main)
 
   (restart @dtx)
 
-  (zen/stop-system @dtx))
+  (zen/stop-system @dtx)
+
+  (query '{:where [[e :parent p]]
+           :find [(pull e [:xt/id :title])]})
+
+  )

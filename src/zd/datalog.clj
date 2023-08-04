@@ -2,6 +2,7 @@
   (:require [zen.core :as zen]
             [clojure.walk]
             [clojure.string :as str]
+            [edamame.core]
             [xtdb.api :as xt]))
 
 (defn get-state [ztx]
@@ -49,6 +50,10 @@
   (let [xtdb-doc (flatten-doc ztx doc)
         result (submit ztx xtdb-doc)]
     ;; TODO und where does result go in pub/sub
+    (doseq [[k sd] (:zd/subdocs doc)]
+      (let [pid (get-in doc [:zd/meta :docname])
+            id (str "'" pid  "." (name k))]
+        (submit ztx (assoc (flatten-doc ztx sd) :xt/id id :parent (str "'" pid) :zd/subdoc true))))
     result))
 
 (defmethod zen/op 'zd.events/datalog-delete
@@ -66,3 +71,79 @@
 (defmethod zen/stop 'zd.engines/datalog
   [ztx config {n :node}]
   (.close n))
+
+
+(defn parse-query [q]
+  (let [xs (->> (str/split q #"\n")
+                (remove (fn [s] (or (str/blank? s) (str/starts-with? s "\\")))))
+        columns   (->> xs
+                       (filterv #(re-matches #"^\s?>.*" %))
+                       (mapv #(subs % 1))
+                       (mapv str/trim)
+                       (filterv #(not (str/blank? %)))
+                       (mapv (fn [x]
+                               (if (str/starts-with? x "(")
+                                 ['expr (edamame.core/parse-string x {:regex true})]
+                                 (let [[e k] (str/split x #":" 2)]
+                                   [(symbol e) (cond
+                                                 (= k "*") (symbol k)
+                                                 :else (keyword k))])))))
+        index (atom {})
+        find-items (->> (group-by first columns)
+                        (reduce (fn [acc [k xs]]
+                                  (if (= 'expr k)
+                                    (->> (mapv second xs)
+                                         (reduce (fn [acc e]
+                                                   (swap! index assoc e (count acc))
+                                                   (conj acc e))
+                                                 acc))
+                                    (let [cs (->> (mapv second xs) (filter identity) (dedupe) (into []))]
+                                      (swap! index assoc k (count acc))
+                                      (if (seq (filter (fn [x] (contains? #{'* :?} x)) cs))
+                                        (conj acc (list 'pull k ['*]))
+                                        (if (empty? cs)
+                                          (conj acc k)
+                                          (conj acc (list 'pull k cs)))))))
+                                []))
+        where-items
+        (->> xs
+             (filterv (every-pred #(not (str/ends-with? % " :asc"))
+                                  #(not (str/ends-with? % " :desc"))
+                                  #(not (re-matches #"^\s?>.*" %))))
+             (mapv (fn [x] (let [res (edamame.core/parse-string (str/replace (str "[" x "]") #"#"  ":symbol/")
+                                                                {:regex true})]
+                             (cond
+                               (list? (get res 1))
+                               (vector res)
+
+                               :else
+                               res)
+                             ))))
+        where (->> where-items
+                   (mapv (fn [x]
+                           (clojure.walk/postwalk
+                            (fn [y]
+                              (if (and (keyword? y) (= "symbol" (namespace y)))
+                                (str "'" (name y))
+                                y)) x))))
+
+        order-items
+        (->> xs
+             (filterv (every-pred #(or (str/ends-with? % " :asc")
+                                       (str/ends-with? % " :desc"))
+                                  #(not (re-matches #"^\s?>.*" %))))
+             (mapv (fn [x] (edamame.core/parse-string (str/replace (str "[" x "]") #"#"  ":symbol/") {:regex true}))))
+
+        order
+        (->> order-items
+             (mapv (fn [x]
+                     (clojure.walk/postwalk
+                       (fn [y]
+                         (if (and (keyword? y) (= "symbol" (namespace y)))
+                           (str "'" (name y))
+                           y)) x))))]
+    (into {:where where
+           :order order
+           :find find-items
+           :columns columns
+           :index @index} )))

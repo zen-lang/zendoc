@@ -1,0 +1,35 @@
+:title "Queries"
+
+:desc /
+
+:menu-order 10
+:query ?/
+
+e :parent #people
+e :desc d
+\(clojure.string/includes? d "open")
+e :title t
+t :desc
+
+> e
+> e:title
+
+:items ?/
+
+e :type :needs
+e :value v
+
+
+> (min v)
+> (max v)
+> (avg v)
+> (count v)
+
+
+&item-1
+:type :needs
+:value 5
+
+&item-2
+:type :needs
+:value 4

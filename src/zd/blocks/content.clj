@@ -50,120 +50,6 @@
     (d/query ztx data)))
 
 
-
-(defn parse-query [q]
-  (let [xs (->> (str/split q #"\n")
-                (remove (fn [s] (or (str/blank? s) (str/starts-with? s "\\")))))
-        columns   (->> xs
-                       (filterv #(re-matches #"^\s?>.*" %))
-                       (mapv #(subs % 1))
-                       (mapv str/trim)
-                       (filterv #(not (str/blank? %)))
-                       (mapv (fn [x]
-                               (if (str/starts-with? x "(")
-                                 ['expr (edamame.core/parse-string x {:regex true})]
-                                 (let [[e k] (str/split x #":" 2)]
-                                   [(symbol e) (cond
-                                                 (= k "*") (symbol k)
-                                                 (nil? k) :meta/docname
-                                                 :else (keyword k))])))))
-        index (atom {})
-        find-items (->> (group-by first columns)
-                        (reduce (fn [acc [k xs]]
-                                  (if (= 'expr k)
-                                    (->> (mapv second xs)
-                                         (reduce (fn [acc e]
-                                                   (swap! index assoc e (count acc))
-                                                   (conj acc e))
-                                                 acc))
-                                    (let [cs (->> (mapv second xs) (dedupe) (into []))]
-                                      (swap! index assoc k (count acc))
-                                      (if (filter (fn [x] (contains? #{'x :?} x)) cs)
-                                        (conj acc (list 'pull k ['*]))
-                                        (if (seq cs)
-                                          (conj acc (list 'pull k cs))
-                                          (conj acc k))))))
-                                []))
-        where-items
-        (->> xs
-             (filterv (every-pred #(not (str/ends-with? % " :asc"))
-                                  #(not (str/ends-with? % " :desc"))
-                                  #(not (re-matches #"^\s?>.*" %))))
-             (mapv (fn [x] (let [res (edamame.core/parse-string (str/replace (str "[" x "]") #"#"  ":symbol/")
-                                                                {:regex true})]
-                             (cond
-                               (list? (get res 1))
-                               (vector res)
-
-                               :else
-                               res)
-                             ))))
-        where (->> where-items
-                   (mapv (fn [x]
-                           (clojure.walk/postwalk
-                            (fn [y]
-                              (if (and (keyword? y) (= "symbol" (namespace y)))
-                                (str "'" (name y))
-                                y)) x))))
-
-        order-items
-        (->> xs
-             (filterv (every-pred #(or (str/ends-with? % " :asc")
-                                       (str/ends-with? % " :desc"))
-                                  #(not (re-matches #"^\s?>.*" %))))
-             (mapv (fn [x] (edamame.core/parse-string (str/replace (str "[" x "]") #"#"  ":symbol/") {:regex true}))))
-
-        order
-        (->> order-items
-             (mapv (fn [x]
-                     (clojure.walk/postwalk
-                       (fn [y]
-                         (if (and (keyword? y) (= "symbol" (namespace y)))
-                           (str "'" (name y))
-                           y)) x))))]
-    (into {:where where
-           :order order
-           :find find-items
-           :columns columns
-           :index @index} )))
-
-
-
-(def q
-  "
-e :parent #organizations
-e :rel #rel.partner
-p :organization e
-p :role #roles.cto
-> d
-> e:xt/id
-> e:rel
-> (count e)
-> (mean e)
-")
-
-(def q2
-  "
-e :parent #customers
-e :category cat
-(clojure.string/starts-with? cat \"s\")
-e :customer-since since
-e :asc
-
-> e:name
-> (count e)
-"
-  )
-
-(def q3
-  "
-e :parent #customers
-e asc
-> e
-")
-
-(parse-query q3)
-
 (defn render-table-value [ztx v block]
   (cond
     (symbol? v) (link/symbol-link ztx v)
@@ -177,7 +63,7 @@ e asc
 
 (defmethod methods/rendercontent :?
   [ztx ctx {{headers :table-of} :ann data :data :as block}]
-  (let [q (parse-query data)
+  (let [q (d/parse-query data)
         idx (:index q)
         res (d/query ztx (dissoc q :columns :index))
         res (->> res
