@@ -82,6 +82,7 @@
 
 (defn parse-query [q]
   (let [xs (->> (str/split q #"\n")
+                (mapv str/trim)
                 (remove (fn [s] (or (str/blank? s) (str/starts-with? s "\\")))))
         columns   (->> xs
                        (filterv #(re-matches #"^\s?>.*" %))
@@ -158,7 +159,7 @@
 
 (defn sugar-query [ztx q]
   (let [q (parse-query q)
-        _ (println :q q)
+        _ (def q q)
         idx (:index q)
         res (->>
              (query ztx (dissoc q :columns :index))
