@@ -18,6 +18,7 @@
     (xt/submit-tx n [[::xt/evict data]])
     :no/xtdb))
 
+
 (defn query [ztx query & params]
   (if-let [{n :node} (get-state ztx)]
     (clojure.walk/postwalk
@@ -26,6 +27,12 @@
               x))
      (apply xt/q (xt/db n) query params))
     :no/xtdb))
+
+(defn evict-by-query [ztx q]
+  (doseq [res (query ztx q)]
+    (evict ztx (str "'" (first res))))
+  (xt/sync (:node (get-state ztx))))
+
 
 (defn flatten-doc [ztx {{dn :docname :as m} :zd/meta :as doc}]
   (let [meta (->> m
@@ -97,13 +104,13 @@
                                                    (swap! index assoc e (count acc))
                                                    (conj acc e))
                                                  acc))
-                                    (let [cs (->> (mapv second xs) (filter identity) (dedupe) (into []))]
+                                    (let [cs (->> (mapv second xs) (dedupe) (into []))]
                                       (swap! index assoc k (count acc))
                                       (if (seq (filter (fn [x] (contains? #{'* :?} x)) cs))
                                         (conj acc (list 'pull k ['*]))
-                                        (if (empty? cs)
+                                        (if (= cs [nil])
                                           (conj acc k)
-                                          (conj acc (list 'pull k cs)))))))
+                                          (conj acc (list 'pull k (mapv (fn [x] (if (nil? x) :xt/id x))cs))))))))
                                 []))
         where-items
         (->> xs
@@ -147,3 +154,24 @@
            :find find-items
            :columns columns
            :index @index} )))
+
+
+(defn sugar-query [ztx q]
+  (let [q (parse-query q)
+        _ (println :q q)
+        idx (:index q)
+        res (->>
+             (query ztx (dissoc q :columns :index))
+             (mapv (fn [x]
+                     (->> (:columns q)
+                          (mapv (fn [[e c]]
+                                  (cond
+                                    (nil? c)  (or (get-in x [(get idx e) :xt/id]) (get-in x [(get idx e)]))
+                                    (list? c) (get-in x [(get idx c)])
+                                    (= c '*)  (get-in x [(get idx e)])
+                                    (= c :?)  (keys (get-in x [(get idx e)]))
+                                    :else     (get-in x [(get idx e) c]))))))))
+        cols (->> (:columns q) (mapv second))]
+    {:result res
+     :query (dissoc q :columns :index)
+     :columns cols}))

@@ -7,12 +7,15 @@
 
 e :parent #people
 e :desc d
-\(clojure.string/includes? d "open")
 e :title t
-t :desc
+e :role r
 
 > e
 > e:title
+> t
+> r
+> (count e)
+
 
 :items ?/
 

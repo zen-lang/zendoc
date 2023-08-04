@@ -63,19 +63,7 @@
 
 (defmethod methods/rendercontent :?
   [ztx ctx {{headers :table-of} :ann data :data :as block}]
-  (let [q (d/parse-query data)
-        idx (:index q)
-        res (d/query ztx (dissoc q :columns :index))
-        res (->> res
-                 (mapv (fn [x]
-                         (->> (:columns q)
-                              (mapv (fn [[e c]]
-                                      (cond
-                                        (list? c) (get-in x [(get idx c)])
-                                        (= c '*)  (get-in x [(get idx e)])
-                                        (= c :?)  (keys (get-in x [(get idx e)]))
-                                        :else     (get-in x [(get idx e) c]))))))))
-        cols (->> (:columns q) (mapv second))]
+  (let [{res :result cols :columns q :query} (d/sugar-query ztx data)]
     [:div
      [:details {:class (c :text-xs [:mb 2])}
       [:summary {:class (c [:text :gray-500]) }"query"]

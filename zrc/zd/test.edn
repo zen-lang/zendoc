@@ -25,4 +25,4 @@
 
  system
  {:zen/tags #{zen/system}
-  :start [datalog fs http]}}
+  :start [datalog fs]}}
