@@ -73,14 +73,19 @@
                  acc))))
 
 (defn collect-links [ztx {{:keys [docname ann] :as meta} :zd/meta :as doc}]
-  (->> (remove #(= "zd" (namespace (first %)))
-               doc)
-       (reduce (fn [acc [k cnt]]
-             (let [cnt-type (get-in ann [k :zd/content-type])]
-               (cond (= cnt-type :edn) (edn-links acc docname [k] cnt)
-                     (= cnt-type :zentext) (zentext-links acc docname [k] cnt)
-                     :else acc)))
-           {})))
+  (let [acc (->> doc
+                 (remove #(= "zd" (namespace (first %))))
+                 (reduce (fn [acc [k cnt]]
+                           (let [cnt-type (get-in ann [k :zd/content-type])]
+                             (cond (= cnt-type :edn) (edn-links acc docname [k] cnt)
+                                   (= cnt-type :zentext) (zentext-links acc docname [k] cnt)
+                                   :else acc)))
+                         {}))]
+    (->> (:zd/subdocs doc)
+         (reduce (fn [acc [k v]]
+                   (let [sub-docname (symbol (str docname "." (name k)))]
+                     (edn-links acc sub-docname [] v)))
+                 acc))))
 
 (defn patch-links [idx patch]
   (loop [acc idx

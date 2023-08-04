@@ -1,0 +1,14 @@
+:menu-order 1000
+
+:title "orgs"
+:desc /
+
+:report ?/
+
+c :type :case
+
+
+> c
+> c:case
+> c:need
+> c:parent

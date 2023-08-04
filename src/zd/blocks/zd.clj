@@ -74,8 +74,7 @@
              (map (fn [{d :doc p :path t :to}]
                     {:to t
                      :doc d
-                     :parent (when (str/includes? (str d) ".")
-                               (str/join "." (butlast (str/split (str d) #"\."))))
+                     :parent (when (str/includes? (str d) ".") (str/join "." (butlast (str/split (str d) #"\."))))
                      :path (->> (map (fn [f] (if (keyword? f) (name f) (str f))) p)
                                 (str/join ".")
                                 (str ":"))}))
@@ -111,7 +110,6 @@
                     :class (c :inline-flex :items-center [:text "#4B5BA0"]
                               [:hover [:underline]] :whitespace-no-wrap)}
                 (:title doc)]
-               #_[:span {:class (c :text-xs [:pl 2])} p]
                [:div {:class (c :flex :self-center)}
                 (when (str/includes? (str docname) "_template")
                   [:span {:class (c :text-xs [:text :orange-500] [:pl 2])}
@@ -119,7 +117,6 @@
                 (when (str/includes? (str docname) "_schema")
                   [:span {:class (c :text-xs [:text :orange-500] [:pl 2])}
                    "_schema"])
-               ;; TODO get last updated from git repo
                 #_[:div {:class (c [:text :gray-500])}
                    "upd: " lu]]]
               [:div {:class (c :flex :flex-wrap :overflow-x-hidden)}
@@ -151,7 +148,8 @@
                                v)))
                        ;; render single link
                        (symbol? v)
-                       (let [res (memstore/get-doc ztx v)]
+                       (link/symbol-link ztx v)
+                       #_(let [res (memstore/get-doc ztx v)]
                          [:a {:href (str "/" v)
                               :class (c :inline-flex
                                         :items-center

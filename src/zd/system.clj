@@ -32,4 +32,6 @@
   (query '{:where [[e :parent p]]
            :find [(pull e [:xt/id :title])]})
 
+  (:zrefs @@dtx)
+
   )

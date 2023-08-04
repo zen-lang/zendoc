@@ -22,7 +22,7 @@
         (resolve-icon ztx parent)))))
 
 (defn icon [ztx res]
-  (if-let [icon (resolve-icon ztx res)]
+  (when-let [icon (resolve-icon ztx res)]
     (cond (= (:type icon) :img)
           [:img {:src (:img icon)
                  :class (c :inline-block [:mr 1]
@@ -31,9 +31,7 @@
                            {:border-radius "100%"
                             :margin-bottom "1px"})}]
           (= (:type icon) :ico)
-          [:i {:class (str (str/join " " (map name (:icon icon)))
-                           " "
-                           (name (c [:mr 1] [:text :gray-500])))}])))
+          [:i {:class (str (str/join " " (map name (:icon icon))) " " (name (c [:mr 1] [:text :gray-500])))}])))
 
 (defn symbol-link [ztx s & [opts]]
   (if-let [res (memstore/get-doc ztx (symbol s))]
@@ -41,4 +39,12 @@
      (icon ztx res)
      (when-not (:compact opts)
        (or (:title res) s))]
-    [:a {:href (str "/" s) :class (c [:text :red-600] [:bg :red-100]) :title "Broken Link"} s]))
+    (let [parts (str/split (str s) #"\.")
+          ss (str/join "." (butlast parts))
+          sub (last parts)]
+      (if-let [sres (when-let [p (memstore/get-doc ztx (symbol ss))]
+                      (get-in p [:zd/subdocs (keyword sub)]))]
+        [:a {:href (str "/" ss "#subdocs-" sub) :class (c :inline-flex :items-center [:text "#4B5BA0"] [:hover [:underline]] :whitespace-no-wrap)}
+         (icon ztx sres)
+         (when-not (:compact opts) (or (:title sres) s))]
+        [:a {:href (str "/" s) :class (c [:text :red-600] [:bg :red-100]) :title "Broken Link"} s]))))

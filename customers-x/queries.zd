@@ -6,16 +6,9 @@
 :query ?/
 
 e :parent #people
-e :desc d
-e :title t
-e :role r
-
 > e
+> e:role
 > e:title
-> t
-> r
-> (count e)
-
 
 :items ?/
 
@@ -29,10 +22,10 @@ e :value v
 > (count v)
 
 
-&item-1
+&need-1
 :type :needs
 :value 5
 
-&item-2
+&need-2
 :type :needs
 :value 4
