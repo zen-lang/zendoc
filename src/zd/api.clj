@@ -54,10 +54,12 @@
 
       (get hs "x-body")
       {:status 200
+       :headers {"Cache-Control" "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"}
        :body (hiccup/html (render/render-doc ztx {:request req :paths ps :doc doc :root r :config config} doc))}
 
       :else
       {:status 200
+       :headers {"Cache-Control" "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"}
        :body (render/doc-view ztx {:request req :paths ps :doc doc :root r :config config} doc)})))
 
 (defmethod web/middleware-out 'zd/layout

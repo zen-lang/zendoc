@@ -248,7 +248,7 @@
 (defn doc-view [ztx ctx doc]
   [:div {:class (c :flex [:h "100%"])}
    (navigation ztx ctx doc)
-   [:div#page {:class (c :flex :flex-grow [:flex-shrink 1] [:py 6] [:px 12] :overflow-y-auto
+   [:div#page-content {:class (c :flex :flex-grow [:flex-shrink 1] [:py 6] [:px 12] :overflow-y-auto
                          {:flex-basis "100%"})}
     (render-doc ztx ctx doc)]])
 
