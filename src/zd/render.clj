@@ -26,12 +26,11 @@
         del-script
         (format "if (confirm(\"delete document?\") == true){
                   fetch('/%s', {method: 'DELETE'}).then((resp)=> {
-                  resp.text().then((docid) => {window.location.href = docid})})}"
+                  resp.text().then((docid) => { window.location.pathname = docid})})}"
                 docname)
 
         del-btn
         [:a {:class (c [:text :gray-600] [:hover [:text :red-600]] [:ml 4])
-             :href ""
              :onclick (when-not (= docname 'index) del-script)}
          [:i.fas.fa-trash-xmark]]
 

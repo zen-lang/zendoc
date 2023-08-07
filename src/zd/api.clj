@@ -114,6 +114,7 @@
     (swap! ztx update :zdb dissoc docname-sym)
     (when (.exists (io/file filepath))
       (io/delete-file filepath))
+    (memstore/remove-links ztx docname-sym)
     (datalog/evict ztx (str "'" docname))))
 
 ;; todo validate links
@@ -131,6 +132,7 @@
     (.mkdirs (io/file dirname))
     (spit filepath content)
     (->> docs (mapv (fn [doc]
+                      (memstore/remove-links ztx (:zd/docname doc))
                       (memstore/put-doc ztx doc)
                       (let [idoc (memstore/infere-doc ztx (:zd/docname doc))]
                         (datalog/save-doc ztx idoc)))))
@@ -167,10 +169,8 @@
     {:status 200 :body (str "/" (or rename-to id))}))
 
 (defn parent-link [id]
-  (let [ parts (str/split id #"\.")]
-    (if-let [parent (seq (butlast parts))]
-      (str "/" (str/join "." parent))
-      "/")))
+  (let [parts (seq (butlast (str/split id #"\.")))]
+    (str "/" (str/join "." parts))))
 
 (defmethod zen/op 'zd/delete-doc
   [ztx _cfg {{:keys [id]} :route-params :as req} & opts]
@@ -199,4 +199,4 @@
   (when-not (or (= ev-name 'zd.events/on-doc-save)
                 (= ev-name 'zd.events/on-doc-load))
     ;; TODO do not print large events
-    (pprint/pprint (assoc ev ::ts (.toString (java.util.Date.))))))
+    (println (assoc ev ::ts (str (java.util.Date.))))))

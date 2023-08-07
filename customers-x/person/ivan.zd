@@ -1,0 +1,20 @@
+:title "Ivan"
+
+&hs-memb
+^badge
+:type org.Member
+^badge
+:org.memberSince #inst"2005-01-01"
+^badge
+:org.organization orgs.health-samurai
+^badge
+:org.role org.Engineer
+^badge
+:org.person person.ivan
+
+&todo
+^badge
+:zd/type tasks.TODO
+^badge
+:tasks.assignee person.niquola
+:title "Help here"

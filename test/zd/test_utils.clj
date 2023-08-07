@@ -86,8 +86,12 @@
 (defn get-symbol [s]
   (zen/get-symbol @ctx s))
 
+;; TODO: this logic should live in codebase
 (defn get-doc [s]
-  (get (:zdb @@ctx) s))
+  (let [backlinks (get (:zrefs @@ctx) s)
+        doc (get (:zdb @@ctx) s)]
+    (when doc
+      (assoc doc :zd/backlinks backlinks))))
 
 (defn hiccup-find [body id]
   (let [res (atom [])]

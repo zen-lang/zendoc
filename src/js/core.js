@@ -176,7 +176,7 @@ var update_widgets = () => {
 };
 
 var load_page = (href, do_push) => {
-    fetch(href + '?only-body=true', {
+    fetch(href, {
         headers: {
             'x-body': 'true',
             'cache-control': 'no-cache'

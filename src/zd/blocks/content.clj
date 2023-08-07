@@ -59,6 +59,7 @@
     (set? v) [:div {:class (c :flex :items-center [:space-x 2])}
               (->> v (map (fn [x] [:div {:key (str x)} (render-table-value ztx x block)])))]
     (keyword? v) (str v)
+    (inst? v) (str/replace (str v) #"00:00:00 " "")
     :else (with-out-str (clojure.pprint/pprint v))))
 
 (defmethod methods/rendercontent :?

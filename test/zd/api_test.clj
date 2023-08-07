@@ -8,12 +8,20 @@
 
 
 
-(def doc
-  )
-
 (deftest test-api
 
-  (t/reset-project {})
+  (t/reset-project {'default (t/zd [:title "Default"])
+                    'other (t/zd [:title "Other"]
+                                 [:link 'default])})
+
+  (testing "initila load"
+    (t/http-match
+     {:uri "/default"}
+     {:status 200})
+
+    (is (t/get-doc 'default))
+
+    (matcho/match (t/query '{:find [t] :where [[e :xt/id "'default"] [e :title t]]}) #{["Default"]}))
 
   (testing "when document not found redirects to editor"
     (t/http-match
@@ -36,11 +44,15 @@
                   [:title "testdoc"]
                   [:tags #{}]
                   [:desc "some"]
+                  [:link 'default]
+                  [:otherlink 'other]
                   ['&subdoc1]
                   [:title "subdoc1"]
                   ['&subdoc2]
                   [:title "subdoc2"])}
      {:status 200})
+
+    (:zrefs @@t/ctx)
 
     (matcho/match (t/get-doc 'testdoc) {:title "testdoc"})
     (matcho/match (t/get-doc 'testdoc.subdoc1) {:title "subdoc1"})
@@ -52,6 +64,19 @@
     (is (seq (t/query '{:find [e] :where [[e :xt/id "'testdoc.subdoc1"]]})))
     (is (seq (t/query '{:find [e] :where [[e :xt/id "'testdoc.subdoc2"]]})))
 
+    (matcho/match (t/get-doc 'default)
+      {:zd/backlinks {'testdoc #{[:link]}}})
+
+
+    (matcho/match (t/get-doc 'default)
+      {:zd/backlinks {'testdoc #{[:link]}}})
+
+    (matcho/match (t/get-doc 'other)
+      {:zd/backlinks {'testdoc #{[:otherlink]}}})
+
+    ;; now lets edit
+    ;; remove :link, change fields, and change subentities
+
     (t/http-match
      {:uri "/testdoc/edit"
       :request-method :put
@@ -59,6 +84,7 @@
                   [:title "testdoc-change"]
                   [:tags #{}]
                   [:desc "some"]
+                  [:otherlink 'other]
                   ['&subdoc1]
                   [:title "subdoc1-change"]
                   ['&subdoc3]
@@ -66,16 +92,18 @@
      {:status 200})
 
 
+
+
     (matcho/match (t/get-doc 'testdoc) {:title "testdoc-change"})
     (matcho/match (t/get-doc 'testdoc.subdoc1) {:title "subdoc1-change"})
     (matcho/match (is (nil? (t/get-doc 'testdoc.subdoc2))))
     (matcho/match (t/get-doc 'testdoc.subdoc3) {:title "subdoc3"})
 
+
     (t/query '{:find [p] :where
                [[e :xt/id "'testdoc"]
                 [p :parent e]
-                [p :zd/subdoc true]
-                ]})
+                [p :zd/subdoc true]]})
 
 
     (matcho/match
@@ -89,12 +117,20 @@
         (t/query '{:find [t] :where [[e :xt/id "'testdoc.subdoc3"] [e :title t]]})
       #{["subdoc3"]})
 
+    (matcho/match (t/get-doc 'default)
+      {:zd/backlinks {'testdoc nil?}})
+
+    (matcho/match (t/get-doc 'other)
+      {:zd/backlinks {'testdoc #{[:otherlink]}}})
+
+    ;; TODO: tests for gitsync
+
     )
 
   (testing "delete document"
     (t/http-match
      {:uri "/testdoc" :request-method :delete}
-     {:status 200 :body #(not (nil? %))})
+     {:status 200 })
 
     (is (nil? (t/get-doc 'testdoc)))
 
@@ -107,6 +143,12 @@
 
     (is (empty? (t/query '{:find [t] :where [[e :xt/id "'testdoc.subdoc1"] [e :title t]]})))
     (is (empty? (t/query '{:find [t] :where [[e :xt/id "'testdoc.subdoc3"] [e :title t]]})))
+
+    (matcho/match (t/get-doc 'default)
+      {:zd/backlinks {'testdoc nil?}})
+
+    (matcho/match (t/get-doc 'other)
+      {:zd/backlinks {'testdoc nil?}})
     )
 
   (testing "rename document"

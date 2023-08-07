@@ -156,6 +156,19 @@
         doc (assoc doc :zd/subs (into #{} (map :zd/docname subdocs)))]
     (into [doc] subdocs)))
 
+(defn *remove-links [zrefs docname]
+  (->> zrefs
+       (reduce (fn [acc [k lnks]]
+                 (if (contains? lnks docname)
+                   (assoc acc k (dissoc lnks docname))
+                   acc))
+               zrefs)))
+
+(*remove-links {'a {'b {}}} 'b)
+
+(defn remove-links [ztx docname]
+  (swap! ztx update :zrefs (fn [zrefs] (*remove-links zrefs docname))))
+
 (defn put-doc [ztx {docname :zd/docname :as doc}]
   (let [links (collect-links ztx doc)
         macros (collect-macros ztx doc)]
