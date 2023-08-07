@@ -1,5 +1,5 @@
 :title "Zendoc tutorial"
-:section "second"
+:section "first"
 :icon [:fa-brands :fa-dochub]
 :menu-order 1
 
