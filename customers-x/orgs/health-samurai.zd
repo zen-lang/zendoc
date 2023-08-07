@@ -1,0 +1,30 @@
+:title "Health Samurai"
+
+^badge
+:type #{ org.Organization }
+^link-badge
+:org.site "https://health-samurai.io"
+^badge
+:org.location #{ country.US }
+^link-badge
+:org.linkedin "https://www.linkedin.com/company/6653460/admin/feed/posts/"
+
+:desc /
+
+:partners ?/
+
+e :prod.partner-of #orgs.health-samurai
+> e:prod.partner-org
+> e:desc
+> e:prod.champion
+
+
+:members ?/
+
+e :type #org.Member
+e :org.organization #orgs.health-samurai
+e :org.person p
+
+
+> p
+> e:org.role

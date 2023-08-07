@@ -95,7 +95,7 @@
             (str *parent ".*")]
            [:span {:class (c [:pl 2] :text-sm [:text :gray-500])}
             (str/join ", " (set (map :path links)))]]
-          [:a {:class (c :block [:p 1] :text-lg :cursor-pointer [:hover [:text :green-600]])
+          #_[:a {:class (c :block [:p 1] :text-lg :cursor-pointer [:hover [:text :green-600]])
                :href (if (some? parent)
                        (str parent "." "_draft/edit")
                        "_draft/edit")}
@@ -106,7 +106,8 @@
                  (memstore/get-doc ztx (symbol docname))]
              [:div {:class (c [:pt 4] :flex :flex-col)}
               [:div {:class (c :inline-flex :items-center)}
-               [:a {:href (str "/" docname)
+               (link/symbol-link ztx docname)
+               #_[:a {:href (str "/" docname)
                     :class (c :inline-flex :items-center [:text "#4B5BA0"]
                               [:hover [:underline]] :whitespace-no-wrap)}
                 (:title doc)]

@@ -1,3 +1,12 @@
 :title "needs"
-:menu-order 100
+:menu-order 110
+:icon [:fa-duotone :fa-lamp]
 :desc /
+
+
+:needs ?/
+
+c :rdf.type #prod.Case
+c :need n
+> n
+> (count c)

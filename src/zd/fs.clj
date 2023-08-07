@@ -18,10 +18,20 @@
   (->> [:zen/state :zd.fs :state]
        (get-in @ztx)))
 
+(defn name-to-dir [pths docname]
+  (->> (str/split docname #"\.")
+       butlast
+       (str/join "/")
+       (str (first pths) "/")))
+
 (defn load-docs! [ztx root dirs]
+  (->> (memstore/read-docs ztx {:path "~" :resource-path "zd.zd" :content (slurp (io/resource "zd.zd"))})
+       (mapv (fn [doc] (memstore/put-doc ztx (assoc doc :zd/readonly true)))))
   (doseq [dir dirs]
     (let [dir (io/file dir)
           dir-path (.getPath dir)]
+      ;; TODO: if we go with zd/type zd.class how do we find all classes before loading other documents?
+      ;; TODO: load zd self schemas
       ;; load metadata
       (doseq [f (->> (file-seq dir)
                      (filter (fn [f] (str/includes? (.getName f) "_schema.zd"))))]
@@ -37,10 +47,10 @@
                    (not (str/starts-with? (.getName f) ".")))
           (let [resource-path (subs path (inc (count dir-path)))
                 content (slurp f)]
-            (memstore/load-document! ztx {:path path
-                                          :root root
-                                          :resource-path resource-path
-                                          :content content})))))))
+            (->> (memstore/read-docs ztx {:path path :root root :resource-path resource-path :content content})
+                 (mapv (fn [doc] (memstore/put-doc ztx doc))))
+            #_(memstore/load-document! ztx {:path path :root root :resource-path resource-path :content content}))))))
+  (memstore/inference ztx))
 
 (defonce queue (agent nil))
 
@@ -58,15 +68,17 @@
 
 (defn fs-delete [ztx {:keys [filepath docname]}]
   (let [{r :root pths :paths} (get-state ztx)
-        fs-delete*
-        (fn [ag]
-          (io/delete-file filepath)
-          (when-let [repo (get-gistate ztx)]
-            (gitsync/delete-doc ztx repo {:docpath filepath :docname docname}))
-          ;; TODO impl delta delete
-          (reload ztx r pths))]
-    (utils/safecall ztx fs-delete* {:type 'zd.fs/delete-doc-error})))
+        docname-sym (symbol docname)]
+    (swap! ztx update :zdb dissoc docname-sym)
+    ;; TODO: cleanup links and clear datalog
+    (io/delete-file filepath)
+    (when-let [repo (get-gistate ztx)]
+      (gitsync/delete-doc ztx repo {:docpath filepath :docname docname}))
+    (reload ztx r pths)))
 
+
+
+;; TODO: obsolete
 (defmethod zen/op 'zd.events/fs-delete
   [ztx config {_ev :ev {docname :docname} :params} & [_session]]
   (println :zd.fs/delete docname)
@@ -81,27 +93,38 @@
     ;; TODO remove await
     (await queue)))
 
+
 (defn fs-save [ztx {dn :docname cnt :content :keys [rename-to]} {:keys [resource-path dirname filepath prev-filepath]}]
   (let [{r :root pths :paths :as st} (get-state ztx)
-        fs-save*
-        (fn [ag]
-          (.mkdirs (io/file dirname))
-          (spit filepath cnt)
-          ;; when rename delete old doc
-          (when (symbol? rename-to)
-            ((fs-delete ztx {:filepath prev-filepath :docname dn}) ag)
-            (d/evict ztx (str dn))
-            ;; TODO when awaits are gone
-            #_(zen/pub ztx 'zd.events/on-doc-delete {:docname dn :root r}))
-          ;; when schema edit initiate full reload
-          (if (str/includes? filepath "_schema")
-            (reload ztx r pths)
-            (do (memstore/load-document! ztx {:path filepath
-                                              :root r
-                                              :resource-path resource-path
-                                              :content cnt})
-                (memstore/load-links! ztx)))
-          'ok)]
+        fs-save* (fn [ag]
+                   (let [old-doc (memstore/get-doc ztx dn)])
+                   (.mkdirs (io/file dirname))
+                   (spit filepath cnt)
+                   ;; when rename delete old doc
+                   ;; TODO remove all subdocs
+                   (when (symbol? rename-to)
+                     ((fs-delete ztx {:filepath prev-filepath :docname dn}) ag)
+                     (d/evict ztx (str dn))
+                     ;; TODO when awaits are gone
+                     #_(zen/pub ztx 'zd.events/on-doc-delete {:docname dn :root r}))
+                   ;; when schema edit initiate full reload
+                   (if (str/includes? filepath "_schema")
+                     (reload ztx r pths)
+                     (do
+                       (->> (memstore/read-docs ztx {:path filepath
+                                                     :root r
+                                                     :resource-path resource-path
+                                                     :content cnt})
+                            (mapv (fn [doc]
+                                    (memstore/put-doc ztx doc)
+                                    (memstore/infere-doc ztx (:zd/docname doc)))))
+                       (memstore/load-links! ztx))
+                     #_(do (memstore/load-document! ztx {:path filepath
+                                                       :root r
+                                                       :resource-path resource-path
+                                                       :content cnt})
+                         (memstore/load-links! ztx)))
+                   'ok)]
     (utils/safecall ztx fs-save* {:type :zd.fs/save-error})))
 
 (defn fs-commit [ztx {:keys [docname]} {:keys [filepath]}]
@@ -112,6 +135,11 @@
                      'ok)]
     (utils/safecall ztx fs-commit* {:type :zd.fs/reload-error})))
 
+
+
+
+
+;; TODO: obsolete
 (defmethod zen/op 'zd.events/fs-save
   [ztx config {_ev :ev {dn :docname rename :rename-to :as ev} :params} & [_session]]
   (zen/pub ztx 'zd.events/fs-save {:docname dn :rename rename})
@@ -134,6 +162,8 @@
     ;; TODO remove await
     (await queue)
     (send-off queue (fs-commit ztx ev arg))))
+
+
 
 (defmethod zen/start 'zd.engines/fs
   [ztx {zd-config :zendoc :as config} & args]

@@ -1,14 +1,21 @@
-:menu-order 1000
+:icon [:fa-duotone :fa-building]
+:menu-order 100
+:zd/type zd.class
 
 :title "orgs"
 :desc /
 
-:report ?/
+:needs ?/
 
-c :type :case
+c :zd/type #prod.Case
+c :need n
 
+> n
+> (count c)
 
-> c
-> c:case
-> c:need
-> c:parent
+:ctos ?/
+
+e :org.role #org.CTO
+e :org.memberOf o
+> e
+> o

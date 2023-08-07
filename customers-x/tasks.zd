@@ -1,0 +1,10 @@
+:title "Tasks"
+:desc /
+
+:table ?/
+
+e :type #tasks.TODO
+
+> e:tasks.severity
+> e:tasks.assignee
+> e

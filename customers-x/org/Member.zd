@@ -1,0 +1,12 @@
+:type #{ Class }
+:title "Member"
+:desc /
+
+
+:query ?/
+
+e :type #org.Member
+> e:org.organization
+> e:org.person
+> e:org.role
+> e:org.memberSince

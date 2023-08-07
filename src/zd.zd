@@ -1,0 +1,64 @@
+:title "Zendoc"
+:desc /
+
+Welcome to zendoc built-in documentation.
+
+
+&class
+:title "Class"
+:zd/type zd.class
+
+&prop
+:title "Property"
+:zd/type zd.class
+
+&type
+:title "zd/type"
+:zd/type zd.prop
+
+&data-type
+:title "zd/type"
+:zd/type zd.prop
+
+&icon
+:title "zd/type"
+:zd/type zd.prop
+
+&menu-order
+:title "zd/type"
+:zd/type zd.prop
+
+&readonly
+:title "zd/type"
+:zd/type zd.prop
+:zd/data-type zd.boolean
+
+&boolean
+:zd/type zd.class
+
+&string
+:zd/type zd.class
+
+&inst
+:zd/type zd.class
+
+&annotation
+:zd/type zd.class
+
+&badge
+:zd/type zd.annotation
+
+&link-badge
+:zd/type zd.annotation
+
+&hide
+:zd/type zd.annotation
+
+&datalog
+:zd/type zd.annotation
+:desc /
+
+&?
+:zd/type zd.annotation
+:desc /
+

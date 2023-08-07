@@ -13,7 +13,10 @@
    [zd.fs :as fs]
    [zd.methods :as methods]
    [zd.render :as render]
-   [zen-web.core :as web])
+   [zen-web.core :as web]
+   [zd.datalog :as datalog]
+   [zd.fs.utils :as futils]
+   [zd.gitsync :as gitsync])
   (:import [java.io StringReader]))
 
 ;; TODO move to zen-web.http
@@ -76,45 +79,104 @@
     {:status 200
      :body [:div "Error: " id " is not found"]}))
 
+(defn extract-id [lines]
+  (-> (->> lines
+           (filter #(or
+                     (str/starts-with? % ":zd/rename") ;; OBSOLETE
+                     (str/starts-with? % ":zd/docname")))
+           (first))
+      (str/trim)
+      (str/split #"\s+")
+      (second)))
+
+
+(defn name-to-dir [pths docname]
+  (->> (str/split docname #"\.")
+       butlast
+       (str/join "/")
+       (str (first pths) "/")))
+
+;; TODO remove all subdocs
+;; (when rename
+;;   (symbol? rename)
+;;   (fs/delete-doc ztx docname)
+;;   (datalog/evict ztx (str docname)))
+;; (zen/pub ztx 'zd.events/fs-save {:docname docname :rename rename})
+;; docname  (if (symbol? rename) (str rename) (str docname))
+
+(defn delete-doc [ztx docname]
+  (let [{pths :paths} (fs/get-state ztx)
+        filepath      (str (first pths) "/" (futils/docpath docname))
+        docname-sym (symbol docname)
+        doc (memstore/get-doc ztx docname-sym)]
+    (when-let [subdocs (:zd/subs doc)]
+      (->> subdocs (mapv (fn [s] (delete-doc ztx s)))))
+    (swap! ztx update :zdb dissoc docname-sym)
+    (when (.exists (io/file filepath))
+      (io/delete-file filepath))
+    (datalog/evict ztx (str "'" docname))))
+
+;; todo validate links
+(defn save-doc [ztx docname content]
+  (let [{root :root pths :paths} (fs/get-state ztx)
+        docpath  (futils/docpath docname)
+        filepath (str (first pths) "/" docpath)
+        dirname  (futils/name-to-dir pths docname)
+        resource-path docpath
+        docname-sym (symbol docname)
+        doc (memstore/get-doc ztx docname-sym)
+        subdocs (:zd/subs doc)
+        docs    (memstore/read-docs ztx {:path filepath :root root :resource-path resource-path :content content})
+        docs-idx (group-by :zd/docname docs)]
+    (.mkdirs (io/file dirname))
+    (spit filepath content)
+    (->> docs (mapv (fn [doc]
+                      (memstore/put-doc ztx doc)
+                      (let [idoc (memstore/infere-doc ztx (:zd/docname doc))]
+                        (datalog/save-doc ztx idoc)))))
+    (->> subdocs
+         (mapv (fn [subdoc]
+                 (when-not (contains? docs-idx subdoc)
+                   (delete-doc ztx subdoc)))))
+    (memstore/load-links! ztx)))
+
+
+(defn get-lines [s]
+  (->> s
+       (StringReader.)
+       (io/reader)
+       (line-seq)))
+
+(defn cleanup-doc [lines]
+  (->> lines
+       (remove #(str/starts-with? % ":zd/docname"))
+       (remove #(str/starts-with? % ":zd/rename"))
+       (str/join "\n")))
+
 (defmethod zen/op 'zd/save-doc
   [ztx _cfg {{id :id} :route-params r :zd/root :as req} & opts]
-  ;; TODO emit zen event
-  (println :zd.api/save-doc id)
-  (let [lines (slurp (:body req))
-        lineseq (->> lines
-                     (StringReader.)
-                     (io/reader)
-                     (line-seq))
-        content (->> lineseq
-                     (remove #(str/starts-with? % ":zd/docname"))
-                     (remove #(str/starts-with? % ":zd/rename"))
-                     (str/join "\n"))
-        doc (->> (reader/parse ztx {:req req} lines)
-                 (meta/append-meta ztx)
-                 (meta/validate-doc ztx))
-        ;; TODO check if coerce is needed
-        docname (str (:zd/docname doc))]
-    (if-let [errs (seq (get-in doc [:zd/meta :errors]))]
-      {:status 422 :body {:message "document validation failed"
-                          :docname docname
-                          :root r
-                          :errors errs}}
-      (do (zen/pub ztx 'zd.events/on-doc-save {:docname docname
-                                               :rename-to (:zd/rename doc)
-                                               :content content
-                                               :root r})
-          {:status 200 :body (str "/" (or (:zd/rename doc) docname))}))))
+  (let [lines     (get-lines (slurp (:body req)))
+        content   (cleanup-doc lines)
+        new-id    (extract-id lines)
+        rename-to (when (and new-id (not (= new-id id))) (symbol new-id))]
+    (if rename-to
+      (do
+        (delete-doc ztx id)
+        (save-doc ztx new-id content))
+      (save-doc ztx id content))
+    {:status 200 :body (str "/" (or rename-to id))}))
+
+(defn parent-link [id]
+  (let [ parts (str/split id #"\.")]
+    (if-let [parent (seq (butlast parts))]
+      (str "/" (str/join "." parent))
+      "/")))
 
 (defmethod zen/op 'zd/delete-doc
   [ztx _cfg {{:keys [id]} :route-params :as req} & opts]
-  (let [{r :root} (zendoc-config ztx)
-        parts (str/split id #"\.")
-        redirect
-        (if-let [parent (seq (butlast parts))]
-          (str "/" (str/join "." parent))
-          (str "/" r))]
-    (zen/pub ztx 'zd.events/on-doc-delete {:docname id :root r})
-    {:status 200 :body redirect}))
+  (let [{r :root} (zendoc-config ztx)]
+    (delete-doc ztx id)
+    {:status 200 :body (parent-link id)}))
 
 (defmethod zen/op 'zd/render-editor
   [ztx _cfg {{id :id} :route-params :as req} & opts]

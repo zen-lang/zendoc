@@ -1,16 +1,16 @@
-
+:zd/type orgs
 :title "O2"
 :desc /
 
 
 &case-big-data
-:type :case
+:zd/type prod.Case
 :need needs.big-data
 :case /
 Here is desc djfaljflkdajfl
 
 &case-ccd
-:type :case
+:zd/type prod.Case
 :need needs.hl7
 :case /
 Here is desc 

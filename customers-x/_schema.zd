@@ -1,9 +1,11 @@
+:zd/menu-order 2
 
 :title "Default schema"
 
-:menu-order 2
+
 
 :desc /
+
 
 this document sets the knowledge base structure
 

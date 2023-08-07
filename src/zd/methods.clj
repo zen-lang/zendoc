@@ -20,6 +20,11 @@
 (defmulti renderkey (fn [ztx ctx block]
                       (:key block)))
 
+(defmethod renderkey :menu-order [& args])
+(defmethod renderkey :icon [& args])
+(defmethod renderkey :zd/icon [& args])
+(defmethod renderkey :zd/menu-order [& args])
+
 (defn get-anns [block]
   (->> (:ann block)
        (remove (fn [[k _]]

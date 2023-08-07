@@ -1,0 +1,4 @@
+:title "TODO"
+:icon [:fa-regular :fa-clipboard-list-check]
+:subclassOf tasks.Task
+:desc /

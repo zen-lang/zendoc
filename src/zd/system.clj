@@ -25,13 +25,21 @@
 
   (-main)
 
-  (restart @dtx)
+  ;; TODO: fix document update
+  ;; TODO: add validation by class
+  ;; TODO: add annotations by prop
 
-  (zen/stop-system @dtx)
+  (zen/stop-system ztx)
+  (def ztx (zen/new-context {}))
+  (restart ztx)
+
 
   (query '{:where [[e :parent p]]
            :find [(pull e [:xt/id :title])]})
 
+  (zd.memstore/get-doc ztx 'needs)
+
   (:zrefs @@dtx)
+  
 
   )

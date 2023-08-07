@@ -1,4 +1,5 @@
 :title "Queries"
+:icon [:fa-brands :fa-searchengin]
 
 :desc /
 

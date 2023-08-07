@@ -1,0 +1,48 @@
+
+:title "Nikolai Ryzhikov"
+^badge
+:org.memberOf orgs.health-samurai
+^badge
+:org.role org.CTO
+^badge
+:foaf.based_near #{ country.Portugal city.Lisboa city.Estoril}
+
+:person/email "niquola@gmail.com"
+:person/telegram "niquola"
+
+
+:desc /
+
+&hs-memb
+^badge
+:type org.Member
+^badge
+:org.memberSince #inst"2005-01-01"
+^badge
+:org.organization orgs.health-samurai
+^badge
+:org.role org.CTO
+^badge
+:org.person person.niquola
+
+&int-postgres
+^badge
+:type foaf.Iterest
+^badge
+:subject #{ tech.PostgreSQL }
+:desc /
+Interested in Clojure
+
+&fill-profile
+:title "Finish Profile"
+^badge
+:type tasks.TODO
+^badge
+:tasks.assignee person.tim
+^badge
+:tasks.severity tasks.critical
+
+
+:desc /
+
+Complete Profile for Nikolai

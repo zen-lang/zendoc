@@ -1,0 +1,37 @@
+:title "Organization"
+:desc /
+
+:type Class
+
+
+&site
+^badge
+:type Property
+^badge
+:required true
+^badge
+:data-type url
+^badge
+:annotation zd.link-badge
+
+&linkedin
+^badge
+:type Property
+^badge
+:required true
+^badge
+:data-type url
+^badge
+:annotation zd.link-badge
+
+&location
+^badge
+:type Property
+^badge
+:required true
+^badge
+:data-type symbol
+^badge
+:ref-type loc.Country
+^badge
+:annotation zd.link-badge

@@ -52,14 +52,13 @@
   (let [parts (str/split (str docname) #"\.")
         icon-class (c :cursor-pointer [:text :gray-500] [:hover [:text :orange-600]])]
     [:div {:class (c :flex [:py 2])}
-     (if (= (symbol root) docname)
+     (if (and root (= (symbol root) docname))
        [:a {:href (str "/") :class icon-class}
         [:span.fa-regular.fa-house]]
        [:div {:class (c :flex :flex-flow :items-baseline)}
         [:a {:href (str "/") :class icon-class}
          [:span.fa-regular.fa-house]]
-        [:span {:class (c [:mx 1.5] [:text :gray-500])}
-         "/"]
+        [:span {:class (c [:mx 1.5] [:text :gray-500])} "/"]
         (for [x (range 1 (+ 1 (count parts)))]
           (let [pth (into [] (take x parts))
                 nm  (str/join "." pth)]
@@ -69,8 +68,7 @@
                   :class (c [:text "#4B5BA0"])}
               (last pth)]
              (when-not (= x (count parts))
-               [:span {:class (c [:text :gray-500] [:mx 1.5] {:font-size "18px"})}
-                "/"])]))])]))
+               [:span {:class (c [:text :gray-500] [:mx 1.5] {:font-size "18px"})} "/"])]))])]))
 
 (defn topbar [ztx ctx doc]
   [:div {:class (c :flex :items-center)}
@@ -81,8 +79,7 @@
   (try (methods/renderkey ztx ctx block)
        (catch Exception e
          (let [err {:message (str "error rendering " (.getMessage e))
-                    :trace (str/split (with-out-str (trace/print-stack-trace e))
-                                      #"\n")
+                    :trace (str/split (with-out-str (trace/print-stack-trace e)) #"\n")
                     :path [k]
                     :type :zd/renderkey-error}
                err-block {:data [err] :key :zd/errors}]
@@ -97,7 +94,9 @@
    (when-let [errs (seq (:errors m))]
      (methods/renderkey ztx ctx {:data errs :ann {} :key :zd/errors}))
    (doall
-    (for [k (distinct (filter #(get doc %) (:doc m)))]
+    (for [k (->> (:doc m)
+                 (filter #(get doc %))
+                 distinct)]
       (let [block {:data (get doc k)
                    :key k
                    :ann (assoc (get-in doc [:zd/meta :ann k]) :zd/render-subdoc? render-subdoc?)}]

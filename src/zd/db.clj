@@ -53,5 +53,6 @@
                     '{:find [?id ?mu (pull ?e [:section])]
                       :where [[?e :xt/id ?id]
                               [(some? ?mu)]
-                              [?e :menu-order ?mu]]
+                              (or [?e :menu-order ?mu]
+                                  [?e :zd/menu-order ?mu])]
                       :order-by [[?mu :asc]]})}))

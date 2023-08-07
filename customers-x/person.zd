@@ -1,0 +1,39 @@
+
+^badge
+:zd/type zd.class
+^badge
+:zd/require #{ person.email }
+
+:title "Person"
+:icon [:fa-duotone :fa-person]
+:desc /
+
+:menu-order 102
+
+:persons ?/
+
+e :zd/type #person
+m :org.organization o
+m :org.person e
+m :type #org.Member
+
+> m:org.organization
+> e
+> m:org.role
+> m:org.memberSince
+
+:check ?/
+
+e :zd/type #person 
+> e
+
+&email
+^badge
+:zd/type zd.prop
+^badge
+:zd/data-type zd.string
+
+^badge
+:zd/annotation zd.badge
+:desc /
+Email of person

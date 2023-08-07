@@ -10,12 +10,16 @@
 
 (defn submit [ztx data]
   (if-let [{n :node} (get-state ztx)]
-    (xt/submit-tx n [[::xt/put data]])
-    :no/xtdb))
+    (let [res (xt/submit-tx n [[::xt/put data]])]
+      (xt/sync n)
+      res)
+    (do (println :no/xtdb)
+        :no/xtdb)))
 
 (defn evict [ztx data]
   (if-let [{n :node} (get-state ztx)]
-    (xt/submit-tx n [[::xt/evict data]])
+    (do (xt/submit-tx n [[::xt/evict data]])
+        (xt/sync n))
     :no/xtdb))
 
 
@@ -36,7 +40,7 @@
 
 (defn flatten-doc [ztx {{dn :docname :as m} :zd/meta :as doc}]
   (let [meta (->> m
-                  (map (fn [[k v]] [(keyword "meta" (name k)) v]))
+                  (map (fn [[k v]] [(keyword "zd" (name k)) v]))
                   (into {}))
         doc (-> (dissoc doc :zd/backlinks :zd/subdocs :zd/meta)
             (merge meta)
@@ -51,6 +55,9 @@
 (defmethod zen/op 'zd/submit
   [ztx _config params & [_session]]
   (submit ztx params))
+
+(defn save-doc [ztx doc]
+  (submit ztx (flatten-doc ztx doc)))
 
 (defmethod zen/op 'zd.events/datalog-sync
   [ztx _config {_ev :ev doc :params} & [_session]]

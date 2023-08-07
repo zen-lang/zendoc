@@ -16,7 +16,7 @@
 (defn resolve-icon [ztx res]
   (if-let [ava (or (get-in res [:avatar]) (get-in res [:logo]))]
     {:type :img :img ava}
-    (if-let [icon (get res :icon)]
+    (if-let [icon (or (get res :icon) (get res :zd/icon))]
       {:type :ico :icon icon}
       (when-let [parent (get-parent ztx res)]
         (resolve-icon ztx parent)))))
@@ -35,16 +35,14 @@
 
 (defn symbol-link [ztx s & [opts]]
   (if-let [res (memstore/get-doc ztx (symbol s))]
-    [:a {:href (str "/" s) :class (c :inline-flex :items-center [:text "#4B5BA0"] [:hover [:underline]] :whitespace-no-wrap)}
-     (icon ztx res)
-     (when-not (:compact opts)
-       (or (:title res) s))]
-    (let [parts (str/split (str s) #"\.")
-          ss (str/join "." (butlast parts))
-          sub (last parts)]
-      (if-let [sres (when-let [p (memstore/get-doc ztx (symbol ss))]
-                      (get-in p [:zd/subdocs (keyword sub)]))]
-        [:a {:href (str "/" ss "#subdocs-" sub) :class (c :inline-flex :items-center [:text "#4B5BA0"] [:hover [:underline]] :whitespace-no-wrap)}
-         (icon ztx sres)
-         (when-not (:compact opts) (or (:title sres) s))]
-        [:a {:href (str "/" s) :class (c [:text :red-600] [:bg :red-100]) :title "Broken Link"} s]))))
+    (if (get-in res [:zd/meta :subdoc])
+      (let [parent (get-in res [:zd/parent])]
+        [:a {:href (str "/" parent "#subdocs-" (:zd/name res))
+             :class (c :inline-flex :items-center [:text "#4B5BA0"] [:hover [:underline]] :whitespace-no-wrap)}
+         (icon ztx res)
+         (when-not (:compact opts) (or (:title res) s))])
+      [:a {:href (str "/" s) :class (c :inline-flex :items-center [:text "#4B5BA0"] [:hover [:underline]] :whitespace-no-wrap)}
+       (icon ztx res)
+       (when-not (:compact opts)
+         (or (:title res) s))])
+    [:a {:href (str "/" s) :class (c [:text :red-600] [:bg :red-100]) :title "Broken Link"} s]))

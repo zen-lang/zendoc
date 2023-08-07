@@ -1,0 +1,9 @@
+:title "TODO"
+:zd/menu-order 100
+:desc /
+
+:todos ?/
+
+e :zd/type #todo
+> e
+> e:zd/assignee

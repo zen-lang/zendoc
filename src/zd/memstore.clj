@@ -4,9 +4,11 @@
    [zd.methods :as methods]
    [zd.macros]
    [zen.core :as zen]
-   [zen-web.utils :refer [deep-merge]]
    [zd.reader :as reader]
-   [clojure.string :as str]))
+   [clojure.string :as str]
+   [zd.utils :as u]))
+
+
 
 (defn get-doc [ztx nm]
   (get-in @ztx [:zdb nm]))
@@ -119,12 +121,81 @@
        (reduce (fn [acc [k v]] (*collect-macros acc [k] v))
                {})))
 
+(defn read-docs [ztx {:keys [root resource-path path content] :as doc}]
+  (let [docname (meta/path->docname ztx resource-path)
+        parts (str/split (str docname) #"\.")
+        parent-link (->>  parts (butlast) (str/join "."))
+        local-name (last parts)
+        parent      (cond
+                      (= (str docname) root) ""
+                      (str/blank? parent-link) (and root (symbol root))
+                      :else (symbol parent-link))
+        doc-body {:zd/meta {:docname docname
+                            :file resource-path
+                            :ann {:parent {:zd/content-type :edn}}
+                            ;; TODO add last updated from git to a document here?
+                            :path path}
+                  :parent parent
+                  :zd/docname docname
+                  :zd/name local-name
+                  :zd/parent parent}
+        doc (->> content (reader/parse ztx {}) (u/deep-merge doc-body))
+        subdocs (->> (:zd/subdocs doc)
+                     (mapv (fn [[k subdoc]]
+                             (let [subdoc-name (symbol (str docname "." (name k)))]
+                               (assoc subdoc :zd/meta
+                                      {:docname subdoc-name
+                                       :subdoc true
+                                       :file resource-path
+                                       :path path}
+                                      ;; TODO: deprecated
+                                      :parent docname
+                                      :zd/docname subdoc-name
+                                      :zd/name local-name
+                                      :zd/parent docname)))))
+        doc (assoc doc :zd/subs (into #{} (map :zd/docname subdocs)))]
+    (into [doc] subdocs)))
+
+(defn put-doc [ztx {docname :zd/docname :as doc}]
+  (let [links (collect-links ztx doc)
+        macros (collect-macros ztx doc)]
+    (swap! ztx assoc-in [:zdb docname] doc)
+    (swap! ztx update :zrefs patch-links links)
+    (swap! ztx update :zd/keys (fnil into #{}) (keys doc))
+    (swap! ztx assoc-in [:zd/macros docname] macros)))
+
+(defn is? [x c]
+  (if (set? x) (contains? x c) (= x c)))
+
+;; TODO: render infered attrs in a specific way
+(defn infere [ztx docname {tp :zd/type p :zd/parent :as doc}]
+  (let [doc (if (and (not tp) (is? (:zd/type (get-doc ztx p)) 'zd.class))
+              (do
+                (println :add docname :zd/type p)
+                (assoc doc :zd/type p))
+              doc)]
+    (zen/pub ztx 'zd.events/on-doc-load doc)
+    doc))
+
+(defn infere-doc [ztx docname]
+  (let [doc (get-doc ztx docname)
+        idoc (infere ztx docname doc)]
+    (swap! ztx assoc-in [:zdb docname] idoc)
+    idoc))
+
+(defn inference [ztx]
+  (swap!
+   ztx update :zdb
+   (fn [zdb]
+     (->> zdb
+          (reduce (fn [acc [k v]]
+                    (assoc acc k (infere ztx k v)))
+                  {})))))
+
+;; OBSOLETE
 (defn load-document! [ztx {:keys [root resource-path path content] :as doc}]
   (let [docname (meta/path->docname ztx resource-path)
-        parent-link
-        (->> (str/split (str docname) #"\.")
-             (butlast)
-             (str/join "."))
+        parent-link (->> (str/split (str docname) #"\.") (butlast) (str/join "."))
         doc-body {:zd/meta {:docname docname
                             :file resource-path
                             :ann {:parent {:zd/content-type :edn}}
@@ -137,7 +208,7 @@
                     :else (symbol parent-link))}
         doc (->> content
                  (reader/parse ztx {})
-                 (deep-merge doc-body)
+                 (u/deep-merge doc-body)
                  (meta/append-meta ztx))
         links (collect-links ztx doc)
         macros (collect-macros ztx doc)]

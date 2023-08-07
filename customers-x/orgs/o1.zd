@@ -1,18 +1,43 @@
+:zd/type orgs
+:title "Acme"
+^badge
+:type #{ org.Organization prod.EHR-Vendor }
 
-:title "O1"
+
 :desc /
 
-:need needs.hl7
+
+
+&partner
+^badge
+:type #{ prod.Partner }
+^badge
+:prod.partner-org orgs.o1
+^badge
+:prod.partner-of orgs.health-samurai
+^badge
+:prod.partner-since #inst"2011"
+^badge
+:prod.champion #{ people.john }
+
+:desc /
+We partnered with Acme
 
 
 &case-big-data
-:type :case
+:title "Big Data Case"
+^badge
+:type prod.Case
+^badge
 :need needs.big-data
-:case /
+:desc /
 Here is desc
 
 &case-hl7
-:type :case
+:title "HL7 Case"
+^badge
+:type prod.Case
+^badge
 :need needs.hl7
-:case /
+:desc /
 Here is desc

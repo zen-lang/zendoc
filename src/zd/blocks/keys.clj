@@ -26,7 +26,7 @@
    (if-let [img (or (:avatar doc) (:logo doc))]
      [:img {:src img
             :class (c [:w 8] [:h 8] :inline-block [:mr 2] {:border-radius "100%"})}]
-     (when-let [icon (:icon doc)]
+     (when-let [icon (or (:icon doc) (:zd/icon doc))]
        [:i {:class (str (str/join " " (map name icon))
                         " "
                         (name (c [:mr 2] [:text :gray-600])))}]))

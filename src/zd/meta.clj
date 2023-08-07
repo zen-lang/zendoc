@@ -1,6 +1,6 @@
 (ns zd.meta
   (:require
-   [zen-web.utils :as utils]
+   [zd.utils :as u]
    [zd.reader :as reader]
    [clojure.string :as str]
    [zen.core :as zen]))
@@ -100,7 +100,7 @@
                            [k (:schema v)]))
                     (into {}))}
         toplevel
-        (utils/deep-merge (get-in @ztx [:zd/schema :schemas (get-parent ztx docname)])
+        (u/deep-merge (get-in @ztx [:zd/schema :schemas (get-parent ztx docname)])
                           (get-in @ztx [:zd/schema :schemas :zd/root]))]
 
     (-> {:zen/name 'zd.schema/document
