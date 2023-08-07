@@ -265,7 +265,7 @@ var on_editor_keydown = (ctx, ev) => {
 };
 
 var sanitize = (s) => {
-    return s.replace(/[\u0020\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]+/g, " ");
+    return s.replace(/[\u0020\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]/g, " ");
 };
 
 var _render = (ev)=>  {

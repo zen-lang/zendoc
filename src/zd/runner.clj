@@ -1,7 +1,8 @@
 (ns zd.runner
   (:require [clojure.java.io :as io]
             [clojure.string :as str])
-  (:import [java.lang ProcessBuilder]))
+  (:import [java.lang ProcessBuilder]
+           [java.util.concurrent TimeUnit]))
 
 (defn read-env  [override]
   (->
@@ -29,11 +30,17 @@
 
 (defn exec [{dir :dir env :env args :exec :as opts}]
   (let [prc (proc opts)
-        p (.start prc)]
-    (.waitFor p)
-    {:status (.exitValue p)
-     :stdout (read-stream (.getInputStream p))
-     :stderr (read-stream (.getErrorStream p))}))
+        p (.start prc)
+        inp (.getInputStream p)
+        err (.getErrorStream p)]
+    (loop [stdout []
+           stderr []]
+      (if (.waitFor p 30 TimeUnit/SECONDS)
+        {:status (.exitValue p)
+         :stdout (into stdout (read-stream inp))
+         :stderr (into stderr (read-stream err))}
+        (recur (into stdout (read-stream inp))
+               (into stderr (read-stream err)))))))
 
 (defn run [opts]
   (let [prc (proc opts)]
