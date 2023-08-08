@@ -1,3 +1,5 @@
-:title "prod.Case"
-:desc /
+^badge
 :zd/type zd.class
+:zd/icon [:fa-duotone :fa-suitcase]
+:title "Case"
+:desc /

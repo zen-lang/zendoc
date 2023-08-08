@@ -2,7 +2,7 @@
 ^badge
 :zd/type zd.class
 ^badge
-:zd/require #{ person.email }
+:zd/require #{ :person/email }
 
 :title "Person"
 :icon [:fa-duotone :fa-person]
@@ -13,14 +13,14 @@
 :persons ?/
 
 e :zd/type #person
-m :org.organization o
-m :org.person e
-m :type #org.Member
+m :org/organization o
+m :org/person e
+m :zd/type #org.Member
 
-> m:org.organization
+> m:org/organization
 > e
-> m:org.role
-> m:org.memberSince
+> m:org/role
+> m:org/memberSince
 
 :check ?/
 

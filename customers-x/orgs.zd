@@ -1,6 +1,9 @@
 :icon [:fa-duotone :fa-building]
 :menu-order 100
+^badge
 :zd/type zd.class
+^badge
+:zd/require #{ :orgs/site :orgs/location}
 
 :title "orgs"
 :desc /
@@ -15,7 +18,21 @@ c :need n
 
 :ctos ?/
 
-e :org.role #org.CTO
-e :org.memberOf o
-> e
+e :org/role #org.CTO
+e :org/memberOf o
+e :org/person p
+> p
+> e:org/role
 > o
+
+&site
+^badge
+:zd/type zd.prop
+^badge
+:zd/annotation zd.badge
+
+&locaition
+^badge
+:zd/type zd.prop
+^badge
+:zd/annotation zd.badge

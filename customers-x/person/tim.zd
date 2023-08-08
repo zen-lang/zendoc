@@ -4,12 +4,12 @@
 
 &hs-memb
 ^badge
-:type org.Member
+:zd/type org.Member
 ^badge
-:org.memberSince #inst"2010-01-01"
+:org/memberSince #inst"2010-01-01"
 ^badge
-:org.organization orgs.health-samurai
+:org/organization orgs.health-samurai
 ^badge
-:org.role org.TechLead
+:org/role org.TechLead
 ^badge
-:org.person person.tim
+:org/person person.tim

@@ -15,10 +15,12 @@ Welcome to zendoc built-in documentation.
 &type
 :title "zd/type"
 :zd/type zd.prop
+:zd/annotation zd.badge
 
 &data-type
 :title "zd/type"
 :zd/type zd.prop
+:zd/annotation zd.badge
 
 &icon
 :title "zd/type"
@@ -27,6 +29,7 @@ Welcome to zendoc built-in documentation.
 &menu-order
 :title "zd/type"
 :zd/type zd.prop
+:zd/annotation zd.badge
 
 &readonly
 :title "zd/type"

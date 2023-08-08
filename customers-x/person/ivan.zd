@@ -2,19 +2,19 @@
 
 &hs-memb
 ^badge
-:type org.Member
+:zd/type org.Member
 ^badge
-:org.memberSince #inst"2005-01-01"
+:org/memberSince #inst"2005-01-01"
 ^badge
-:org.organization orgs.health-samurai
+:org/organization orgs.health-samurai
 ^badge
-:org.role org.Engineer
+:org/role org.Engineer
 ^badge
-:org.person person.ivan
+:org/person person.ivan
 
 &todo
 ^badge
-:zd/type tasks.TODO
+:zd/type tasks
 ^badge
-:tasks.assignee person.niquola
+:tasks/assignee person.niquola
 :title "Help here"

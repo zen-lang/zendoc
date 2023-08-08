@@ -14,6 +14,7 @@
    [zd.methods :as methods]
    [stylo.core :refer [c]]
    [zd.memstore :as memstore]
+   [clojure.pprint]
    [zd.db :as db]))
 
 (defn actions [ztx {{uri :uri qs :query-string :as req} :request :as ctx} {{:keys [docname]} :zd/meta :as doc}]
@@ -86,6 +87,16 @@
         (zen/pub ztx 'zd.events/on-renderkey-error {:key k :error err})
         (methods/renderkey ztx ctx err-block)))))
 
+(defn *key-to-docname [k]
+  (symbol (str (when-let [ns (namespace k)] (str ns ".")) (name k))))
+
+(defn key-schema [ztx k]
+  {:ann
+   (if-let [ann (-> (memstore/get-doc ztx (*key-to-docname k))
+                    :zd/annotation)]
+     {(keyword (last (str/split (str ann) #"\."))) {}}
+     {})})
+
 (defn render-blocks [ztx ctx {m :zd/meta subs :zd/subdocs :as doc} & [render-subdoc?]]
   [:div {:class (if (:zd/render-preview? ctx)
                   (c [:overflow-x-auto] [:w-max "50vw"])
@@ -93,9 +104,14 @@
    ;; TODO render errors in doc view
    (when-let [errs (seq (:errors m))]
      (methods/renderkey ztx ctx {:data errs :ann {} :key :zd/errors}))
-   (->> (:doc m) (filter #(get doc %)) distinct
+   (->> (:doc m)
+        (filter #(get doc %)) distinct
         (map (fn [k]
-               (let [block {:data (get doc k) :key k :ann (assoc (get-in doc [:zd/meta :ann k]) :zd/render-subdoc? render-subdoc?)}]
+               (let [schema (key-schema ztx k)
+                     block {:data (get doc k)
+                            :key k
+                            :ann (-> (assoc (get-in doc [:zd/meta :ann k]) :zd/render-subdoc? render-subdoc?)
+                                     (merge (:ann schema)))}]
                  (render-key ztx ctx block)))))
    (let [links (seq (get doc :zd/backlinks))]
      (when-not render-subdoc?
@@ -109,7 +125,10 @@
            [:a {:id (str "subdocs-" (name sub-key))}
             [:span "&"]
             [:span {:class (c :uppercase {:font-weight "600"})} (name sub-key)]]]
-          (render-blocks ztx ctx (get-in doc [:zd/subdocs sub-key]) true)]))])])
+          (render-blocks ztx ctx (get-in doc [:zd/subdocs sub-key]) true)]))])
+   [:details
+    [:summary {:class (c [:text :gray-300] :text-sm :cursor-pointer [:hover [:text :gray-500]])} "data"]
+    [:pre {:class (c [:bg :gray-100] :border [:p 2] :text-sm)}(with-out-str (clojure.pprint/pprint doc))]]])
 
 (defn contents-sidebar
   [ztx {r :root :as ctx} {{order :doc anns :ann :as m} :zd/meta links :zd/backlinks subs :zd/subdocs :as doc}]
@@ -271,7 +290,8 @@
   (let [parsed (reader/parse ztx ctx text)]
     (->> parsed
          (meta/append-meta ztx)
-         (meta/validate-doc ztx)
+         (memstore/validate-doc ztx)
+         ;; (meta/validate-doc ztx)
          (render-blocks ztx (assoc ctx :zd/render-preview? true)))))
 
 (defn editor [ztx ctx {m :zd/meta :as doc}]

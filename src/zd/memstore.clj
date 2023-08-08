@@ -9,11 +9,35 @@
    [zd.utils :as u]))
 
 
+(defn validate-doc [ztx doc]
+  (if-let [cls (when-let [tp (:zd/type doc)] (if (set? tp) tp #{tp}))]
+    (let [_ (println :cls? (:zd/docname doc) cls)
+          errors
+          (->> cls
+               (mapcat
+                (fn [cn]
+                  (let [c (get (:zdb @ztx) cn)]
+                    (->> (:zd/require c)
+                         (reduce (fn [acc k]
+                                   (if (contains? doc k)
+                                     acc
+                                     (conj acc
+                                           {:type :doc-validation
+                                            :message (str " required by " cn)
+                                            :path [k]})))
+                                 []))))))]
+      (if (seq errors)
+        (assoc-in doc [:zd/meta :errors] errors)
+        doc))
+    doc))
 
 (defn get-doc [ztx nm]
   (let [backlinks (get (:zrefs @ztx) nm)
-        doc (get (:zdb @ztx) nm)]
+        doc (validate-doc ztx (get (:zdb @ztx) nm))]
     (when doc (assoc doc :zd/backlinks backlinks))))
+
+
+
 
 (defn *edn-links [acc docname path node]
   (cond

@@ -76,6 +76,7 @@
                       (into {:zd/docname {:type 'zen/symbol}}))
         meta-sch
         {:type 'zen/map
+         :values {:type 'zen/any}
          :keys {:doc {:type 'zen/vector
                       :every {:type 'zen/keyword}}
                 :text-values {:type 'zen/any}
@@ -116,12 +117,12 @@
   "validate doc with zen schema compiled from a _schema.zd"
   [ztx doc]
   (let [docname (str (:zd/docname doc))
-        sch (zen-schema ztx docname)
-        errs (->> (zen/validate-schema ztx sch doc)
-                  (:errors)
-                  (map (fn [e] {:type :doc-validation
-                                :message (:message e)
-                                :path (:path e)})))]
+        sch     (zen-schema ztx docname)
+        errs    (->> (zen/validate-schema ztx sch doc)
+                     (:errors)
+                     (map (fn [e] {:type :doc-validation
+                                  :message (:message e)
+                                  :path (:path e)})))]
     (update-in doc [:zd/meta :errors] into
                (cond-> errs
                  (or (empty? docname) (str/ends-with? docname "."))
@@ -129,10 +130,12 @@
                         :path [:zd/docname]
                         :message "Add not empty :zd/docname"})
 
+                 ;; This is a bad idea
                  (str/ends-with? docname "_draft")
                  (conj {:type :docname-validation
                         :path [:zd/docname]
                         :message "Rename :zd/docname from _draft"})))))
+
 
 (defn annotations
   "list annotations used in _schema"

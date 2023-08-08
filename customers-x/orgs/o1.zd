@@ -1,24 +1,27 @@
 :zd/type orgs
+
+:zd/type #{ orgs prod.EHR-Vendor }
+:orgs/site "?"
+:orgs/location country.US
+
 :title "Acme"
-^badge
-:type #{ org.Organization prod.EHR-Vendor }
-
-
 :desc /
 
 
 
 &partner
 ^badge
-:type #{ prod.Partner }
+:zd/type #{ prod.Partner }
 ^badge
-:prod.partner-org orgs.o1
+:prod/partner-org orgs.o1
 ^badge
-:prod.partner-of orgs.health-samurai
+:prod/partner-of orgs.health-samurai
 ^badge
-:prod.partner-since #inst"2011"
+:prod/partner-since #inst"2011"
 ^badge
-:prod.champion #{ people.john }
+:prod/champion #{ people.john }
+
+
 
 :desc /
 We partnered with Acme
@@ -27,7 +30,7 @@ We partnered with Acme
 &case-big-data
 :title "Big Data Case"
 ^badge
-:type prod.Case
+:zd/type prod.Case
 ^badge
 :need needs.big-data
 :desc /
@@ -36,7 +39,7 @@ Here is desc
 &case-hl7
 :title "HL7 Case"
 ^badge
-:type prod.Case
+:zd/type prod.Case
 ^badge
 :need needs.hl7
 :desc /

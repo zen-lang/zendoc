@@ -16,19 +16,19 @@
 
 &hs-memb
 ^badge
-:type org.Member
+:zd/type org.Member
 ^badge
-:org.memberSince #inst"2005-01-01"
+:org/memberSince #inst"2005-01-01"
 ^badge
-:org.organization orgs.health-samurai
+:org/memberOf orgs.health-samurai
 ^badge
-:org.role org.CTO
+:org/role org.CTO
 ^badge
-:org.person person.niquola
+:org/person person.niquola
 
 &int-postgres
 ^badge
-:type foaf.Iterest
+:zd/type foaf.Iterest
 ^badge
 :subject #{ tech.PostgreSQL }
 :desc /
@@ -37,11 +37,11 @@ Interested in Clojure
 &fill-profile
 :title "Finish Profile"
 ^badge
-:type tasks.TODO
+:zd/type tasks
 ^badge
-:tasks.assignee person.tim
+:tasks/assignee person.tim
 ^badge
-:tasks.severity tasks.critical
+:tasks/severity tasks.critical
 
 
 :desc /

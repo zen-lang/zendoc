@@ -4,13 +4,17 @@
 
 
 &case-big-data
+^badge
 :zd/type prod.Case
+^badge
 :need needs.big-data
-:case /
+:desc /
 Here is desc djfaljflkdajfl
 
 &case-ccd
+^badge
 :zd/type prod.Case
+^badge
 :need needs.hl7
 :case /
 Here is desc 
