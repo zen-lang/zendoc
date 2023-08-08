@@ -1,4 +1,5 @@
 :zd/menu-order 100
+:zd/icon [:fa-regular :fa-clipboard-check]
 :title "Tasks"
 :desc /
 

@@ -1,7 +1,8 @@
-:type #{ Class }
+^badge
+:zd/type #{ zd.class }
 :title "Member"
 :desc /
-
+ This is i a class
 
 :query ?/
 

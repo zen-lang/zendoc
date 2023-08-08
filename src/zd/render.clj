@@ -104,7 +104,7 @@
      [:div {:class (c [:py 4])}
       (doall
        (for [sub-key (distinct subdocs)]
-         [:div {:class (c [:my 2])}
+         [:div {:class (c [:my 3] :border [:p 4] :rounded :shadow-sm)}
           [:div {:class (c :flex :flex-row :border-b)}
            [:a {:id (str "subdocs-" (name sub-key))}
             [:span "&"]
