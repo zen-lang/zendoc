@@ -1,13 +1,14 @@
-:title "Zendoc backlog"
-
+:menu-order 1
 :icon [:fa-solid :fa-rectangle-list]
 
 ^link-badge
 :repo "https://github.com/zen-lang/zendoc"
 
-:menu-order 1
+^badge
 :section "first"
 
+
+:title "Zendoc backlog"
 :desc /
 
 features and issues

@@ -60,7 +60,7 @@
   (zen/pub ztx 'zd.events/on-load-start {})
   (swap! ztx dissoc :zdb :zd/schema :zrefs :zd/macros)
   (load-docs! ztx root paths)
-  (memstore/load-links! ztx)
+  ;; (memstore/load-links! ztx)
   (memstore/eval-macros! ztx)
   (zen/pub ztx 'zd.events/on-load-complete {})
   ;; TODO think about return value
@@ -118,7 +118,8 @@
                             (mapv (fn [doc]
                                     (memstore/put-doc ztx doc)
                                     (memstore/infere-doc ztx (:zd/docname doc)))))
-                       (memstore/load-links! ztx))
+                       ;; (memstore/load-links! ztx)
+                       )
                      #_(do (memstore/load-document! ztx {:path filepath
                                                        :root r
                                                        :resource-path resource-path

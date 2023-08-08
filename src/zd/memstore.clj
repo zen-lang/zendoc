@@ -11,7 +11,9 @@
 
 
 (defn get-doc [ztx nm]
-  (get-in @ztx [:zdb nm]))
+  (let [backlinks (get (:zrefs @ztx) nm)
+        doc (get (:zdb @ztx) nm)]
+    (when doc (assoc doc :zd/backlinks backlinks))))
 
 (defn *edn-links [acc docname path node]
   (cond

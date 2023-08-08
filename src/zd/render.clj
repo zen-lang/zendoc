@@ -75,15 +75,16 @@
    (actions ztx ctx doc)])
 
 (defn render-key [ztx ctx {k :key :as block}]
-  (try (methods/renderkey ztx ctx block)
-       (catch Exception e
-         (let [err {:message (str "error rendering " (.getMessage e))
-                    :trace (str/split (with-out-str (trace/print-stack-trace e)) #"\n")
-                    :path [k]
-                    :type :zd/renderkey-error}
-               err-block {:data [err] :key :zd/errors}]
-           (zen/pub ztx 'zd.events/on-renderkey-error {:key k :error err})
-           (methods/renderkey ztx ctx err-block)))))
+  (try
+    (methods/renderkey ztx ctx block)
+    (catch Exception e
+      (let [err {:message (str "error rendering " (.getMessage e))
+                 :trace (str/split (with-out-str (trace/print-stack-trace e)) #"\n")
+                 :path [k]
+                 :type :zd/renderkey-error}
+            err-block {:data [err] :key :zd/errors}]
+        (zen/pub ztx 'zd.events/on-renderkey-error {:key k :error err})
+        (methods/renderkey ztx ctx err-block)))))
 
 (defn render-blocks [ztx ctx {m :zd/meta subs :zd/subdocs :as doc} & [render-subdoc?]]
   [:div {:class (if (:zd/render-preview? ctx)
@@ -92,15 +93,11 @@
    ;; TODO render errors in doc view
    (when-let [errs (seq (:errors m))]
      (methods/renderkey ztx ctx {:data errs :ann {} :key :zd/errors}))
-   (doall
-    (for [k (->> (:doc m)
-                 (filter #(get doc %))
-                 distinct)]
-      (let [block {:data (get doc k)
-                   :key k
-                   :ann (assoc (get-in doc [:zd/meta :ann k]) :zd/render-subdoc? render-subdoc?)}]
-        (render-key ztx ctx block))))
-   (let [links (seq (get-in doc [:zd/meta :backlinks]))]
+   (->> (:doc m) (filter #(get doc %)) distinct
+        (map (fn [k]
+               (let [block {:data (get doc k) :key k :ann (assoc (get-in doc [:zd/meta :ann k]) :zd/render-subdoc? render-subdoc?)}]
+                 (render-key ztx ctx block)))))
+   (let [links (seq (get doc :zd/backlinks))]
      (when-not render-subdoc?
        (methods/renderkey ztx ctx {:data links :key :zd/backlinks})))
    (when-let [subdocs (seq (filter #(get subs %) (:doc m)))]
@@ -114,8 +111,8 @@
             [:span {:class (c :uppercase {:font-weight "600"})} (name sub-key)]]]
           (render-blocks ztx ctx (get-in doc [:zd/subdocs sub-key]) true)]))])])
 
-(defn contents-sidebar [ztx {r :root :as ctx} {{order :doc anns :ann :as m} :zd/meta
-                                               links :zd/backlinks subs :zd/subdocs :as doc}]
+(defn contents-sidebar
+  [ztx {r :root :as ctx} {{order :doc anns :ann :as m} :zd/meta links :zd/backlinks subs :zd/subdocs :as doc}]
   (let [dockeys
         ;; TODO fix case when subdocs and dockey are the same
         (->> order
@@ -141,18 +138,18 @@
         subdocs (->> order
                      (filter #(get subs %))
                      (distinct))
-        root (c :flex :flex-col :text-sm [:p 6] [:bg "white"] [:w-max "16rem"])
         col  (c :flex :flex-col [:py 2])
-        head (c :uppercase [:pb 3])
-        item (c [:py 0.6])]
-    [:div {:class root}
+        head (c [:pb 0.5] [:pt 1] :border-b :text-lg [:mb 1] [:text :gray-600] {:font-weight "500"})
+        item (c [:py 0.5] [:hover [:text :gray-800]])]
+    [:div {:class (c :flex :flex-col :text-sm [:p 6] [:bg "white"] [:w-max "16rem"]
+                     :text-sm [:text :gray-600]
+                     {:position "absolute" :top "0rem" :right "1rem"})}
      (when (seq dockeys)
        [:div {:class col}
         [:div {:class head} "keys"]
         ;; TODO make items clickable
         (for [{d :display h :href} dockeys]
-          [:a {:class item
-               :href (str "#" h)} d])])
+          [:a {:class item :href (str "#" h)} d])])
      (when (seq doclinks)
        [:div {:class col}
         [:div {:class head} "backlinks"]

@@ -6,6 +6,7 @@
    [hickory.core]
    [matcho.core :as matcho]
    [clojure.java.io :as io]
+   [zd.memstore]
    [zd.datalog])
   (:import [java.nio.file Files Path]))
 
@@ -88,10 +89,7 @@
 
 ;; TODO: this logic should live in codebase
 (defn get-doc [s]
-  (let [backlinks (get (:zrefs @@ctx) s)
-        doc (get (:zdb @@ctx) s)]
-    (when doc
-      (assoc doc :zd/backlinks backlinks))))
+  (zd.memstore/get-doc @ctx s))
 
 (defn hiccup-find [body id]
   (let [res (atom [])]

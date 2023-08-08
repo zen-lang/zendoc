@@ -1,3 +1,5 @@
-:title "Customers X knowledge base"
+:menu-order 0
+:title "Home"
+:zd/icon [:fa-duotone :fa-house-chimney-medical]
 :desc /
 X company wants to gather knowledge and get insights in customer relations.

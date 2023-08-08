@@ -139,8 +139,7 @@
     (->> subdocs
          (mapv (fn [subdoc]
                  (when-not (contains? docs-idx subdoc)
-                   (delete-doc ztx subdoc)))))
-    (memstore/load-links! ztx)))
+                   (delete-doc ztx subdoc)))))))
 
 
 (defn get-lines [s]

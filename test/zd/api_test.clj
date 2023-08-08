@@ -19,6 +19,8 @@
      {:uri "/default"}
      {:status 200})
 
+    (:zrefs @@t/ctx)
+
     (is (t/get-doc 'default))
 
     (matcho/match (t/query '{:find [t] :where [[e :xt/id "'default"] [e :title t]]}) #{["Default"]}))

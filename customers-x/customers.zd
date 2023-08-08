@@ -1,4 +1,7 @@
 :icon [:fa-solid :fa-store]
+
+:country #{countries.ru}
+:tags [tags.telemed]
 :title "customers list"
 
 :menu-order 1
@@ -6,16 +9,11 @@
 :desc /
 
 a description that refers to #people.john and mentions @todd.
-
 have you seen it @todd?
-
 it also refers to #customers.flame and even mentions #people.john!
+there is also a link that includes hash char - [[a https://docs.google.com/spreadsheets/d/1BbaAQLo2RaktkKJQxyDN2cqTNbit4mnA/edit#gid=1568783766 Link]]
 
-there is also a link that includes hash char - [[a https://docs.google.com/spreadsheets/d/1BbaAQLo2RaktkKJQxyDN2cqTNbit4mnA/edit#gid=1568783766]]
 
-:country #{countries.ru}
-
-:tags [tags.telemed]
 
 :product-champion people.john
 

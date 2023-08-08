@@ -71,55 +71,40 @@
         ;; TODO move this processing to memstore
         links
         (->> data
+             (mapcat (fn [[from paths]] (for [p paths] {:to dn :path p :doc from})))
              (map (fn [{d :doc p :path t :to}]
                     {:to t
                      :doc d
                      :parent (when (str/includes? (str d) ".") (str/join "." (butlast (str/split (str d) #"\."))))
-                     :path (->> (map (fn [f] (if (keyword? f) (name f) (str f))) p)
-                                (str/join ".")
-                                (str ":"))}))
+                     :path   (->> (map (fn [f] (if (keyword? f) (name f) (str f))) p) (str/join ".") (str ":"))}))
              (sort-by (juxt :parent :path :doc))
              (group-by :parent)
-             (map (fn [[p links]]
-                    [p (sort-by (fn [{d :doc}]
-                                  (:title (memstore/get-doc ztx d)))
-                                links)])))]
+             (map (fn [[p links]] [p (sort-by (fn [{d :doc}] (:title (memstore/get-doc ztx d))) links)])))]
     (for [[parent links] links]
       (let [*parent (or parent r)]
         [:div {:class (c [:py 4] #_[:text :gray-600])}
          [:div {:class (c :flex :flex-row :items-center :border-b :justify-between [:py 1])}
           [:div
-           [:span {:class (c :text-sm)}
-            [:i.fas.fa-regular.fa-link]]
-           [:a {:id (str "backlinks-" *parent) :class (c :uppercase {:font-weight "600"})}
+           [:span {:class (c :text-sm [:mr 1])}
+            [:i.fa-solid.fa-arrow-up]]
+           [:a {:id (str "backlinks-" *parent)
+                :class (c :text-lg {:font-weight "600"})}
             (str *parent ".*")]
            [:span {:class (c [:pl 2] :text-sm [:text :gray-500])}
-            (str/join ", " (set (map :path links)))]]
-          #_[:a {:class (c :block [:p 1] :text-lg :cursor-pointer [:hover [:text :green-600]])
-               :href (if (some? parent)
-                       (str parent "." "_draft/edit")
-                       "_draft/edit")}
-           [:i.fas.fa-plus]]]
+            (str/join ", " (set (map :path links)))]]]
          ;; TODO think if path is needed in each link
-         (for [{p :path docname :doc} (distinct (map #(dissoc % :path) links))]
-           (let [{{anns :ann lu :last-updated} :zd/meta :as doc}
-                 (memstore/get-doc ztx (symbol docname))]
-             [:div {:class (c [:pt 4] :flex :flex-col)}
-              [:div {:class (c :inline-flex :items-center)}
-               (link/symbol-link ztx docname)
-               #_[:a {:href (str "/" docname)
-                    :class (c :inline-flex :items-center [:text "#4B5BA0"]
-                              [:hover [:underline]] :whitespace-no-wrap)}
-                (:title doc)]
+         (for [{docname :doc} (distinct (map #(dissoc % :path) links))]
+           (let [{{anns :ann} :zd/meta :as doc} (memstore/get-doc ztx (symbol docname))]
+             [:div {:class (c [:py 1] :flex  :border-b)}
+              [:div {:class (c :flex :flex-1)}
+               (link/symbol-link ztx docname {:force-icon true :icon-class (c {:min-width "1em"})})
                [:div {:class (c :flex :self-center)}
                 (when (str/includes? (str docname) "_template")
                   [:span {:class (c :text-xs [:text :orange-500] [:pl 2])}
                    "_template"])
                 (when (str/includes? (str docname) "_schema")
                   [:span {:class (c :text-xs [:text :orange-500] [:pl 2])}
-                   "_schema"])
-                #_[:div {:class (c [:text :gray-500])}
-                   "upd: " lu]]]
+                   "_schema"])]]
               [:div {:class (c :flex :flex-wrap :overflow-x-hidden)}
                (doall
                 (for [[k v] (select-keys doc summary-keys)]
@@ -147,18 +132,8 @@
                                              (str s))]]
                                    [:span (pr-str s)]))
                                v)))
-                       ;; render single link
                        (symbol? v)
                        (link/symbol-link ztx v)
-                       #_(let [res (memstore/get-doc ztx v)]
-                         [:a {:href (str "/" v)
-                              :class (c :inline-flex
-                                        :items-center
-                                        [:hover [:text :blue-600] :underline]
-                                        :whitespace-no-wrap
-                                        {:text-decoration-thickness "0.5px"})}
-                          [:span (:title res)]])
-
                        :else [:span (pr-str v)])])))]]))]))))
 
 (defmethod methods/renderkey :zd/errors

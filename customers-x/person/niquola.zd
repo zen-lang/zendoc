@@ -1,15 +1,16 @@
 
-:title "Nikolai Ryzhikov"
+
 ^badge
 :org.memberOf orgs.health-samurai
 ^badge
 :org.role org.CTO
 ^badge
 :foaf.based_near #{ country.Portugal city.Lisboa city.Estoril}
-
+^badge
 :person/email "niquola@gmail.com"
+^badge
 :person/telegram "niquola"
-
+:title "Nikolai Ryzhikov"
 
 :desc /
 

@@ -124,7 +124,7 @@
 (defmethod apply-transition :p-end
   [ztx tr {lns :lines :as ctx} line]
   (-> (update ctx :result conj
-              (let [res (into [:p {:class (c [:pb 4])}]
+              (let [res (into [:p {:class (c [:pb 2])}]
                               (mapcat (fn [l] (let [parsed (parse-inline ztx l ctx)]
                                                 (if-not (or (some #{"."} parsed) (some #{","} parsed))
                                                   (conj parsed "\n")

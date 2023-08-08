@@ -7,8 +7,7 @@
    [zd.methods :as methods]))
 
 ;; renders content of a block with :zd/content-type annotation
-(defmulti rendercontent (fn [ztx ctx block]
-                          (get-in block [:ann :zd/content-type])))
+(defmulti rendercontent (fn [ztx ctx block] (get-in block [:ann :zd/content-type])))
 
 ;; by default just pretty prints the content
 (defmethod rendercontent :default
@@ -35,32 +34,29 @@
                       (when-let [[block-key _] (first (get-anns block))]
                         block-key)))
 
+(defmethod renderkey :desc
+  [ztx ctx {kp :key d :data anns :ann :as block}]
+  [:p {:class (c [:text :gray-600])}
+   (rendercontent ztx ctx block)])
+
 ;; by default add a header and renders content of a block
-(defmethod renderkey :default [ztx ctx {kp :key d :data anns :ann :as block}]
+(defmethod renderkey :default
+  [ztx ctx {kp :key d :data anns :ann :as block}]
   ;; TODO fix render inline for bb run
   ;; TODO think if render inline is usable at all
-  (let [render-inline?
-        (and (not (:zd/multiline anns))
-             (= (:zd/content-type anns) :edn)
-             (not (map? d)))
-        basic-style (c [:py 1] [:mb "0.8rem"] :border-b)
+  (let [basic-style (c [:pb 0.2] [:pt 1.5] [:mb 3] :text-lg :border-b)
         embedded-style (c :flex :flex-row :items-center)
+        render-inline? (and (not (:zd/multiline anns)) (= (:zd/content-type anns) :edn) (not (map? d)))
         multiline-embedded (c :flex :flex-row :items-baseline [:py 4])
-        cnt (when-not (and (string? d) (str/blank? d))
-              (rendercontent ztx ctx block))]
+        cnt (when-not (and (string? d) (str/blank? d)) (rendercontent ztx ctx block))]
     (if (seq (get-anns block))
       (methods/renderann ztx ctx (assoc block :content cnt))
       [:div {:class (c [:py 4])}
-       [:div {:class (if (:zd/render-subdoc? anns)
-                       embedded-style
-                       basic-style)}
-        [:span {:class (c :uppercase)} ":"]
-        [:a {:id kp}
-         [:span {:class (c :uppercase {:font-weight "600"})} kp]]]
+       [:div {:class (if (:zd/render-subdoc? anns) embedded-style basic-style)}
+        [:a {:id kp :href (str "#" (name kp)) :class (c  {:font-weight "600"})}
+         (name kp)]]
        ;; TODO think about rendering flow
-       (try (hiccup/html cnt)
-            (catch Exception e
-              (with-out-str (pprint/pprint cnt))))])))
+       (try (hiccup/html cnt) (catch Exception e (with-out-str (pprint/pprint cnt))))])))
 
 ;; zentext methods
 (defmulti inline-method   (fn [ztx m arg ctx] (keyword m)))

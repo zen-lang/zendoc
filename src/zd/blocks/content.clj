@@ -63,7 +63,7 @@
     :else (with-out-str (clojure.pprint/pprint v))))
 
 (defmethod methods/rendercontent :?
-  [ztx ctx {{headers :table-of} :ann data :data :as block}]
+  [ztx _ctx {data :data :as block}]
   (let [{res :result cols :columns q :query} (d/sugar-query ztx data)]
     [:div
      [:details {:class (c :text-xs [:mb 2])}
@@ -72,7 +72,12 @@
        (with-out-str (clojure.pprint/pprint (dissoc q :columns :index :args)))]]
      [:table
       (into [:thead]
-            (->> cols (map (fn [col] [:th {:class (c [:py 1] [:bg :gray-100] :border {:font-weight "500"})} (str col)]))))
+            (->> cols
+                 (map (fn [col]
+                        [:th {:class (c [:py 1] [:px 2] [:bg :gray-100] :border {:font-weight "500"})}
+                         (cond (keyword? col) (name col)
+                               (nil? col) "~"
+                               :else (str col))]))))
       (into [:tbody]
             (for [vs res]
               [:tr {:key (hash vs)}
