@@ -6,37 +6,59 @@
    [zen.core :as zen]
    [zd.reader :as reader]
    [clojure.string :as str]
+   [zd.datalog :as datalog]
    [zd.utils :as u]))
 
+(defn validate-refs [ztx doc]
+  (->> doc
+       (reduce
+        (fn [acc [k v]]
+          (if (symbol? v)
+            (if-not (get (:zdb @ztx) v)
+              (conj acc {:type :doc-validation :message (str "could not find " v) :path [k]})
+              acc)
+            (if (set? v)
+              (->> v
+                   (reduce (fn [acc x]
+                             (if (and (symbol? x) (not (get (:zdb @ztx) x)))
+                               (conj acc {:type :doc-validation :message (str "could not find '" x) :path [k]})
+                               acc))
+                           acc))
+              acc)))
+        [])))
 
-(defn validate-doc [ztx doc]
-  (if-let [cls (when-let [tp (:zd/type doc)] (if (set? tp) tp #{tp}))]
-    (let [errors
-          (->> cls
-               (mapcat
-                (fn [cn]
-                  (let [c (get (:zdb @ztx) cn)]
-                    (->> (:zd/require c)
-                         (reduce (fn [acc k]
-                                   (if (contains? doc k)
-                                     acc
-                                     (conj acc
-                                           {:type :doc-validation
-                                            :message (str " required by " cn)
-                                            :path [k]})))
-                                 []))))))]
-      (if (seq errors)
-        (assoc-in doc [:zd/meta :errors] errors)
-        doc))
-    doc))
+(defn doc-errors [ztx doc]
+  (let [cls (when-let [tp (:zd/type doc)] (if (set? tp) tp #{tp}))
+        errors
+        (->> cls
+             (mapcat
+              (fn [cn]
+                (let [c (get (:zdb @ztx) cn)]
+                  (->> (:zd/require c)
+                       (reduce (fn [acc k]
+                                 (if (contains? doc k)
+                                   acc
+                                   (conj acc
+                                         {:type :doc-validation
+                                          :message (str " required by " cn)
+                                          :path [k]})))
+                               []))))))
+        errors (into errors (into (validate-refs ztx doc)))]
+    errors))
+
+(defn enrich [ztx doc]
+  (let [nm        (:zd/docname doc)
+        nm        (when nm (if (string? nm) nm (symbol nm)))
+        backlinks (when nm (when nm (get (:zrefs @ztx) nm)))
+        errors    (seq (doc-errors ztx doc))]
+    (when doc
+      (cond-> doc
+        (seq backlinks) (assoc :zd/backlinks backlinks)
+        (seq errors)    (assoc :zd/errors errors)))))
 
 (defn get-doc [ztx nm]
-  (let [backlinks (get (:zrefs @ztx) nm)
-        doc (validate-doc ztx (get (:zdb @ztx) nm))]
-    (when doc (assoc doc :zd/backlinks backlinks))))
-
-
-
+  (let [doc (get (:zdb @ztx) nm)]
+    (enrich ztx doc)))
 
 (defn *edn-links [acc docname path node]
   (cond
@@ -194,13 +216,19 @@
 (defn remove-links [ztx docname]
   (swap! ztx update :zrefs (fn [zrefs] (*remove-links zrefs docname))))
 
-(defn put-doc [ztx {docname :zd/docname :as doc}]
+(defn put-doc [ztx {docname :zd/docname :as doc} & [opts]]
   (let [links (collect-links ztx doc)
         macros (collect-macros ztx doc)]
     (swap! ztx assoc-in [:zdb docname] doc)
+    (when-not (:dont-validate opts)
+      (let [errors (doc-errors ztx doc)]
+        (swap! ztx assoc-in [:zd/errors docname] errors)))
     (swap! ztx update :zrefs patch-links links)
     (swap! ztx update :zd/keys (fnil into #{}) (keys doc))
     (swap! ztx assoc-in [:zd/macros docname] macros)))
+
+(defn get-all-errors [ztx]
+  (get @ztx :zd/errors))
 
 (defn is? [x c]
   (if (set? x) (contains? x c) (= x c)))
@@ -208,27 +236,25 @@
 ;; TODO: render infered attrs in a specific way
 (defn infere [ztx docname {tp :zd/type p :zd/parent :as doc}]
   (let [doc (if (and (not tp) (is? (:zd/type (get-doc ztx p)) 'zd.class))
-              (do
-                (println :add docname :zd/type p)
-                (assoc doc :zd/type p))
+              (assoc doc :zd/type p)
               doc)]
-    (zen/pub ztx 'zd.events/on-doc-load doc)
     doc))
 
 (defn infere-doc [ztx docname]
   (let [doc (get-doc ztx docname)
         idoc (infere ztx docname doc)]
     (swap! ztx assoc-in [:zdb docname] idoc)
+    (datalog/save-doc ztx idoc)
     idoc))
 
 (defn inference [ztx]
-  (swap!
-   ztx update :zdb
-   (fn [zdb]
-     (->> zdb
-          (reduce (fn [acc [k v]]
-                    (assoc acc k (infere ztx k v)))
-                  {})))))
+  (println :inference)
+  (doseq [[docname doc] (:zdb @ztx)]
+    (infere-doc ztx docname)
+    (let [errors (doc-errors ztx doc)]
+      (if (seq errors)
+        (swap! ztx assoc-in [:zd/errors docname] errors)
+        (swap! ztx update-in [:zd/errors] dissoc docname)))))
 
 ;; OBSOLETE
 (defn load-document! [ztx {:keys [root resource-path path content] :as doc}]

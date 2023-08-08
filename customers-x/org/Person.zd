@@ -1,4 +1,4 @@
 ^badge
-:type #{ Class }
+:zd/type zd.class
 :title "Person"
 :desc /

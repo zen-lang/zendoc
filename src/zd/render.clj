@@ -15,6 +15,7 @@
    [stylo.core :refer [c]]
    [zd.memstore :as memstore]
    [clojure.pprint]
+   [zd.blocks.zd]
    [zd.db :as db]))
 
 (defn actions [ztx {{uri :uri qs :query-string :as req} :request :as ctx} {{:keys [docname]} :zd/meta :as doc}]
@@ -99,13 +100,22 @@
             {(keyword (last (str/split (str ann) #"\."))) {}}
             {})}))
 
+(defn render-errors [_ztx errors]
+  [:div#doc-errors {:class (c [:text :red-700]  [:my 2] :rounded :text-sm [:border :red-300])}
+   [:ul {:class (c :font-bold [:mb 1] [:py 1] [:px 3] [:ml 0] [:text :red-600] [:bg :red-100] [:border-b :red-300]
+                   {:border-radius "4px 4px 0 0"})} "Document errors"]
+   (for [err (sort-by :type errors)]
+     [:li {:class (c [:py 0.5] :flex [:space-x 3] [:text :red-600] [:px 3])}
+      [:span (pr-str (:path err))]
+      [:span {:class (c [:ml 4] {:text-align "right"})} (:message err)]])])
+
 (defn render-blocks [ztx ctx {m :zd/meta subs :zd/subdocs :as doc} & [render-subdoc?]]
   [:div {:class (if (:zd/render-preview? ctx)
                   (c [:overflow-x-auto] [:w-max "50vw"])
                   (c [:w "60vw"] #_[:overflow-x-auto] [:w-max "60rem"]))}
    ;; TODO render errors in doc view
-   (when-let [errs (seq (:errors m))]
-     (methods/renderkey ztx ctx {:data errs :ann {} :key :zd/errors}))
+   (when-let [errs (seq (:zd/errors doc))]
+     (render-errors ztx errs))
    (->> (:doc m)
         (filter #(get doc %)) distinct
         (map (fn [k]
@@ -292,8 +302,7 @@
   (let [parsed (reader/parse ztx ctx text)]
     (->> parsed
          (meta/append-meta ztx)
-         (memstore/validate-doc ztx)
-         ;; (meta/validate-doc ztx)
+         (memstore/enrich ztx)
          (render-blocks ztx (assoc ctx :zd/render-preview? true)))))
 
 (defn editor [ztx ctx {m :zd/meta :as doc}]

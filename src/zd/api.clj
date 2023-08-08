@@ -79,6 +79,23 @@
     {:status 200
      :body [:div "Error: " id " is not found"]}))
 
+(defmethod zen/op 'zd/errors-page
+  [ztx _cfg req & _opts]
+  (let [{r :root ps :paths :as config} (zendoc-config ztx)
+        doc {:zd/name '_errors
+             :title "Errors"
+             :zd/readonly true
+             :zd/meta {:doc [:title :errors-view]}
+             :errors-view true}]
+
+    (if (get-in req [:headers "x-body"])
+      {:status 200
+       :headers {"Cache-Control" "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"}
+       :body (render/render-doc ztx {:request req :paths ps :doc doc :root r :config config} doc)}
+      {:status 200
+       :headers {"Cache-Control" "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"}
+       :body (render/doc-view ztx {:request req :paths ps :doc doc :root r :config config} doc)})))
+
 (defn extract-id [lines]
   (-> (->> lines
            (filter #(or
@@ -88,7 +105,6 @@
       (str/trim)
       (str/split #"\s+")
       (second)))
-
 
 (defn name-to-dir [pths docname]
   (->> (str/split docname #"\.")

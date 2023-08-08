@@ -56,9 +56,9 @@
 
     (:zrefs @@t/ctx)
 
-    (matcho/match (t/get-doc 'testdoc) {:title "testdoc"})
-    (matcho/match (t/get-doc 'testdoc.subdoc1) {:title "subdoc1"})
-    (matcho/match (t/get-doc 'testdoc.subdoc2) {:title "subdoc2"})
+    (t/match-doc 'testdoc {:title "testdoc"})
+    (t/match-doc 'testdoc.subdoc1 {:title "subdoc1"})
+    (t/match-doc 'testdoc.subdoc2  {:title "subdoc2"})
 
     (t/query '{:find [e] :where [[e :xt/id id]]})
 
@@ -66,15 +66,8 @@
     (is (seq (t/query '{:find [e] :where [[e :xt/id "'testdoc.subdoc1"]]})))
     (is (seq (t/query '{:find [e] :where [[e :xt/id "'testdoc.subdoc2"]]})))
 
-    (matcho/match (t/get-doc 'default)
-      {:zd/backlinks {'testdoc #{[:link]}}})
-
-
-    (matcho/match (t/get-doc 'default)
-      {:zd/backlinks {'testdoc #{[:link]}}})
-
-    (matcho/match (t/get-doc 'other)
-      {:zd/backlinks {'testdoc #{[:otherlink]}}})
+    (t/match-doc 'default {:zd/backlinks {'testdoc #{[:link]}}})
+    (t/match-doc 'other {:zd/backlinks {'testdoc #{[:otherlink]}}})
 
     ;; now lets edit
     ;; remove :link, change fields, and change subentities
@@ -92,9 +85,6 @@
                   ['&subdoc3]
                   [:title "subdoc3"])}
      {:status 200})
-
-
-
 
     (matcho/match (t/get-doc 'testdoc) {:title "testdoc-change"})
     (matcho/match (t/get-doc 'testdoc.subdoc1) {:title "subdoc1-change"})
@@ -146,11 +136,8 @@
     (is (empty? (t/query '{:find [t] :where [[e :xt/id "'testdoc.subdoc1"] [e :title t]]})))
     (is (empty? (t/query '{:find [t] :where [[e :xt/id "'testdoc.subdoc3"] [e :title t]]})))
 
-    (matcho/match (t/get-doc 'default)
-      {:zd/backlinks {'testdoc nil?}})
-
-    (matcho/match (t/get-doc 'other)
-      {:zd/backlinks {'testdoc nil?}})
+    (t/match-doc 'default  {:zd/backlinks {'testdoc nil?}})
+    (t/match-doc 'other    {:zd/backlinks nil?})
     )
 
   (testing "rename document"
@@ -185,7 +172,72 @@
       :headers {"Location" "/testdoc/edit?"}})
 
 
-    ))
+    )
+
+  (testing "validation"
+    (t/http-match
+     {:uri "/org/edit"
+      :request-method :put
+      :body (t/zd [:zd/docname 'org]
+                  [:title "Organization"]
+                  [:zd/type 'zd.class]
+                  [:zd/require #{:title :org/prop}]
+                  ['&prop]
+                  [:zd/type 'zd.prop]
+                  [:zd/data-type 'zd.string])}
+     {:status 200})
+
+    (t/http-match
+     {:uri "/org.o1/edit"
+      :request-method :put
+      :body (t/zd [:zd/docname 'org.o1]
+                  [:zd/type 'org]
+                  [:title "O1"])}
+     {:status 200})
+
+    (t/get-doc 'org)
+
+    (t/match-doc 'org.o1 {:zd/errors [{:path [:org/prop]} nil?]})
+
+    (def resp (t/http-match {:uri "/org.o1"} {:status 200}))
+
+    (->
+     (t/hiccup-find resp "doc-errors")
+     (t/hiccup-text "[:org/prop]")
+     is)
+
+    (t/http-match
+     {:uri "/org.o1/edit"
+      :request-method :put
+      :body (t/zd [:zd/docname 'org.o1]
+                  [:zd/type 'org]
+                  [:title "O1"]
+                  [:org/prop "value"])}
+     {:status 200})
+
+    (t/match-doc 'org.o1 {:zd/errors nil?})
+
+    (-> (t/hiccup-find resp "doc-errors") (t/hiccup-text "[:org/prop]") is not)
+
+
+    (t/http-match
+     {:uri "/org.o1/edit"
+      :request-method :put
+      :body (t/zd [:zd/docname 'org.o1]
+                  [:zd/type 'org]
+                  [:title "O1"]
+                  [:org/prop "value"]
+                  [:borken-link 'ups])}
+     {:status 200})
+
+    (t/match-doc 'org.o1 {:zd/errors [{:message "could not find 'ups"}]})
+
+    (t/http-match {:uri "/_errors"} {:status 200})
+    (t/all-errors)
+
+    )
+
+  )
 
 (deftest document-rename)
 

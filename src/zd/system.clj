@@ -18,8 +18,8 @@
     (reset! dtx ztx)
     (restart ztx)))
 
-(defn query [q]
-  (zd.datalog/query @dtx q))
+(defn query [ztx q]
+  (zd.datalog/query ztx q))
 
 (comment
 
@@ -34,8 +34,8 @@
   (restart ztx)
 
 
-  (query '{:where [[e :parent p]]
-           :find [(pull e [:xt/id :title])]})
+  (query ztx '{:where [[e :xt/id id]]
+               :find [(pull e [:xt/id :title])]})
 
   (zd.memstore/get-doc ztx 'needs)
 

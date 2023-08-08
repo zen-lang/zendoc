@@ -74,6 +74,9 @@
  render-preview
  {:zen/tags #{zen-web/op zen/op}}
 
+ errors-page
+ {:zen/tags #{zen-web/op zen/op}}
+
  api
  {:zen/tags #{zen-web/api}
   :engine zen-web/routemap
@@ -89,4 +92,6 @@
                     {:GET render-widget}}
          "edit" {:PUT save-doc
                  :GET render-editor}}
+  "_errors" {:mw [append-doc layout]
+             :* {:GET errors-page}}
   "static" {:* {:GET serve-static}}}}

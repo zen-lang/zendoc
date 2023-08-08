@@ -7,6 +7,7 @@
    [matcho.core :as matcho]
    [clojure.java.io :as io]
    [zd.memstore]
+   [clojure.walk]
    [zd.datalog])
   (:import [java.nio.file Files Path]))
 
@@ -91,10 +92,26 @@
 (defn get-doc [s]
   (zd.memstore/get-doc @ctx s))
 
+(defn all-errors []
+  (zd.memstore/get-all-errors @ctx))
+
+(defmacro match-doc [s pat]
+  `(let [d# (get-doc ~s)]
+    (matcho/match d# ~pat)
+    d#))
+
 (defn hiccup-find [body id]
   (let [res (atom [])]
     (clojure.walk/postwalk (fn [x]
                              (when (and (vector? x) (map? (second x)) (= id (:id (second x))))
+                               (swap! res conj x))
+                             x) body)
+    @res))
+
+(defn hiccup-text [body text]
+  (let [res (atom [])]
+    (clojure.walk/postwalk (fn [x]
+                             (when (and (string? x) (= x text))
                                (swap! res conj x))
                              x) body)
     @res))

@@ -2,11 +2,8 @@
 
 ^badge
 :zd/type orgs
-^link-badge
 :orgs/site "https://health-samurai.io"
-^badge
 :orgs/location #{ country.US }
-^link-badge
 :orgs/linkedin "https://www.linkedin.com/company/6653460/admin/feed/posts/"
 
 :desc /

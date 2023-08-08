@@ -25,6 +25,7 @@
        (str (first pths) "/")))
 
 (defn load-docs! [ztx root dirs]
+  (println :load-docs)
   (->> (memstore/read-docs ztx {:path "~" :resource-path "zd.zd" :content (slurp (io/resource "zd.zd"))})
        (mapv (fn [doc] (memstore/put-doc ztx (assoc doc :zd/readonly true)))))
   (doseq [dir dirs]
@@ -48,8 +49,7 @@
           (let [resource-path (subs path (inc (count dir-path)))
                 content (slurp f)]
             (->> (memstore/read-docs ztx {:path path :root root :resource-path resource-path :content content})
-                 (mapv (fn [doc] (memstore/put-doc ztx doc))))
-            #_(memstore/load-document! ztx {:path path :root root :resource-path resource-path :content content}))))))
+                 (mapv (fn [doc] (memstore/put-doc ztx doc {:dont-validate true})))))))))
   (memstore/inference ztx))
 
 (defonce queue (agent nil))
@@ -100,31 +100,18 @@
                    (let [old-doc (memstore/get-doc ztx dn)])
                    (.mkdirs (io/file dirname))
                    (spit filepath cnt)
-                   ;; when rename delete old doc
-                   ;; TODO remove all subdocs
                    (when (symbol? rename-to)
                      ((fs-delete ztx {:filepath prev-filepath :docname dn}) ag)
-                     (d/evict ztx (str dn))
-                     ;; TODO when awaits are gone
-                     #_(zen/pub ztx 'zd.events/on-doc-delete {:docname dn :root r}))
-                   ;; when schema edit initiate full reload
+                     (d/evict ztx (str dn)))
                    (if (str/includes? filepath "_schema")
                      (reload ztx r pths)
-                     (do
-                       (->> (memstore/read-docs ztx {:path filepath
-                                                     :root r
-                                                     :resource-path resource-path
-                                                     :content cnt})
-                            (mapv (fn [doc]
-                                    (memstore/put-doc ztx doc)
-                                    (memstore/infere-doc ztx (:zd/docname doc)))))
-                       ;; (memstore/load-links! ztx)
-                       )
-                     #_(do (memstore/load-document! ztx {:path filepath
-                                                       :root r
-                                                       :resource-path resource-path
-                                                       :content cnt})
-                         (memstore/load-links! ztx)))
+                     (->> (memstore/read-docs ztx {:path filepath
+                                                   :root r
+                                                   :resource-path resource-path
+                                                   :content cnt})
+                          (mapv (fn [doc]
+                                  (memstore/put-doc ztx doc)
+                                  (memstore/infere-doc ztx (:zd/docname doc))))))
                    'ok)]
     (utils/safecall ztx fs-save* {:type :zd.fs/save-error})))
 
@@ -135,9 +122,6 @@
                      (memstore/eval-macros! ztx)
                      'ok)]
     (utils/safecall ztx fs-commit* {:type :zd.fs/reload-error})))
-
-
-
 
 
 ;; TODO: obsolete
@@ -163,8 +147,6 @@
     ;; TODO remove await
     (await queue)
     (send-off queue (fs-commit ztx ev arg))))
-
-
 
 (defmethod zen/start 'zd.engines/fs
   [ztx {zd-config :zendoc :as config} & args]

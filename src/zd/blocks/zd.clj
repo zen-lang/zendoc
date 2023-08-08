@@ -148,6 +148,7 @@
                        (link/symbol-link ztx v)
                        :else [:span (pr-str v)])])))]]))]))))
 
+;; TODO: obsolete
 (defmethod methods/renderkey :zd/errors
   [ztx ctx {errors :data k :key :as block}]
   [:div {:class (c [:text :red-700]  [:my 2] :rounded :text-sm [:border :red-300])}
@@ -156,3 +157,5 @@
      [:li {:class (c [:py 0.5] :flex [:space-x 3] [:text :red-600] [:px 3])}
       [:span (pr-str (:path err))]
       [:span {:class (c [:ml 4] {:text-align "right"})} (:message err)]])])
+
+

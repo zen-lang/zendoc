@@ -6,6 +6,8 @@
 :desc /
 
 
+:broken-link link-to-nowhere
+
 &case-big-data
 ^badge
 :zd/type prod.Case
