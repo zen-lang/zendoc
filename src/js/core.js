@@ -310,9 +310,12 @@ main(() => {
     }
 
     window.addEventListener('popstate', (ev) => {
-        console.log('pop', ev, window.location.href);
-        var href = window.location.href;
-        load_page(href, false);
+        var l = new URL(window.location.href);
+        if (!l.hash){
+            console.log('pop', ev, window.location.href);
+            var href = window.location.href;
+            load_page(href, false);
+        }
     });
 
     // TODO check prefix to use in browser app

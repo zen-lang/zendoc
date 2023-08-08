@@ -1,9 +1,9 @@
-^badge
-:section "second"
-:zd/icon [:fa-brands :fa-dochub]
-:zd/menu-order 1
-
 :title "Zendoc tutorial"
+:section "first"
+:icon [:fa-brands :fa-dochub]
+:menu-order 1
+
+^title "About"
 :desc /
 
 zendoc tutorial as demo knowledge base

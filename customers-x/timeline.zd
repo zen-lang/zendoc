@@ -1,6 +1,7 @@
 :title "Timeline"
 :icon [:fa-duotone :fa-list-timeline]
-:menu-order 9999
+:section "zd-system"
+:menu-order 2
 :desc /
 shows history of changes in zendoc repo from git remote
 :git/timeline

@@ -43,7 +43,7 @@
   [:div (zentext/parse-block ztx data block)])
 
 (defmethod methods/rendercontent :datalog
-  [ztx ctx {{headers :table-of} :ann data :data :as block}]
+  [ztx ctx {data :data :as block}]
   (if-let [params (:in data)]
     ;; TODO impl preprocess to remove :in from queries
     (apply d/query ztx data params)

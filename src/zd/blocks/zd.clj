@@ -39,13 +39,29 @@
                   (partition-by #(= 1 (count (:ps %))))
                   (partition 2)
                   (map (fn [[h t]]
-                         (concat h t))))]
-    [:div {:class (c :flex :flex-wrap [:w "100%"])}
-     (for [gr docs]
-       [:div {:class (c [:py 2] [:pr 10] :text-sm :flex-col :flex)}
-        (for [{:keys [s ps]} gr]
+                         (if (> (count t) 20)
+                           h
+                           (concat h t)))))
+        total (reduce + (map count docs))
+        group-idx (loop [[[idx item] & oth] (map-indexed vector (map count docs))
+                         left (int (/ total 2))]
+                    (if (<= left 0)
+                      idx
+                      (recur oth (- left item))))
+        [l r] (split-at group-idx docs)]
+    [:div {:class (c :flex :flex-row)}
+     [:div {:class (c :flex [:w "50%"])}
+      [:div {:class (c [:py 2] [:w "50%"] :text-sm :flex-col :flex)}
+       (doall
+        (for [{:keys [s ps]} (apply concat l)]
           [:div (conj (indent-item ps)
-                      (link/symbol-link ztx s))])])]))
+                      (link/symbol-link ztx s))]))]]
+     [:div {:class (c :flex [:w "50%"])}
+      [:div {:class (c [:py 2] [:w "50%"] :text-sm :flex-col :flex)}
+       (doall
+        (for [{:keys [s ps]} (apply concat r)]
+          [:div (conj (indent-item ps)
+                      (link/symbol-link ztx s))]))]]]))
 
 (defmethod methods/renderkey :zd/docname
   [ztx ctx {data :data :as block}]

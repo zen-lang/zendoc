@@ -1,5 +1,7 @@
 :title "Index"
-:menu-order 0
+:menu-order 1
+:icon [:fa-duotone :fa-book]
+:section "zd-system"
 :desc /
 shows database structure in a compact format. folds documents which have >20 children.
 :zd/index
