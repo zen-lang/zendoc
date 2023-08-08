@@ -30,18 +30,14 @@
 (defmethod methods/renderkey :zd/index
   [ztx ctx block]
   (let [docs (->> '{:find [?docname]
-                    :where [[?e :meta/docname ?docname]
+                    :where [[?e :xt/id ?docname]
                             [?e :title ?title]]
                     :order-by [[?docname :asc]]}
                   (d/query ztx)
-                  (map (fn [v] {:s (first v)
-                                :ps (str/split (str (first v)) #"\.")}))
+                  (mapv (fn [v] {:s (first v) :ps (str/split (str (first v)) #"\.")}))
                   (partition-by #(= 1 (count (:ps %))))
                   (partition 2)
-                  (map (fn [[h t]]
-                         (if (> (count t) 20)
-                           h
-                           (concat h t)))))
+                  (mapv (fn [[h t]] (if (> (count t) 20) h (concat h t)))))
         total (reduce + (map count docs))
         group-idx (loop [[[idx item] & oth] (map-indexed vector (map count docs))
                          left (int (/ total 2))]

@@ -11,8 +11,7 @@
 
 (defn validate-doc [ztx doc]
   (if-let [cls (when-let [tp (:zd/type doc)] (if (set? tp) tp #{tp}))]
-    (let [_ (println :cls? (:zd/docname doc) cls)
-          errors
+    (let [errors
           (->> cls
                (mapcat
                 (fn [cn]
