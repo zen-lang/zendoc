@@ -91,11 +91,13 @@
   (symbol (str (when-let [ns (namespace k)] (str ns ".")) (name k))))
 
 (defn key-schema [ztx k]
-  {:ann
-   (if-let [ann (-> (memstore/get-doc ztx (*key-to-docname k))
-                    :zd/annotation)]
-     {(keyword (last (str/split (str ann) #"\."))) {}}
-     {})})
+  (let [schema (memstore/get-doc ztx (*key-to-docname k))]
+    {:schema schema
+     :key k
+     :schema-name (str (when-let [ns (namespace k)] (str ns ".")) (name k))
+     :ann (if-let [ann (:zd/annotation schema)]
+            {(keyword (last (str/split (str ann) #"\."))) {}}
+            {})}))
 
 (defn render-blocks [ztx ctx {m :zd/meta subs :zd/subdocs :as doc} & [render-subdoc?]]
   [:div {:class (if (:zd/render-preview? ctx)

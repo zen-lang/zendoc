@@ -3,7 +3,7 @@
 ^badge
 :zd/type zd.class
 ^badge
-:zd/require #{ :orgs/site :orgs/location}
+:zd/require #{ :orgs/site :orgs/location :orgs/linkedin}
 
 :title "orgs"
 :desc /
@@ -26,13 +26,13 @@ e :org/person p
 > o
 
 &site
-^badge
 :zd/type zd.prop
-^badge
+:zd/annotation zd.link-badge
+
+&location
+:zd/type zd.prop
 :zd/annotation zd.badge
 
-&locaition
-^badge
+&linkedin
 :zd/type zd.prop
-^badge
-:zd/annotation zd.badge
+:zd/annotation zd.link-badge

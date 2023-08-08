@@ -1,4 +1,7 @@
 :zd/type orgs
+:orgs/site "site"
+:orgs/location loc.Country
+:orgs/linkedin "?"
 :title "O2"
 :desc /
 

@@ -25,6 +25,7 @@ Welcome to zendoc built-in documentation.
 &icon
 :title "zd/type"
 :zd/type zd.prop
+:zd/annotation zd.hide
 
 &menu-order
 :title "zd/type"
@@ -35,6 +36,7 @@ Welcome to zendoc built-in documentation.
 :title "zd/type"
 :zd/type zd.prop
 :zd/data-type zd.boolean
+:zd/annotation zd.hide
 
 &boolean
 :zd/type zd.class
@@ -46,22 +48,19 @@ Welcome to zendoc built-in documentation.
 :zd/type zd.class
 
 &annotation
-:zd/type zd.class
+:zd/type zd.prop
+:zd/annotation zd.badge
 
-&badge
-:zd/type zd.annotation
-
-&link-badge
-:zd/type zd.annotation
+&annotation-class
 
 &hide
-:zd/type zd.annotation
+:zd/type zd.annotation-class
 
-&datalog
-:zd/type zd.annotation
-:desc /
+&badge
+:zd/type zd.annotation-class
 
-&?
-:zd/type zd.annotation
-:desc /
+&link-badge
+:zd/type zd.annotation-class
 
+&attribute
+:zd/type zd.annotation-class
