@@ -129,8 +129,8 @@
             [:span {:class (c :uppercase {:font-weight "600"})} (name sub-key)]]]
           (render-blocks ztx ctx (get-in doc [:zd/subdocs sub-key]) true)]))])
    [:details
-    [:summary {:class (c [:text :gray-300] :text-sm :cursor-pointer [:hover [:text :gray-500]])} "data"]
-    [:pre {:class (c [:bg :gray-100] :border [:p 2] :text-sm)}(with-out-str (clojure.pprint/pprint doc))]]])
+    [:summary {:class (c [:text :gray-300] :text-xs :cursor-pointer [:hover [:text :gray-500]])} "data"]
+    [:pre {:class (c [:bg :gray-100] :border [:p 2] :text-xs)}(with-out-str (clojure.pprint/pprint doc))]]])
 
 (defn contents-sidebar
   [ztx {r :root :as ctx} {{order :doc anns :ann :as m} :zd/meta links :zd/backlinks subs :zd/subdocs :as doc}]

@@ -66,10 +66,6 @@
   [ztx _ctx {data :data :as block}]
   (let [{res :result cols :columns q :query} (d/sugar-query ztx data)]
     [:div
-     [:details {:class (c :text-xs [:mb 2])}
-      [:summary {:class (c [:text :gray-500]) }"query"]
-      [:pre {:class (c :border [:p 2] [:bg :gray-100])}
-       (with-out-str (clojure.pprint/pprint (dissoc q :columns :index :args)))]]
      [:table
       (into [:thead]
             (->> cols
@@ -83,7 +79,11 @@
               [:tr {:key (hash vs)}
                (for [v vs]
                  [:td {:key v :class (c :border [:px 2] [:py 1] {:vertical-align "top"})}
-                  (render-table-value ztx v block)])]))]]))
+                  (render-table-value ztx v block)])]))]
+     [:details {:class (c :text-xs [:mt 0.5])}
+      [:summary {:class (c [:text :gray-500]) }"query"]
+      [:pre {:class (c :border [:p 2] [:bg :gray-100])}
+       (with-out-str (clojure.pprint/pprint (dissoc q :columns :index :args)))]]]))
 
 (defmethod methods/rendercontent :mm
   [ztx ctx {d :data :as block}]

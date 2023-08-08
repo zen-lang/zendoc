@@ -17,6 +17,16 @@ Welcome to zendoc built-in documentation.
 :zd/type zd.prop
 :zd/annotation zd.badge
 
+&require
+:title "zd/type"
+:zd/type zd.prop
+:zd/annotation zd.badge
+
+&summary
+:title "zd/type"
+:zd/type zd.prop
+:zd/annotation zd.badge
+
 &data-type
 :title "zd/type"
 :zd/type zd.prop

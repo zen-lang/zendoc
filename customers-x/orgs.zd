@@ -1,9 +1,8 @@
 :icon [:fa-duotone :fa-building]
 :menu-order 100
-^badge
 :zd/type zd.class
-^badge
-:zd/require #{ :orgs/site :orgs/location :orgs/linkedin}
+:zd/require #{ :orgs/site :orgs/location :orgs/linkedin :orgs/tags }
+:zd/summary #{ :orgs/tags }
 
 :title "orgs"
 :desc /
@@ -36,3 +35,7 @@ e :org/person p
 &linkedin
 :zd/type zd.prop
 :zd/annotation zd.link-badge
+
+&tags
+:zd/type zd.prop
+:zd/annotation zd.badge
