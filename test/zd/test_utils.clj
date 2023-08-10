@@ -56,16 +56,19 @@
 (defn mk-doc [docname content]
   (spit (str ".tmp/" (str/replace (str docname) #"\\." "/") ".zd") content))
 
+(defn rm-dir [dir]
+  (when (Files/exists (path dir) (make-array java.nio.file.LinkOption 0))
+    (let [dir (java.io.File. dir)]
+      (doseq [f (->> (file-seq dir) (sort) (reverse))]
+        (.delete f))
+      (.delete dir))))
+
 (defonce ctx (atom (zen/new-context)))
 
 (defn reset-project [docs]
   (when-let [ztx @ctx]
     (zen/stop-system ztx))
-  (when (Files/exists (path ".tmp") (make-array java.nio.file.LinkOption 0))
-    (let [dir (java.io.File. ".tmp")]
-      (doseq [f (->> (file-seq dir) (sort) (reverse))]
-        (.delete f))
-      (.delete dir)))
+  (rm-dir ".tmp")
   (mk-dir ".tmp")
   (doseq [[docname doc] docs]
     (mk-doc docname doc))

@@ -218,3 +218,30 @@
   (let [lines (get-lines s)
         res (into [:div] (parse-block* ztx lines block))]
     res))
+
+(defn quick-parse-links [l]
+  (let [m (re-matcher  #"(\s|^)(#|@)([-._a-zA-Z0-9]+)" l)]
+    (loop [acc #{}]
+      (if-let [[_ _ tp link :as x] (re-find m)]
+        (recur (conj acc  (if (= tp "#")
+                            (symbol link)
+                            (symbol (str "person." link)))))
+        acc))))
+
+(comment
+  (quick-parse-links "#at-start abc#d some @ivan \\@andrey text \\#esaped #e some text #doted.name text #word-x #at-end"))
+
+(defn extract-links [text]
+  (let [lines (get-lines text)]
+    (loop [[l & ls] lines
+           collect? true
+           acc #{}]
+      (if (and (nil? l) (empty? ls))
+        acc
+        (if (str/starts-with? l "```")
+          (if collect?
+            (recur ls false acc)
+            (recur ls true acc))
+          (if collect?
+            (recur ls collect? (into acc (quick-parse-links l)))
+            (recur ls collect? acc)))))))

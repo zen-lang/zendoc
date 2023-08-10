@@ -11,8 +11,8 @@
 (deftest test-api
 
   (t/reset-project {'default (t/zd [:title "Default"])
-                    'other (t/zd [:title "Other"]
-                                 [:link 'default])})
+                    'other   (t/zd [:title "Other"]
+                                   [:link 'default])})
 
   (testing "initila load"
     (t/http-match

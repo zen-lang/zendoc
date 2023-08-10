@@ -14,7 +14,7 @@
 ^badge
 :need needs.big-data
 :desc /
-Here is desc djfaljflkdajfl
+We have 30M of patients
 
 &case-ccd
 ^badge
@@ -22,4 +22,12 @@ Here is desc djfaljflkdajfl
 ^badge
 :need needs.hl7
 :case /
-Here is desc 
+Here is desc
+
+&todo
+:zd/type tasks
+^badge
+:tasks/assignee person.niquola
+^badge
+:tasks/severity tasks.critical
+:title "Update profile"

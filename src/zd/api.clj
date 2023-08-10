@@ -79,6 +79,7 @@
     {:status 200
      :body [:div "Error: " id " is not found"]}))
 
+;; TODO: add check for errors endpoint
 (defmethod zen/op 'zd/errors-page
   [ztx _cfg req & _opts]
   (let [{r :root ps :paths :as config} (zendoc-config ztx)
@@ -87,7 +88,6 @@
              :zd/readonly true
              :zd/meta {:doc [:title :errors-view]}
              :errors-view true}]
-
     (if (get-in req [:headers "x-body"])
       {:status 200
        :headers {"Cache-Control" "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"}

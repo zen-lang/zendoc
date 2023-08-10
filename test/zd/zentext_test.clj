@@ -287,3 +287,12 @@ select 1
   (match "\\"            [:div [:p {:class keyword?} "\n" "\\"]])
 
   (match "foo@foo.bar"   [:div [:p {:class keyword?} "\n" "foo@foo.bar"]]))
+
+(t/deftest collect-links
+  (t/is (= (zentext/extract-links " Here is a \\not-link text #link and #another.link + @ivan\n```\nText with #no-link\n```\n But this #should-be-link")
+           #{'link 'another.link 'person.ivan 'should-be-link}))
+
+  (zentext/extract-links "#at-start abc#d some \ntext \\#esaped #e some text #doted.name \ntext #word-x #at-end")
+  #{'doted.name 'at-start 'word-x 'at-end 'e}
+
+  )

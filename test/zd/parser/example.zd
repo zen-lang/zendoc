@@ -1,0 +1,39 @@
+:string "Title"
+:symbol symbol
+:symbols #{symbols}
+:int 1
+:long 1.0
+:date #inst"2001"
+:map {:a 1, :b 2}
+:vector [1 2 3 4]
+:zd/type zd.class
+:multiline /
+String 1
+String 2
+
+^title "Title"
+:textwithtitle /
+Here is some
+text
+
+:query ?/
+e :zd/type zd.class
+> e
+
+:multiline-edn edn/
+{:a 1
+ :b 2
+ :c 3}
+
+&subdoc-1
+:title "S1"
+:local-ref .
+
+&subdoc-2
+:title "S2"
+
+&
+:title "Anonimous1"
+
+&
+:title "Anonimous2"

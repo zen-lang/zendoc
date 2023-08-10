@@ -4,8 +4,6 @@
    [clojure.pprint :as pprint]
    [clojure.string :as str]
    [stylo.core :refer [c]]
-   [zd.memstore]
-   [zd.link :as link]
    [zd.methods :as methods]))
 
 ;; renders content of a block with :zd/content-type annotation
@@ -60,18 +58,6 @@
        ;; TODO think about rendering flow
        (try (hiccup/html cnt) (catch Exception e (with-out-str (pprint/pprint cnt))))])))
 
-(defmethod renderkey :errors-view
-  [ztx ctx {d :data :as block}]
-  [:div {:class (c)}
-   (for [[docname errors] (->> (zd.memstore/get-all-errors ztx)
-                               (sort-by #(str (first %))))]
-     [:div {:class (c [:py 1] :border-b)}
-      [:b (str docname) " > "(link/symbol-link ztx docname)]
-      (for [e errors]
-        [:div {:class (c :flex [:space-x 3] :borer-b)}
-         [:div "⚬ " (str (:type e))]
-         [:div (str (:path e))]
-         [:div (:message e)]])])])
 
 ;; zentext methods
 (defmulti inline-method   (fn [ztx m arg ctx] (keyword m)))
