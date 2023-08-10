@@ -7,11 +7,15 @@
             [zd.zentext]
             [clojure.string :as str]))
 
-;; TODO: add hooks for plugins
-
-;; doc/create
+;; TODO: add zen/events for plugins (like git)
 ;; doc/delete
 ;; doc/update
+;; file/update
+;; file/delete
+;; TODO: support for macros
+;; TODO: implement search
+;; TODO: index of keys from props and existing keys
+;; TODO: implement summary
 
 (defn get-db [ztx]
   (if-let [db (:db @ztx)]
@@ -115,10 +119,11 @@
 (defn put-doc
   [ztx doc]
   (swap! ztx assoc-in [:zdb (:zd/docname doc)] doc)
-  
   doc)
 
-(defn walk-docs [ztx f]
+(defn walk-docs
+  "call (f docname doc)"
+  [ztx f]
   (doseq [[docname doc] (:zdb @ztx)]
     (f docname doc)))
 
@@ -149,13 +154,13 @@
         (fn [acc [k v]]
           (if (symbol? v)
             (if-not (get (:zdb @ztx) v)
-              (conj acc {:type :reference :message (str "could not find " v) :path [k]})
+              (conj acc {:type :reference :message (str "'" v " not found") :path [k]})
               acc)
             (if (set? v)
               (->> v
                    (reduce (fn [acc x]
                              (if (and (symbol? x) (not (get (:zdb @ztx) x)))
-                               (conj acc {:type :reference :message (str "could not find '" x) :path [k]})
+                               (conj acc {:type :reference :message (str "'" x " not found") :path [k]})
                                acc))
                            acc))
               acc)))
@@ -179,20 +184,22 @@
         errors (into errors (into (validate-refs ztx doc)))]
     errors))
 
+
+(defn validate-doc [ztx docname]
+  (let [doc (get-doc ztx docname)]
+    (put-errors ztx docname (doc-validate ztx doc))))
+
 (defn re-validate
   "re-validate broken resources"
   [ztx]
-  (update-docs)
-  )
+  (swap! ztx assoc :zd/errors {})
+  (walk-docs ztx (fn [docname _doc] (validate-doc ztx docname))))
 
 (defn doc-inference
   "run inference"
   [ztx doc]
   doc)
 
-(defn validate-doc [ztx docname]
-  (let [doc (get-doc ztx docname)]
-    (put-errors ztx docname (doc-validate ztx doc))))
 
 
 (defn get-backlinks [ztx docname]
@@ -241,6 +248,10 @@
       (cond-> (get-doc ztx docname)
         (seq errors) (assoc :zd/errors errors)
         (seq backlinks) (assoc :zd/backlinks backlinks)))))
+
+(defn doc-summary
+  "return doc summary based on class"
+  [ztx docname])
 
 (defn edn-links [acc docname path node]
   (cond
@@ -329,7 +340,6 @@
                                   (file-read ztx dir-path path {:last-modified (.lastModified f)})))))))]
     docs))
 
-
 (defn dir-load
   "read docs from filesystem and load into memory"
   [ztx dir]
@@ -351,3 +361,8 @@
   "return all errors"
   [ztx]
   (get @ztx :zd/errors))
+
+
+(defn symbol-search   [ztx query])
+(defn keywords-search [ztx query])
+(defn search          [ztx query])

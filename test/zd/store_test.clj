@@ -208,5 +208,7 @@
        {:zd/docname 'other}
        nil?]))
 
+  (store/re-validate ztx)
+  (is (store/errors ztx))
 
 )

@@ -1,3 +1,4 @@
+;; TODO move to core
 (ns zd.system
   (:require [zen.core :as zen]
             [zd.datalog]

@@ -3,6 +3,8 @@
             [clojure.java.io :as io]
             [clj-jgit.porcelain :as git]))
 
+;; TODO: may be use shell git integration
+
 (defn commit-doc [ztx {:keys [repo ident]} {p :docpath d :docname}]
   (git/with-identity ident
     (let [;; TODO sync all untracked docs at gitsync start?
