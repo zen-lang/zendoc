@@ -1,3 +1,4 @@
+;; merge into core
 (ns zd.api
   (:require
    [clojure.pprint :as pprint]

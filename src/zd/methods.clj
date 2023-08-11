@@ -7,17 +7,16 @@
    [zd.methods :as methods]))
 
 ;; renders content of a block with :zd/content-type annotation
-(defmulti rendercontent (fn [ztx ctx block] (get-in block [:ann :zd/content-type])))
+(defmulti rendercontent (fn [ztx ctx block] (or (get-in block [:annotations :type])
+                                               (type (:data block)))))
 
-;; by default just pretty prints the content
 (defmethod rendercontent :default
-  [ztx ctx {:keys [data] :as block}]
-  [:span (with-out-str (pprint/pprint data))])
+  [ztx ctx {data :data annotations :annotations doc :doc :as block}]
+  [:div
+   [:b  (pr-str annotations)]
+   [:span (with-out-str (pprint/pprint data))]])
 
-;; renders key of a document with provided annotation
-;; or by a block name
-(defmulti renderkey (fn [ztx ctx block]
-                      (:key block)))
+(defmulti renderkey (fn [ztx ctx {data :data annotations :annotations doc :doc :as block}] (:key block)))
 
 (defmethod renderkey :menu-order [& args])
 (defmethod renderkey :icon [& args])

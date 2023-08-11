@@ -41,4 +41,5 @@
 
  system
  {:zen/tags #{zen/system}
-  :start [datalog fs http #_web-ui]}}
+  :start [datalog fs http #_web-ui]}
+ }

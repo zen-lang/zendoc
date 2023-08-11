@@ -1,7 +1,6 @@
 (ns zd.view.zentext
   (:require
-   [zd.components :as cmp]
-   [zd.link :as link]
+   [zd.view.utils :as link]
    [stylo.core :refer [c]]
    [clojure.string :as str]
    [zd.methods :as methods]))
@@ -23,9 +22,6 @@
   [ztx m d ctx]
   (github-disc d))
 
-(defmethod methods/inline-method :youtube
-  [ztx m d ctx]
-  (cmp/render-yt d))
 
 (defmethod methods/inline-method :symbol-link
   [ztx m s ctx]

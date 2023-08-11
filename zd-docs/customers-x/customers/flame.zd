@@ -1,0 +1,51 @@
+:title "Flame industries"
+
+^title "Customer summary"
+:desc /
+flame industries is one of the key customers of X Company.
+
+:icon [:fa-solid :fa-cart-shopping]
+
+:rel #{rel.presale}
+
+:site "https://flame.com"
+
+:linkedin "https://www.linkedin.com/company/health-samurai"
+
+:funding funding.e
+
+:category "startup"
+
+:country #{countries.br}
+
+:tags #{tags.data-platfrom tags.telemed}
+
+:techs #{tech-postgres tech.js}
+
+:founder people.john
+
+:ceo people.john
+
+:customer-since "22-05-2022"
+
+&goals
+
+:short-term-goals /
+
+* close best deal ever
+
+:long-term-goals /
+
+* make a lot of money
+
+&perks
+
+^attribute
+:potential :high
+^attribute
+:sales-cycle :slow
+:proactive.feedback :medium
+:organized.payments :low
+:easy-to-work :no
+:challenging :yes
+:techstack-match :yes

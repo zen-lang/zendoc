@@ -14,7 +14,7 @@
          :to {:type zen/string}
          :branch {:type zen/string}}}
 
- zendoc
+ zendoc-config
  {:zen/tags #{zen/tag zen/schema}
   :type zen/map
   :keys {:root {:type zen/string}
@@ -65,6 +65,9 @@
  save-doc
  {:zen/tags #{zen-web/op zen/op}}
 
+ doc-content
+ {:zen/tags #{zen-web/op zen/op}}
+
  render-editor
  {:zen/tags #{zen-web/op zen/op}}
 
@@ -81,17 +84,31 @@
  {:zen/tags #{zen-web/api}
   :engine zen-web/routemap
   ;; TODO move zen web defaults to zen web core
-  :mw [zen-web/defaults]
+  ;; :mw [zen-web/defaults]
   :GET render-doc
-  [:id] {:mw [append-doc layout]
+  [:id] {;;:mw [append-doc layout]
          :DELETE delete-doc
          :POST save-doc
          :GET render-doc
          "preview" {:POST render-preview}
-         "widgets" {[:widget-id]
-                    {:GET render-widget}}
-         "edit" {:PUT save-doc
-                 :GET render-editor}}
-  "_errors" {:mw [append-doc layout]
-             :* {:GET errors-page}}
-  "static" {:* {:GET serve-static}}}}
+         "content" {:GET  doc-content}
+         "widgets" {[:widget-id] {:GET render-widget}}
+         "edit"    {:GET render-editor}}
+  "static" {:* {:GET serve-static}}}
+
+ http
+ {:zen/tags #{zen/start zen-web/http zd.engines/http}
+  :engine zen-web/httpkit
+  :port 4444
+  :zendoc zendoc
+  :api api}
+
+ zendoc
+ {:zen/tags #{zen/start}
+  :zen/state-key :zd/config
+  :dir "docs"}
+
+ system
+ {:zen/tags #{zen/system}
+  :start [zendoc http]}
+ }

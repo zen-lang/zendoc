@@ -1,0 +1,13 @@
+:zd/menu-order 110
+:zd/icon [:fa-duotone :fa-lamp]
+
+:title "needs"
+:desc /
+Company Needs
+
+:needs ?/
+
+c :zd/type #prod.Case
+c :need n
+> n
+> (count c)

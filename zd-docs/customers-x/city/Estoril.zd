@@ -1,0 +1,6 @@
+:title "Estoril"
+^badge
+:type loc.City
+^badge
+:loc.in country.Portugal
+:desc /

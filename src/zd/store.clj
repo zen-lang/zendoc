@@ -38,6 +38,7 @@
    res))
 
 (defn datalog-put [ztx data]
+  (assert (:zd/docname data) (pr-str data))
   (let [db (get-db ztx)
         data (if (:xt/id data) data (assoc data :xt/id (:zd/docname data)))
         res (xt/submit-tx db [[::xt/put (encode-data (dissoc data :zd/docname :zd/view))]])]
@@ -129,7 +130,9 @@
 
 (defn update-docs [ztx f]
   (doseq [[docname doc] (:zdb @ztx)]
-    (put-doc ztx (f docname doc))))
+    (if docname
+      (put-doc ztx (f docname doc))
+      (println :bad-doc doc))))
 
 (defn put-errors [ztx docname errors]
   (if (seq errors)

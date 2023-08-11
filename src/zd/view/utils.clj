@@ -46,15 +46,3 @@
        (when-not (:compact opts)
          (or (:title res) s))])
     [:a {:href (str "/" s) :class (c [:text :red-600] [:bg :red-100]) :title "Broken Link"} s]))
-
-(defn menu [ztx])
-
-(defn content [ztx doc])
-
-(defn doc [ztx doc])
-
-(defn page [ztx doc])
-
-(defn editor [ztx doc])
-
-(defn errors [ztx doc])

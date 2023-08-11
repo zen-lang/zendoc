@@ -175,8 +175,9 @@ var update_widgets = () => {
     //mermaid.initialize();
 };
 
+// TODO: handle params
 var load_page = (href, do_push) => {
-    fetch(href, {
+    fetch(href + '/content', {
         headers: {
             'x-body': 'true',
             'cache-control': 'no-cache'

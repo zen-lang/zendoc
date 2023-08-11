@@ -2,7 +2,8 @@
   (:require
    [garden.core]
    [stylo.core :refer [c]]
-   [stylo.rule :refer [join-rules]]))
+   [stylo.rule :refer [join-rules]]
+   [zd.view.menu]))
 
 (defn c* [& args]
   (join-rules args))
@@ -91,17 +92,14 @@
     [:.zd-block-title [:.fas {:transform "rotate(90deg)"
                               :transition "all 0.26s"}]]]])
 
-(defn sidebar [ztx {{{id :id} :route-params} :request} content]
+
+(defn layout [ztx ctx content]
   [:html
    [:head
     [:style (stylo.core/compile-styles @stylo.core/styles)]
     [:style (garden.core/css common-style)]
     [:link {:rel "icon" :href "data:,"}]
     [:meta {:charset "UTF-8"}]
-    ;; TODO think about title update on x-body doc re-render requests
-    #_(when (not (str/blank? id))
-        (let [title (:title (memstore/get-doc ztx (symbol id)))]
-          [:title (or title (str id))]))
     [:link {:href "//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/styles/default.min.css", :rel "stylesheet"}]
     [:link {:href "/static/js/fa/css/all.min.css", :rel "stylesheet"}]
     [:link  {:href "/static/js/spinner.css"  :rel "stylesheet"}]
@@ -114,9 +112,18 @@
     [:script {:src "/static/js/core.js"}]
     [:script {:src "https://cdn.jsdelivr.net/npm/mermaid@10.2.4/dist/mermaid.min.js"}]
 
+    [:title "Here"]
     #_[:script {:src "/static/js/vega.min.js"}]
     [:script {:src "/static/js/quick-score.min.js"}]
     [:script {:src "/static/js/editor.js"}]]
    [:body {:class (c :overflow-hidden [:h "100vh"] [:text "#353B50"])}
     content
     [:script "mermaid.initialize({ startOnLoad: false});"]]])
+
+(defn layout-with-menu [ztx ctx doc cnt]
+  (layout ztx ctx
+   [:div {:class (c :flex [:h "100%"])}
+    (zd.view.menu/menu ztx ctx doc)
+    [:div#page-content {:class (c :flex :flex-grow [:flex-shrink 1] [:py 6] [:px 12] :overflow-y-auto
+                                  {:flex-basis "100%"})}
+     cnt]]))

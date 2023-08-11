@@ -41,6 +41,5 @@
   (zd.memstore/get-doc ztx 'needs)
 
   (:zrefs @@dtx)
-  
 
   )

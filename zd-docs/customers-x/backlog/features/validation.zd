@@ -1,0 +1,14 @@
+:title "Document validation"
+:tags #{backlog.tags.tech-platform}
+
+:priority "high"
+
+:desc /
+functionality related to constraining document structure and its values
+
+:feature-spec /
+
+* RDF/OWL ontologies support (.ttl)
+* better error messages (- types description, - get rid of "incorrect edn" error)
+* add page with all documents errors and broken links; implement as live validation with reactive updates
+* merge _template and _schema into _schema.zd

@@ -1,0 +1,43 @@
+:icon [:fa-duotone :fa-building]
+:menu-order 100
+:zd/type zd.class
+:zd/require #{ :title :orgs/site :orgs/location :orgs/linkedin :orgs/tags }
+:zd/summary #{ :orgs/tags }
+
+:title "orgs"
+:desc /
+
+:needs ?/
+
+c :zd/type #prod.Case
+c :need n
+
+> n
+> (count c)
+
+:ctos ?/
+
+e :org/role #org.CTO
+e :org/memberOf o
+e :org/person p
+> p
+> e:org/role
+> o
+
+&site
+:zd/type zd.prop
+:zd/annotation zd.link-badge
+
+&location
+:zd/type zd.prop
+:zd/annotation zd.badge
+
+&linkedin
+:zd/type zd.prop
+:zd/annotation zd.link-badge
+
+&tags
+:zd/type zd.prop
+:zd/annotation zd.badge
+:zd/data-type zd.symbol
+:zd/ref-type  tag
