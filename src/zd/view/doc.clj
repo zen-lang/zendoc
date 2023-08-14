@@ -131,10 +131,9 @@
   [:div
    [:div {:class h2} "Subdocs:"]
    (->> subdocs
-        (map (fn [d]
+        (map (fn [doc]
                [:div {:class (c :border [:px 4] [:py 2] [:my 2] :rounded :shadow-sm)}
-                (let [doc (store/doc-get ztx d)]
-                  (document ztx ctx doc))])))])
+                (document ztx ctx doc)])))])
 
 (defn document [ztx ctx doc]
   [:div

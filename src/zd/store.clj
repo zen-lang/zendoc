@@ -222,6 +222,11 @@
   [ztx docname]
   (swap! ztx update :zdb dissoc docname))
 
+(defn symbolize-subdocs [doc]
+  (if-let [subdocs (seq (:zd/subdocs doc))]
+    (assoc doc :zd/subdocs (mapv :zd/docname subdocs))
+    doc))
+
 (defn put-doc
   [ztx {docname :zd/docname :as doc}]
   (swap! ztx assoc-in [:zdb docname] (assoc doc :zd/parent (parent-name docname)))
@@ -334,17 +339,10 @@
     ;; revalidate docs looking at this doc
     (->> backlinks (mapv #(validate-doc ztx %)))))
 
-(defn to-docs
+(defn to-doc
   "return docs from text representation"
   [ztx docname content & [{docpath :docpath lm :last-modified}]]
-  (let [[doc & subdocs] (cond->>
-                            (zd.parser/parse ztx docname content)
-                          docpath (mapv (fn [x] (cond-> x
-                                                 docpath (assoc :zd/file docpath)
-                                                 lm (assoc :zd/last-modified lm)))))]
-    (if (seq subdocs)
-      (into [(assoc doc :zd/subdocs (into #{} (mapv :zd/docname subdocs)) :zd/parent (parent-name docname))] subdocs)
-      [doc])))
+  (zd.parser/parse ztx docname content (cond-> {} docpath (assoc :zd/file docpath) lm (assoc :zd/last-modified lm))))
 
 (defn file-content [ztx docname]
   (let [doc (get-doc ztx docname)]
@@ -357,19 +355,22 @@
   (let [docpath (str dir "/" path)
         docname (path-to-docname path)
         content (slurp docpath)]
-    (to-docs ztx docname content (merge {:docpath docpath} opts))))
+    (to-doc ztx docname content (merge {:docpath docpath} opts))))
 
 
 (defn doc-get
   "get document from memory, validate, add backlinks etc"
   [ztx docname]
-  (let [errors (get-errors ztx docname)
-        backlinks (get-backlinks ztx docname)
-        doc (get-doc ztx docname)]
-    (when doc
-      (cond-> (get-doc ztx docname)
-        (seq errors)    (assoc :zd/errors errors)
-        (seq backlinks) (assoc :zd/backlinks backlinks)))))
+  (when-let [doc (get-doc ztx docname)]
+    (let [errors (get-errors ztx docname)
+          backlinks (get-backlinks ztx docname)
+          subdocs (->> (:zd/subdocs doc)
+                       (mapv #(doc-get ztx %)))]
+      (when doc
+        (cond-> (get-doc ztx docname)
+          (seq errors)    (assoc :zd/errors errors)
+          (seq backlinks) (assoc :zd/backlinks backlinks)
+          (seq subdocs)   (assoc :zd/subdocs subdocs))))))
 
 (defn doc-summary
   "return doc summary based on class"
@@ -430,6 +431,7 @@
     (re-index-doc ztx idoc opts)
     idoc))
 
+
 (defn file-delete
   "save document content into file and recalculate databases"
   [ztx docname]
@@ -454,8 +456,12 @@
         docpath (str dir "/" path)]
     (file-delete ztx docname)
     (spit docpath content)
-    (->> (to-docs ztx docname content {:docpath docpath})
-         (mapv #(doc-save ztx % opts)))))
+    (let [doc (to-doc ztx docname content {:docpath docpath})
+          doc' (symbolize-subdocs doc)]
+      (doc-save ztx doc' opts)
+      (->> (:zd/subdocs doc)
+           (mapv #(doc-save ztx % opts)))
+      doc)))
 
 (defn dir-read
   "read docs from filesystem"
@@ -463,18 +469,22 @@
   (let [dir (io/file dir)
         dir-path (.getPath dir)
         docs (->> (file-seq dir)
-                  (mapcat (fn [f]
-                            (let [p (.getPath f)]
-                              (when (str/ends-with? p ".zd")
-                                (let [path (subs p (inc (count dir-path)))]
-                                  (file-read ztx dir-path path {:last-modified (.lastModified f)})))))))]
+                  (map (fn [f]
+                         (let [p (.getPath f)]
+                           (when (str/ends-with? p ".zd")
+                             (let [path (subs p (inc (count dir-path)))]
+                               (file-read ztx dir-path path {:last-modified (.lastModified f)}))))))
+                  (filter identity))]
     docs))
 
 (defn dir-load
   "read docs from filesystem and load into memory"
   [ztx dir]
   (->> (dir-read ztx dir)
-       (mapv (fn [doc] (put-doc ztx doc))))
+       (mapv (fn [doc]
+               (put-doc ztx (symbolize-subdocs doc))
+               (->> (:zd/subdocs doc)
+                    (mapv #(put-doc ztx %))))))
   (update-docs ztx
                (fn [_docname doc]
                  (let [idoc (doc-inference ztx doc)]

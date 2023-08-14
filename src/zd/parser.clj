@@ -235,13 +235,14 @@
 (split-docs ["a" "b" "&c" "d" "&e" "f"])
 
 ;; split into documents
-(defn parse [ztx docname text]
+(defn parse [ztx docname text & [meta]]
   (let [lines (->> (get-lines text)
                    (remove #(str/starts-with? % ";;")))
-        docs  (->> (split-docs lines)
-                   (map-indexed (fn [i doc]
-                                  (-> doc
-                                      (dissoc :lines)
-                                      (assoc :keys (split-keys (:lines doc) docname))
-                                      (parse-doc docname i)))))]
-    docs))
+        [doc & subdocs]  (->> (split-docs lines)
+                              (map-indexed (fn [i doc]
+                                             (-> doc
+                                                 (dissoc :lines)
+                                                 (assoc :keys (split-keys (:lines doc) docname))
+                                                 (parse-doc docname i)
+                                                 (merge  meta)))))]
+    (cond-> doc (seq subdocs) (assoc :zd/subdocs (into [] subdocs)))))

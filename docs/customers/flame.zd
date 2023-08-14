@@ -1,3 +1,5 @@
+:zd/docname customers.flame
+:zd/docname customers.flame
 :title "Flame industries"
 
 ^title "Customer summary"
@@ -40,9 +42,8 @@ flame industries is one of the key customers of X Company.
 
 &perks
 
-^attribute
+
 :potential :high
-^attribute
 :sales-cycle :slow
 :proactive.feedback :medium
 :organized.payments :low

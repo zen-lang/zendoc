@@ -23,19 +23,20 @@
   (spit ".tmp/index.zd" doc-content)
   (spit ".tmp/other.zd" other-content)
 
-  (matcho/match (store/to-docs ztx 'mydoc doc-content)
-    [{:title "Index"}
-     {:title "Subdoc"}])
+  (matcho/match (store/to-doc ztx 'mydoc doc-content)
+    {:title "Index"
+     :zd/subdocs [{:title "Subdoc" :zd/parent 'mydoc}]})
 
   (matcho/match (store/file-read ztx ".tmp" "index.zd")
-    [{:title "Index"}
-     {:title "Subdoc"}])
+    {:title "Index"
+     :zd/subdocs [{:title "Subdoc"}]})
 
   (matcho/match (store/dir-read ztx ".tmp")
-    [{:title "Index"}
-     {:title "Subdoc" :zd/parent 'index}
-     {:title "Other"  :zd/parent 'index}
-     {:title "Subdoc" :zd/parent 'other}])
+    [{:title "Index"
+      :zd/subdocs [{:title "Subdoc" :zd/parent 'index}]}
+     {:title "Other"
+      ;; :zd/parent 'index
+      :zd/subdocs [{:title "Subdoc" :zd/parent 'other}]}])
 
   (testing "encoding/decoding for datadog"
     (matcho/match
@@ -78,7 +79,9 @@
 
   (matcho/match (store/doc-get ztx 'index)
     {:zd/docname 'index
-     :title "Index"})
+     :title "Index"
+     :zd/subdocs [{:zd/docname 'index.sub1
+                   :title "Subdoc"}]})
 
   (matcho/match
       (store/datalog-query ztx '{:where [[e :xt/id 'index] [e :title t]] :find [e t]})
@@ -90,7 +93,7 @@
     {:zd/docname 'newone
      :title "newone"
      :zd/parent 'index
-     :zd/subdocs #{'newone.sub}})
+     :zd/subdocs [{:zd/docname 'newone.sub}]})
 
   (matcho/match
       (store/get-backlinks ztx 'index)
@@ -246,6 +249,12 @@
 
   (is (contains? (store/props ztx) :fixed))
 
-  (store/to-docs ztx 'mydoc ":title \"title\"\n^badge\n:key /\n value\n^ann 1\n:another some/\ntext")
+  (store/to-doc ztx 'mydoc ":title \"title\"\n^badge\n:key /\n value\n^ann 1\n:another some/\ntext")
+
+  (testing "nested docs"
+
+    (store/file-save ztx 'nested.one ":title \"one\"")
+
+    )
 
 )

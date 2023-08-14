@@ -28,24 +28,20 @@
   [ztx config {{id :id} :route-params uri :uri hs :headers doc :doc :as req} & opts]
   (let [docname (symbol (or id "index"))
         doc (store/doc-get ztx docname)]
-    {:status 301
-     :headers {"Location" (str "/" docname "/edit" "?" (:query-string req))
-               "Cache-Control" "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"}
+    {:status 200
      :body (hiccup.core/html (view/preview ztx req doc))}))
 
 (defmethod zen/op 'zd/render-doc
-  [ztx config {{id :id} :route-params uri :uri hs :headers doc :doc :as req} & opts]
+  [ztx config {{id :id} :route-params :as req} & opts]
   (try
-    (let [docname (symbol (or id "index"))
-          doc (store/doc-get ztx docname)]
-      (if doc
-        {:status 200
-         :headers {"Cache-Control" "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"}
-         :body   (hiccup.core/html (view/page ztx req doc))}
-        {:status 301
-         :headers {"Location" (str "/" docname "/edit" "?" (:query-string req))
-                   "Cache-Control" "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"}
-         :body "Editor"}))
+    (if-let [doc (store/doc-get ztx (symbol (or id "index")))]
+      {:status 200
+       :headers {"Cache-Control" "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"}
+       :body   (hiccup.core/html (view/page ztx req doc))}
+      {:status 301
+       :headers {"Location" (str "/" (or id "index") "/edit" "?" (:query-string req))
+                 "Cache-Control" "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"}
+       :body "Editor"})
     (catch Exception e
       {:status 500
        :headers {"Cache-Control" "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"}
@@ -64,9 +60,18 @@
   [ztx _cfg {{id :id} :route-params body :body :as req} & opts]
   (let [docname (symbol id)
         content (if (=  BytesInputStream (type body)) (slurp body) body)
-        doc     (->> (store/to-docs ztx docname content {}) first)]
+        doc     (store/to-doc ztx docname content {})]
     {:status 200
      :body (hiccup.core/html (view/preview ztx req doc))}))
+
+;; TODO handle rename
+(defmethod zen/op 'zd/save-doc
+  [ztx _cfg {{id :id} :route-params body :body :as req} & opts]
+  (let [docname (symbol id)
+        content (if (=  BytesInputStream (type body)) (slurp body) body)]
+    (store/file-save ztx docname content)
+    {:status 200
+     :body (str "/" docname)}))
 
 (defmethod zen/op 'zd/doc-content
   [ztx config {{id :id} :route-params uri :uri hs :headers doc :doc :as req} & opts]
@@ -85,15 +90,10 @@
     {:status 200
      :body [:div "Error: " id " is not found"]}))
 
-;; TODO handle rename
-(defmethod zen/op 'zd/save-doc
-  [ztx _cfg {{id :id} :route-params r :zd/root :as req} & opts]
-  {:status 200 :body "TBD"})
 
 (defmethod zen/op 'zd/delete-doc
   [ztx _cfg {{:keys [id]} :route-params :as req} & opts]
   {:status 200 :body "TBD"})
-
 
 (defmethod zen/op 'zd.events/logger
   [ztx config {ev-name :ev :as ev} & opts]
@@ -102,6 +102,7 @@
 (defmethod zen/start 'zd/zendoc
   [ztx config & opts]
   (println :zd/start config)
+  (swap! ztx assoc :zd/dir (or (:dir config) "docs"))
   (store/dir-load ztx (:dir config))
   config)
 
