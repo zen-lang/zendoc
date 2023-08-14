@@ -1,0 +1,10 @@
+* [ ] symbols autocomplete
+* [ ] keys atocomplete
+* [ ] save & rename
+* [ ] default block type (badge, attribute, block)
+* [ ] content navigation
+* [ ] subdocs render
+* [ ] subdoc page
+* [ ] nested menu
+* [ ] new item
+* [ ] search (name, title, desc)

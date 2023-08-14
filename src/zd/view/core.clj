@@ -9,7 +9,9 @@
    [zd.view.menu]
    [zd.view.multimedia]
    [zd.view.timeline]
-   [zd.view.layout :as layout]))
+   [zd.view.editor]
+   [zd.view.layout :as layout]
+   [hiccup.core]))
 
 (defn preview [ztx ctx doc]
   (zd.view.doc/view ztx ctx doc))
@@ -17,6 +19,7 @@
 (defn page [ztx ctx doc]
   (layout/layout-with-menu ztx ctx doc (preview ztx ctx doc)))
 
-(defn editor [ztx doc])
+(defn editor [ztx ctx doc content]
+  (layout/layout ztx ctx (zd.view.editor/editor ztx ctx doc  content)))
 
 (defn errors [ztx doc])

@@ -5,6 +5,7 @@
             [clojure.walk]
             [clojure.java.io :as io]
             [zd.zentext]
+            [edamame.core]
             [clojure.string :as str]))
 
 ;; TODO: add zen/events for plugins (like git)
@@ -63,9 +64,103 @@
     (-> (apply xt/q (xt/db db) (encode-query query) params)
         (decode-data))))
 
-(defn datalog-simple-query [ztx query]
-  "run datalog simple query"
-  )
+
+(defn parse-query [q]
+  (let [xs (->> (str/split q #"\n")
+                (mapv str/trim)
+                (remove (fn [s] (or (str/blank? s) (str/starts-with? s "\\")))))
+        columns   (->> xs
+                       (filterv #(re-matches #"^\s?>.*" %))
+                       (mapv #(subs % 1))
+                       (mapv str/trim)
+                       (filterv #(not (str/blank? %)))
+                       (mapv (fn [x]
+                               (if (str/starts-with? x "(")
+                                 ['expr (edamame.core/parse-string x {:regex true})]
+                                 (let [[e k] (str/split x #":" 2)]
+                                   [(symbol e) (cond
+                                                 (= k "*") (symbol k)
+                                                 :else (keyword k))])))))
+        index (atom {})
+        find-items (->> (group-by first columns)
+                        (reduce (fn [acc [k xs]]
+                                  (if (= 'expr k)
+                                    (->> (mapv second xs)
+                                         (reduce (fn [acc e]
+                                                   (swap! index assoc e (count acc))
+                                                   (conj acc e))
+                                                 acc))
+                                    (let [cs (->> (mapv second xs) (dedupe) (into []))]
+                                      (swap! index assoc k (count acc))
+                                      (if (seq (filter (fn [x] (contains? #{'* :?} x)) cs))
+                                        (conj acc (list 'pull k ['*]))
+                                        (if (= cs [nil])
+                                          (conj acc k)
+                                          (conj acc (list 'pull k (mapv (fn [x] (if (nil? x) :xt/id x))cs))))))))
+                                []))
+        where-items
+        (->> xs
+             (filterv (every-pred #(not (str/ends-with? % " :asc"))
+                                  #(not (str/ends-with? % " :desc"))
+                                  #(not (re-matches #"^\s?>.*" %))))
+             (mapv (fn [x] (let [res (edamame.core/parse-string (str/replace (str "[" x "]") #"#"  ":symbol/")
+                                                                {:regex true})]
+                             (cond
+                               (list? (get res 1))
+                               (vector res)
+
+                               :else
+                               res)
+                             ))))
+        where (->> where-items
+                   (mapv (fn [x]
+                           (clojure.walk/postwalk
+                            (fn [y]
+                              (if (and (keyword? y) (= "symbol" (namespace y)))
+                                (str "'" (name y))
+                                y)) x))))
+
+        ;; TODO: fix order by
+        order-items
+        (->> xs
+             (filterv (every-pred #(or (str/ends-with? % " :asc")
+                                       (str/ends-with? % " :desc"))
+                                  #(not (re-matches #"^\s?>.*" %))))
+             (mapv (fn [x] (edamame.core/parse-string (str/replace (str "[" x "]") #"#"  ":symbol/") {:regex true}))))
+
+        order
+        (->> order-items
+             (mapv (fn [x]
+                     (clojure.walk/postwalk
+                       (fn [y]
+                         (if (and (keyword? y) (= "symbol" (namespace y)))
+                           (str "'" (name y))
+                           y)) x))))]
+    (into {:where where
+           :order-by order
+           :find find-items
+           :columns columns
+           :index @index} )))
+
+
+(defn datalog-sugar-query [ztx q]
+  (let [q (parse-query q)
+        idx (:index q)
+        res (->>
+             (datalog-query ztx (dissoc q :columns :index))
+             (mapv (fn [x]
+                     (->> (:columns q)
+                          (mapv (fn [[e c]]
+                                  (cond
+                                    (nil? c)  (or (get-in x [(get idx e) :xt/id]) (get-in x [(get idx e)]))
+                                    (list? c) (get-in x [(get idx c)])
+                                    (= c '*)  (get-in x [(get idx e)])
+                                    (= c :?)  (keys (get-in x [(get idx e)]))
+                                    :else     (get-in x [(get idx e) c]))))))))
+        cols (->> (:columns q) (mapv second))]
+    {:result res
+     :query (dissoc q :columns :index)
+     :columns cols}))
 
 (defn *docname-to-path [docname]
   (-> (->> (str/split (str docname) #"\.") (str/join "/"))
@@ -84,7 +179,17 @@
 (defn child-docname [docname child]
   (symbol (str docname "." (name child))))
 
-(defn parent-name [docname])
+(defn parent-name [docname]
+  (let [parts (str/split (str docname) #"\.")
+        parent (butlast parts)]
+    (if (empty? parent)
+      'index
+      (symbol (str/join "." parent)))))
+
+;; (parent-name 'a.b.c)
+;; (parent-name 'a)
+;; (parent-name 'a.b)
+
 
 (defn get-reference
   "return reference for docs and subdocs"
@@ -118,8 +223,8 @@
   (swap! ztx update :zdb dissoc docname))
 
 (defn put-doc
-  [ztx doc]
-  (swap! ztx assoc-in [:zdb (:zd/docname doc)] doc)
+  [ztx {docname :zd/docname :as doc}]
+  (swap! ztx assoc-in [:zdb docname] (assoc doc :zd/parent (parent-name docname)))
   doc)
 
 (defn walk-docs
@@ -206,20 +311,28 @@
 
 
 (defn get-backlinks [ztx docname]
-  (get-in @ztx [:zd/backlinks docname]))
+  (->> (get-in @ztx [:zd/backlinks docname])
+       (reduce (fn [acc [docname attrs]]
+                 (->> attrs
+                      (reduce (fn [acc path] (update acc path (fn [xs] (conj (or xs []) docname))))
+                              acc))) {})))
+
+(defn backlinked [ztx docname]
+  (->> (get-in @ztx [:zd/backlinks docname])
+       (keys)
+       (into #{})))
 
 ;; emit delete event
 (defn doc-delete
   "delete document"
   [ztx docname]
-  (let [backlinks (get-backlinks ztx docname)]
+  (let [backlinks (backlinked ztx docname)]
     (datalog-delete ztx docname)
     (delete-doc ztx docname)
     (backlinks-clear ztx docname)
     (errors-clear ztx docname)
     ;; revalidate docs looking at this doc
-    (->> backlinks
-         (mapv (fn [[d _]] (validate-doc ztx d))))))
+    (->> backlinks (mapv #(validate-doc ztx %)))))
 
 (defn to-docs
   "return docs from text representation"
@@ -230,8 +343,13 @@
                                                  docpath (assoc :zd/file docpath)
                                                  lm (assoc :zd/last-modified lm)))))]
     (if (seq subdocs)
-      (into [(assoc doc :zd/subdocs (into #{} (mapv :zd/docname subdocs)))] subdocs)
+      (into [(assoc doc :zd/subdocs (into #{} (mapv :zd/docname subdocs)) :zd/parent (parent-name docname))] subdocs)
       [doc])))
+
+(defn file-content [ztx docname]
+  (let [doc (get-doc ztx docname)]
+    (when-let [file (:zd/file doc)]
+      (slurp file))))
 
 (defn file-read
   "read file and return vector of doc and subdocs"
@@ -241,6 +359,7 @@
         content (slurp docpath)]
     (to-docs ztx docname content (merge {:docpath docpath} opts))))
 
+
 (defn doc-get
   "get document from memory, validate, add backlinks etc"
   [ztx docname]
@@ -249,7 +368,7 @@
         doc (get-doc ztx docname)]
     (when doc
       (cond-> (get-doc ztx docname)
-        (seq errors) (assoc :zd/errors errors)
+        (seq errors)    (assoc :zd/errors errors)
         (seq backlinks) (assoc :zd/backlinks backlinks)))))
 
 (defn doc-summary
@@ -258,7 +377,7 @@
 
 (defn edn-links [acc docname path node]
   (cond
-    (symbol? node)
+    (and (symbol? node) (not (= node docname)))
     (update-in acc [node docname] (fnil conj #{}) path)
 
     (map? node)
@@ -290,17 +409,25 @@
   (let [links (collect-links doc)]
     (swap! ztx update :zd/backlinks (fn [ls] (merge-with merge ls links)))))
 
+(defn update-keys-index [ztx doc]
+  (swap! ztx update :zd/keys (fn [ks] (into (or ks #{}) (keys doc)))))
+
+(defn re-index-doc [ztx {docname :zd/docname :as doc} & [{dont-validate :dont-validate}]]
+  (put-doc ztx doc)
+  (datalog-put ztx doc)
+  (update-backlinks ztx doc)
+  (update-menu ztx doc)
+  (update-keys-index ztx doc)
+  (when-not dont-validate
+    (validate-doc ztx docname)))
+
 ;; emit save event
 (defn doc-save
   "upsert document into memory databases & indexes"
-  [ztx {docname :zd/docname :as doc} {dont-validate :dont-validate}]
+  [ztx {docname :zd/docname :as doc} {dont-validate :dont-validate :as opts}]
   (let [idoc (doc-inference ztx doc)]
     (put-doc ztx idoc)
-    (datalog-put ztx idoc)
-    (update-backlinks ztx idoc)
-    (update-menu ztx idoc)
-    (when-not dont-validate
-      (validate-doc ztx docname))
+    (re-index-doc ztx idoc opts)
     idoc))
 
 (defn file-delete
@@ -351,20 +478,43 @@
   (update-docs ztx
                (fn [_docname doc]
                  (let [idoc (doc-inference ztx doc)]
-                   (update-menu ztx idoc)
-                   (datalog-put ztx idoc)))))
+                   (re-index-doc ztx idoc)))))
 
 (defn menu
   "return navigation"
   [ztx]
   (->> (vals (get @ztx :zd/menu))
-       (sort-by :zd/menu-order)))
+       (sort-by (fn [x]
+                  (let [mo (:zd/menu-order x)]
+                    [(if (number? mo) mo 100) (str (:zd/docname x))])))))
 
 (defn errors
   "return all errors"
   [ztx]
   (get @ztx :zd/errors))
 
+
+(defn breadcrump [ztx docname]
+  (let [parts (str/split (str docname) #"\.")]
+    (loop [[p & ps] parts nm [] acc []]
+      (if (nil? p)
+        acc
+        (recur ps (conj nm p) (conj acc (symbol  (str/join "." (conj nm p)))))))))
+
+(defn props
+  "return all used props (keys)"
+  [ztx]
+  (:zd/keys @ztx))
+
+(defn annotations [ztx] )
+
+(defn symbols [ztx]
+  (->> (:zdb @ztx)
+       (mapv (fn [[k {old-ico :icon  ico :zd/icon logo :logo tit :title}]]
+               {:title tit
+                :name k
+                :logo logo
+                :icon (or old-ico ico)}))))
 
 (defn symbol-search   [ztx query])
 (defn keywords-search [ztx query])

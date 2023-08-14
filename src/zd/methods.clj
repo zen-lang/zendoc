@@ -6,6 +6,24 @@
    [stylo.core :refer [c]]
    [zd.methods :as methods]))
 
+(defmulti annotation (fn [name params] name))
+
+(defmethod annotation :badge [nm params] {:as :badge})
+
+(defmethod annotation :link-badge [nm params] {:as :badge})
+
+(defmethod annotation :hide [nm params] {:as :none})
+
+(defmethod annotation :block [nm params] {:as :block})
+
+(defmethod annotation :attribute [nm params] {:as :attribute})
+
+(defmethod annotation :default [nm params] (assoc {} nm params))
+
+
+(defmulti do-parse (fn [ctx tp s] tp))
+(defmethod do-parse :default [ctx _tp s] (str/trim s))
+
 ;; renders content of a block with :zd/content-type annotation
 (defmulti rendercontent (fn [ztx ctx block] (or (get-in block [:annotations :type])
                                                (type (:data block)))))
@@ -28,35 +46,7 @@
        (remove (fn [[k _]]
                  (= "zd" (namespace k)))) ))
 
-(defmulti renderann (fn [ztx ctx block]
-                      ;; TODO pub error if more then 1 ann?
-                      (when-let [[block-key _] (first (get-anns block))]
-                        block-key)))
-
-(defmethod renderkey :desc
-  [ztx ctx {kp :key d :data anns :ann :as block}]
-  [:p {:class (c [:text :gray-600])}
-   (rendercontent ztx ctx block)])
-
-;; by default add a header and renders content of a block
-(defmethod renderkey :default
-  [ztx ctx {kp :key d :data anns :ann :as block}]
-  ;; TODO fix render inline for bb run
-  ;; TODO think if render inline is usable at all
-  (let [basic-style (c [:pb 0.2] [:pt 1.5] [:mb 3] :text-lg :border-b)
-        embedded-style (c :flex :flex-row :items-center)
-        render-inline? (and (not (:zd/multiline anns)) (= (:zd/content-type anns) :edn) (not (map? d)))
-        multiline-embedded (c :flex :flex-row :items-baseline [:py 4])
-        cnt (when-not (and (string? d) (str/blank? d)) (rendercontent ztx ctx block))]
-    (if (seq (get-anns block))
-      (methods/renderann ztx ctx (assoc block :content cnt))
-      [:div {:class (c [:py 4])}
-       [:div {:class (if (:zd/render-subdoc? anns) embedded-style basic-style)}
-        [:a {:id kp :href (str "#" (name kp)) :class (c  {:font-weight "600"})}
-         (name kp)]]
-       ;; TODO think about rendering flow
-       (try (hiccup/html cnt) (catch Exception e (with-out-str (pprint/pprint cnt))))])))
-
+(defmulti renderann (fn [ztx ctx block] (get-in block [:annotations :as])))
 
 ;; zentext methods
 (defmulti inline-method   (fn [ztx m arg ctx] (keyword m)))

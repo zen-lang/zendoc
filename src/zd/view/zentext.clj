@@ -3,6 +3,7 @@
    [zd.view.utils :as link]
    [stylo.core :refer [c]]
    [clojure.string :as str]
+   [zd.zentext :as zentext]
    [zd.methods :as methods]))
 
 (defn github-disc [d]
@@ -144,3 +145,7 @@
                 (mapv (fn [x]
                         (into [:tr]
                               (->> x (mapv (fn [v] [:td {:class (c [:px 4] [:py 2] :border)} v]))))))))]))
+
+(defmethod methods/rendercontent :zentext
+  [ztx ctx {:keys [data] :as block}]
+  [:div (zentext/parse-block ztx data block)])

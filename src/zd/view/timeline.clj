@@ -1,9 +1,9 @@
 (ns zd.view.timeline
   (:require
-   [zd.runner :as runner]
+   ;; [zd.runner :as runner]
    [stylo.core :refer [c]]
    [zd.methods :as methods]
-   [zd.link :as link]
+   [zd.view.utils :as utils]
    [clojure.string :as str]))
 
 ;; TODO try to re impl using java git
@@ -40,11 +40,12 @@
 
 (defn get-history
   []
-  (->> (runner/exec {:exec ["git" "log"
+  (->> #_(runner/exec {:exec ["git" "log"
                             "--name-only"
                             "--date=format-local:%Y-%m-%d %H:%M"
                             "--no-merges"
                             "-n" "30"]})
+       []
        :stdout
        (partition-by empty?)
        (remove (fn [x] (-> x first empty?)))
@@ -66,7 +67,7 @@
 
 (defn gh-user [ztx gh-idx l]
   (if-let [u (get gh-idx (when-let [un (:user l)] (str/trim un)))]
-    (link/symbol-link ztx (:zd/name u))
+    (utils/symbol-link ztx (:zd/name u))
     [:b (or (:user l) (:email l))]))
 
 (defmethod methods/renderkey :git/timeline
@@ -103,5 +104,5 @@
                                       (str/replace "/" ".")
                                       (str/replace ".zd" ""))))))
                  (sort)
-                 (mapv (fn [x] [:li (link/symbol-link ztx x)]))
+                 (mapv (fn [x] [:li (utils/symbol-link ztx x)]))
                  (apply conj [:div]))]])])]))

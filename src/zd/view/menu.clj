@@ -24,7 +24,7 @@
    (->> (store/menu ztx)
         (map (fn [doc]
                [:div {:class (c :flex [:py 1.5] :items-center :flex-row [:pseudo ":hover>a:last-child" :block] :justify-between)}
-                (utils/symbol-link ztx (:zd/docname doc))
+                (utils/menu-link ztx (:zd/docname doc))
                 [:a {:class (c :cursor-pointer :text-lg [:text :gray-500] :hidden [:hover [:text :green-600]])
                      :href (str (:zd/docname doc) "." "_draft/edit")}
                  [:i.fas.fa-plus]]])))])

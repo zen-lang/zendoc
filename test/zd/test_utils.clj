@@ -6,9 +6,10 @@
    [hickory.core]
    [matcho.core :as matcho]
    [clojure.java.io :as io]
-   [zd.memstore]
+   ;; [zd.memstore]
    [clojure.walk]
-   [zd.datalog])
+   ;; [zd.datalog]
+   )
   (:import [java.nio.file Files Path]))
 
 (def wd (System/getProperty "user.dir"))
@@ -92,11 +93,11 @@
   (zen/get-symbol @ctx s))
 
 ;; TODO: this logic should live in codebase
-(defn get-doc [s]
-  (zd.memstore/get-doc @ctx s))
+;; (defn get-doc [s]
+;;   (zd.memstore/get-doc @ctx s))
 
-(defn all-errors []
-  (zd.memstore/get-all-errors @ctx))
+;; (defn all-errors []
+;;   (zd.memstore/get-all-errors @ctx))
 
 (defmacro match-doc [s pat]
   `(let [d# (get-doc ~s)]
@@ -138,12 +139,12 @@
      (matcho/match res# ~patt)
      res#))
 
-(defn query [q & params]
-  (apply zd.datalog/query @ctx q params))
+;; (defn query [q & params]
+;;   (apply zd.datalog/query @ctx q params))
 
-(defn datalog-save [data]
-  (zd.datalog/save-doc )
-  )
+;; (defn datalog-save [data]
+;;   (zd.datalog/save-doc )
+;;   )
 
 
 (defn prepare! [ztx]

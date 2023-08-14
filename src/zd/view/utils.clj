@@ -2,6 +2,10 @@
   (:require
    [stylo.core :refer [c]]
    [zd.store :as store]
+   [clojure.pprint]
+   [zd.methods :as methods]
+   [zd.zentext :as zentext]
+   [zd.store :as store]
    [clojure.string :as str]))
 
 (defn get-parent [ztx res]
@@ -46,3 +50,69 @@
        (when-not (:compact opts)
          (or (:title res) s))])
     [:a {:href (str "/" s) :class (c [:text :red-600] [:bg :red-100]) :title "Broken Link"} s]))
+
+(defn menu-link [ztx s & [opts]]
+  (if-let [res (store/get-doc ztx (symbol s))]
+    (if (:zd/subdoc? res)
+      [:span "TBD"]
+      [:a {:href (str "/" s)
+           :class (c :flex :items-center [:space-x 2])}
+       [:div {:class (c [:w 5] :text-center)}
+        (icon ztx res opts)]
+       [:div
+        (when-not (:compact opts)
+          (or (:title res) s))]])
+    [:a {:href (str "/" s) :class (c [:text :red-600] [:bg :red-100]) :title "Broken Link"} s]))
+
+(defn pprint [title data]
+  [:details {:class (c :text-xs [:mt 0.5])}
+   [:summary {:class (c [:text :gray-500]) } title]
+   [:pre {:class (c :border [:p 2] [:bg :gray-100])}
+    (with-out-str (clojure.pprint/pprint data))]])
+
+(defn table
+  "renders table from vector of hashmaps. each hashmap is a memstore document"
+  [ztx ctx headers data]
+  [:div "TBD" [:table {:class (c :rounded [:py 2] [:w-max "80rem"] {:display "block" :table-layout "fixed"})}
+    #_[:thead
+       (->> headers
+            (map (fn [k]
+                   [:th {:class (c [:px 4] [:py 2] :border [:bg :gray-100])}
+                    (str/lower-case (name k))]))
+            (into [:tr]))]
+    #_(->> data
+           (mapv (fn [row]
+                   [:tr
+                    (doall
+                     (for [h headers]
+                       [:td {:class (c [:px 4] [:py 2] :border {:vertical-align "top"})}
+                        (let [v (get row h)
+                              docname (get row :xt/id)
+                              doc (when docname (store/doc-get ztx (symbol docname)))
+                              block {:key h :data v}]
+
+                          (cond (= :xt/id h)
+                                [:a {:href (str "/" docname)
+                                     :class (c :inline-flex :items-center [:text "#4B5BA0"] [:hover [:underline]])}
+                                 (icon ztx doc)
+                                 (or (:title doc) docname)]
+
+                                ;; (= :zentext (:zd/content-type key-ann))
+                                ;; [:div {:class (c [:w-min "16rem"] :text-sm)}
+                                ;;  (zentext/parse-block ztx v block)]
+
+                                (= :edn (:zd/content-type key-ann))
+                                (cond
+                                  (set? v)
+                                  (->> v
+                                       (mapv (fn [e]
+                                               (if (symbol? e)
+                                                 (symbol-link ztx e)
+                                                 (zentext/parse-block ztx (str e) block))))
+                                       (into [:div {:class (c :flex :flex-col :text-sm {:flex-wrap "wrap"})}]))
+
+                                  :else (methods/rendercontent ztx ctx block))
+
+                                (some? v)
+                                (methods/rendercontent ztx ctx {:data v :key h :ann {:zd/content-type :edn}})))]))]))
+           (into [:tbody]))]])

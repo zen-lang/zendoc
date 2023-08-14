@@ -7,7 +7,7 @@
    [clojure.test :refer [deftest is testing]]
    [zd.fs :as fs]
    [zd.api]
-   [zd.memstore :as memstore]
+   ;; [zd.memstore :as memstore]
    [zen.core :as zen]
    [zen-web.core :as web]
    [zd.test-utils :as t]))

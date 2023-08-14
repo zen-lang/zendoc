@@ -5,7 +5,8 @@
    [zd.methods :as methods]
    [zen-web.core]
    [hiccup.core]
-   [zd.view.core :as view]))
+   [zd.view.core :as view])
+  (:import [org.httpkit BytesInputStream]))
 
 (defn config [ztx]
   (zen/get-state ztx :zd/config))
@@ -50,6 +51,23 @@
        :headers {"Cache-Control" "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"}
        :body   (hiccup.core/html [:pre (pr-str e)])})))
 
+(defmethod zen/op 'zd/render-editor
+  [ztx _cfg {{id :id} :route-params :as req} & opts]
+  (let [docname (symbol (or id "index"))
+        doc (store/doc-get ztx docname)
+        content (store/file-content ztx docname)]
+    {:status 200
+     :body (hiccup.core/html (view/editor ztx req doc content))}))
+
+;; TODO: add validation and inference
+(defmethod zen/op 'zd/render-preview
+  [ztx _cfg {{id :id} :route-params body :body :as req} & opts]
+  (let [docname (symbol id)
+        content (if (=  BytesInputStream (type body)) (slurp body) body)
+        doc     (->> (store/to-docs ztx docname content {}) first)]
+    {:status 200
+     :body (hiccup.core/html (view/preview ztx req doc))}))
+
 (defmethod zen/op 'zd/doc-content
   [ztx config {{id :id} :route-params uri :uri hs :headers doc :doc :as req} & opts]
   (let [docname (symbol (or id "index"))
@@ -76,11 +94,6 @@
   [ztx _cfg {{:keys [id]} :route-params :as req} & opts]
   {:status 200 :body "TBD"})
 
-(defmethod zen/op 'zd/render-editor
-  [ztx _cfg {{id :id} :route-params :as req} & opts]
-  (let []
-    {:status 200
-     :body "TBD"}))
 
 (defmethod zen/op 'zd.events/logger
   [ztx config {ev-name :ev :as ev} & opts]
@@ -101,12 +114,10 @@
   (def ztx (zen/new-context {}))
 
   (zen/read-ns ztx 'zd)
-  (zen/get-symbol ztx 'zd/system)
-
-  (zen/get-symbol ztx 'zd/zendoc)
-
   (zen/start-system ztx 'zd/system)
   (zen/stop-system ztx)
+
+  (:zd/backlinks @ztx)
 
   (config ztx)
 
