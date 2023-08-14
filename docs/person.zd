@@ -1,3 +1,5 @@
+:zd/docname person
+:zd/docname person
 
 ^badge
 :zd/type zd.class
@@ -27,13 +29,8 @@ m :zd/type #org.Member
 e :zd/type #person 
 > e
 
-&email
-^badge
-:zd/type zd.prop
-^badge
+&email zd.prop
 :zd/data-type zd.string
-
-^badge
 :zd/annotation zd.badge
 :desc /
 Email of person

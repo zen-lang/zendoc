@@ -3,6 +3,8 @@
    [zd.store :as store]
    [zen.core :as zen]
    [matcho.core :as matcho]
+   [clojure.set]
+   [clojure.java.io :as io]
    [clojure.test :refer [deftest is testing]]
    [zd.test-utils :as tu]))
 
@@ -248,7 +250,6 @@
      :query {:where [[e :xt/id id]] :find [(pull e [:xt/id :title])]},
      :columns [nil :title]})
 
-  (is (contains? (store/props ztx) :fixed))
 
   (store/to-doc ztx 'mydoc ":title \"title\"\n^badge\n:key /\n value\n^ann 1\n:another some/\ntext")
 
@@ -259,4 +260,37 @@
         (store/doc-get ztx 'nested.one)
       {:title "one"}))
 
-)
+  (testing "props"
+    (is (clojure.set/subset?  #{":zd/subdoc?" ":broken"} (into #{} (mapv :name (store/props ztx))))))
+
+  (testing "rename"
+    (store/file-save ztx 'torename ":title \"torename\"\n:ref other")
+
+
+    (is (store/file-content ztx 'torename))
+
+    (matcho/match (store/doc-get ztx 'torename)
+      {:title "torename"})
+
+    (is (contains? (store/backlinked ztx 'index) 'torename))
+
+    (store/file-save ztx 'torename ":zd/docname renamed\n:title \"torename\"\n:ref other")
+
+    (is (.exists (io/file ".tmp/renamed.zd")))
+    (is (not (.exists (io/file ".tmp/torename.zd"))))
+
+    (is (nil? (store/doc-get ztx 'torename)))
+
+    (is (nil? (store/file-content ztx 'torename)))
+
+    (is (store/file-content ztx 'renamed))
+
+    (matcho/match (store/doc-get ztx 'renamed)
+      {:title "torename"})
+
+    (is (not (contains? (store/backlinked ztx 'index) 'torename)))
+    (is (contains? (store/backlinked ztx 'index) 'renamed))
+
+    )
+
+  )

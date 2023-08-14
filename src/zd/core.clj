@@ -60,7 +60,9 @@
   [ztx _cfg {{id :id} :route-params body :body :as req} & opts]
   (let [docname (symbol id)
         content (if (=  BytesInputStream (type body)) (slurp body) body)
-        doc     (store/to-doc ztx docname content {})]
+        doc     (store/to-doc ztx docname content {})
+        errors  (store/doc-validate ztx doc)
+        doc (cond-> doc (seq errors) (assoc :zd/errors errors))]
     {:status 200
      :body (hiccup.core/html (view/preview ztx req doc))}))
 
@@ -68,10 +70,10 @@
 (defmethod zen/op 'zd/save-doc
   [ztx _cfg {{id :id} :route-params body :body :as req} & opts]
   (let [docname (symbol id)
-        content (if (=  BytesInputStream (type body)) (slurp body) body)]
-    (store/file-save ztx docname content)
+        content (if (=  BytesInputStream (type body)) (slurp body) body)
+        doc (store/file-save ztx docname content)]
     {:status 200
-     :body (str "/" docname)}))
+     :body (str "/" (:zd/docname doc))}))
 
 (defmethod zen/op 'zd/doc-content
   [ztx config {{id :id} :route-params uri :uri hs :headers doc :doc :as req} & opts]
@@ -90,10 +92,12 @@
     {:status 200
      :body [:div "Error: " id " is not found"]}))
 
-
 (defmethod zen/op 'zd/delete-doc
   [ztx _cfg {{:keys [id]} :route-params :as req} & opts]
-  {:status 200 :body "TBD"})
+  (let [docname (symbol id)]
+    (store/file-delete ztx docname)
+    {:status 200
+     :body (str (store/parent-name docname))}))
 
 (defmethod zen/op 'zd.events/logger
   [ztx config {ev-name :ev :as ev} & opts]
@@ -108,7 +112,8 @@
 
 (defmethod zen/stop 'zd/zendoc
   [ztx config state]
-  (println :zd/stop state))
+  (println :zd/stop state)
+  (swap! ztx dissoc :zdb :zd/backlinks))
 
 (comment
 

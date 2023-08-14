@@ -1,3 +1,5 @@
+:zd/docname queries
+:zd/docname queries
 :title "Queries"
 :icon [:fa-brands :fa-searchengin]
 
@@ -6,7 +8,7 @@
 :menu-order 10
 :query ?/
 
-e :parent #people
+e :zd/parent #people
 > e
 > e:role
 > e:title

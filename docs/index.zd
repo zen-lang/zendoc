@@ -2,4 +2,5 @@
 :title "Home"
 :zd/icon [:fa-duotone :fa-house-chimney-medical]
 :desc /
-X company wants to gather knowledge and get insights in customer relations.
+X company wants to gather knowledge and 
+get insights in customer relations.

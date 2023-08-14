@@ -1,3 +1,5 @@
+:zd/docname person.niquola
+:zd/docname person.niquola
 
 
 ^badge
@@ -14,36 +16,21 @@
 
 :desc /
 
-&hs-memb
-^badge
-:zd/type org.Member
-^badge
+& org.Member
 :org/memberSince #inst"2005-01-01"
-^badge
 :org/memberOf orgs.health-samurai
-^badge
 :org/role org.CTO
-^badge
 :org/person person.niquola
 
-&int-postgres
-^badge
-:zd/type foaf.Iterest
-^badge
+& foaf.Iterest
 :subject #{ tech.PostgreSQL }
 :desc /
 Interested in Clojure
 
-&fill-profile
-:title "Finish Profile"
-^badge
-:zd/type tasks
-^badge
+& tasks
 :tasks/assignee person.tim
-^badge
 :tasks/severity tasks.critical
-
-
+:title "Finish Profile"
 :desc /
 
 Complete Profile for Nikolai

@@ -352,9 +352,9 @@
                                          docpath (assoc :zd/file docpath) lm (assoc :zd/last-modified lm))))
 
 (defn file-content [ztx docname]
-  (let [doc (get-doc ztx docname)]
-    (when-let [file (:zd/file doc)]
-      (slurp file))))
+  (let [docpath (str (:zd/dir @ztx) "/" (docname-to-path docname))]
+    (when (.exists (io/file docpath))
+      (slurp docpath))))
 
 (defn file-read
   "read file and return vector of doc and subdocs"
@@ -385,7 +385,7 @@
 
 (defn edn-links [acc docname path node]
   (cond
-    (and (not (= [:zd/subdocs] path))  (symbol? node) (not (= node docname)))
+    (and (not (= :zd/subdocs (first path)))  (symbol? node) (not (= node docname)))
     (update-in acc [node docname] (fnil conj #{}) path)
 
     (map? node)
@@ -453,18 +453,32 @@
     (clear-menu ztx docname)
     (when (.exists file) (.delete file))))
 
+;; TODO: this dirty think a better way
+(defn extract-docname [content]
+  (let [lines (zd.parser/get-lines content)
+        docname-line (->> lines (filter #(str/starts-with? % ":zd/docname")) (first))
+        docname (when docname-line (when-let [s (-> docname-line (str/split #"\s+") (second))] (symbol s)))
+        content' (->> lines
+                      (remove #(str/starts-with? % ":zd/docname"))
+                      (str/join "\n"))]
+    [(when docname (symbol docname)) content']))
+
+(extract-docname ":a 1\n:zd/docname docname\n:b 1")
+
 ;; check that it is identical to what you have now
 ;; and skeep if so
 (defn file-save
   "save document content into file and recalculate databases"
   [ztx docname content & [{dont-validate :dont-validate :as opts}]]
-  (let [dir (:zd/dir @ztx)
-        path (docname-to-path docname)
+  (let [[new-docname content] (extract-docname content)
+        new-docname (or new-docname docname)
+        dir (:zd/dir @ztx)
+        path (docname-to-path new-docname)
         docpath (str dir "/" path)]
     (file-delete ztx docname)
     (.mkdirs (io/file (parent-dir docpath)))
     (spit docpath content)
-    (let [doc (to-doc ztx docname content {:docpath docpath :parent (parent-name docname)})
+    (let [doc (to-doc ztx new-docname content {:docpath docpath :parent (parent-name new-docname)})
           doc' (symbolize-subdocs doc)]
       (doc-save ztx doc' opts)
       (->> (:zd/subdocs doc)
@@ -522,7 +536,8 @@
 (defn props
   "return all used props (keys)"
   [ztx]
-  (:zd/keys @ztx))
+  (->> (:zd/keys @ztx)
+       (mapv (fn [k] {:name (str k)}))))
 
 (defn annotations [ztx] )
 
@@ -534,6 +549,5 @@
                 :logo logo
                 :icon (or old-ico ico)}))))
 
-(defn symbol-search   [ztx query])
-(defn keywords-search [ztx query])
-(defn search          [ztx query])
+
+(defn search [ztx query])

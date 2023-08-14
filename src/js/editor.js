@@ -126,6 +126,7 @@ var autocompl = (ctx, v)=> {
             token_start = i;
             break;
         } else if(c == ':' && (p_aln || j == 1) && is_in_key(btxt)) {
+            console.log('here');
             pos_type = 'key';
             token_start = i;
             break;

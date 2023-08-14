@@ -39,12 +39,13 @@
 
 (defn symbol-link [ztx s & [opts]]
   (if-let [res (store/get-doc ztx (symbol s))]
-    (if (get-in res [:zd/meta :subdoc])
-      (let [parent (get-in res [:zd/parent])]
-        [:a {:href (str "/" parent "#subdocs-" (:zd/name res))
+    (if (:zd/subdoc? res)
+      (let [parent-name (get-in res [:zd/parent])
+            parent (store/get-doc ztx parent-name)]
+        [:a {:href (str "/" parent-name "#subdocs-" (:zd/docname res))
              :class (c :inline-flex :items-center [:text "#4B5BA0"] [:hover [:underline]] :whitespace-no-wrap)}
          (icon ztx res opts)
-         (when-not (:compact opts) (or (:title res) s))])
+         (when-not (:compact opts) (or (:title res) (:title parent) s))])
       [:a {:href (str "/" s) :class (c :inline-flex :items-center [:text "#4B5BA0"] [:hover [:underline]] :whitespace-no-wrap)}
        (icon ztx res opts)
        (when-not (:compact opts)

@@ -38,7 +38,7 @@ var stop = (ev) => {
 };
 
 var is_alphanum = (c) => {
-    return (c || false) && c.match(/[-.a-zA-Z0-9]/i) !== null;
+    return (c || false) && c.match(/[-/.a-zA-Z0-9]/i) !== null;
 };
 
 var is_in_key = (txt, sym) => {
@@ -50,7 +50,7 @@ var is_in_key = (txt, sym) => {
         }
     }
     var lastc = txt[line_start + 1];
-    return (lastc == ':' || lastc == '^') && !(quote_count & 1);
+    return (lastc == ':' || lastc == '^' || lastc == '&') && !(quote_count & 1);
 };
 
 var set = (nel, attrs) => {

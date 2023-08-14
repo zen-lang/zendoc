@@ -9,7 +9,8 @@
 
 (defmethod methods/renderkey :title
   [ztx {doc :doc} {title :data :as block}]
-  [:h1 {:class (c :flex :items-center [:m 0] [:py 2] [:border-b :gray-400] [:mb 4]) :id "title"}
+  [:h1 {:class (c :flex :items-center [:m 0] [:py 2] [:border-b :gray-400] [:mb 4])
+        :id "title"}
    (if-let [img (or (:avatar doc) (:logo doc))]
      [:img {:src img
             :class (c [:w 8] [:h 8] :inline-block [:mr 2] {:border-radius "100%"})}]
@@ -135,6 +136,15 @@
                [:div {:class (c :border [:px 4] [:py 2] [:my 2] :rounded :shadow-sm)}
                 (document ztx ctx doc)])))])
 
+
+(defn errors-view [ztx errors]
+  [:div {:class (c [:text :red-700]  [:my 2] [:pb 2] :rounded :text-sm [:border :red-300])}
+   [:ul {:class (c :font-bold [:mb 1] [:py 1] [:px 3] [:ml 0] [:text :red-600] [:bg :red-100] [:border-b :red-300])} "Document errors"]
+   (for [err (sort-by :type errors)]
+     [:li {:class (c [:py 0.5] :flex [:space-x 3] [:text :red-600] [:px 3])}
+      [:span (pr-str (:path err))]
+      [:span {:class (c [:ml 4] {:text-align "right"})} (:message err)]])])
+
 (defn document [ztx ctx doc]
   [:div
    (->> (:zd/view doc)
@@ -152,6 +162,8 @@
 (defn view [ztx ctx doc]
   [:div {:class (c [:w 200])}
    [:div (topbar/topbar ztx ctx doc)]
+   (when-let [errors (seq (:zd/errors doc))]
+     (errors-view ztx errors))
    (document ztx ctx doc)])
 
 ;; TODO:  choose between badge and block based on (type: edn)-> badge; others -> block

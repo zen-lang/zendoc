@@ -2,14 +2,22 @@
 * [x] save
 * [x] symbols autocomplete
 * [x] default block type (badge, attribute, block)
-* [ ] delete
-* [ ] symbols autocomplete in subdoc name
-* [ ] rename
+* [x] delete
+* [x] symbols autocomplete in subdoc name
+* [x] rename
+* [x] fix validation
+* [ ] global errors page
+* [ ] new item
+* [ ] load zd schema
 * [ ] content navigation
 * [ ] subdoc page
 * [ ] nested menu
-* [ ] new item
 * [ ] search (name, title, desc)
 * [ ] timeline
 * [ ] index
 * [ ] parents puzzle
+* [ ] remove backlinks for :zd/subdocs
+* [ ] do not collect links from subs to parent
+* [ ] invisible ancor for subdocs
+* [ ] link preview load with ancor
+* [ ] style doc preview
