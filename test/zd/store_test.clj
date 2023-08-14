@@ -23,8 +23,9 @@
   (spit ".tmp/index.zd" doc-content)
   (spit ".tmp/other.zd" other-content)
 
-  (matcho/match (store/to-doc ztx 'mydoc doc-content)
+  (matcho/match (store/to-doc ztx 'mydoc doc-content {:parent 'index})
     {:title "Index"
+     :zd/parent 'index
      :zd/subdocs [{:title "Subdoc" :zd/parent 'mydoc}]})
 
   (matcho/match (store/file-read ztx ".tmp" "index.zd")
@@ -254,7 +255,8 @@
   (testing "nested docs"
 
     (store/file-save ztx 'nested.one ":title \"one\"")
-
-    )
+    (matcho/match
+        (store/doc-get ztx 'nested.one)
+      {:title "one"}))
 
 )

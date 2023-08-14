@@ -1,3 +1,5 @@
+:zd/docname orgs
+:zd/docname orgs
 :icon [:fa-duotone :fa-building]
 :menu-order 100
 :zd/type zd.class
@@ -28,16 +30,13 @@ e :org/person p
 :zd/type zd.prop
 :zd/annotation zd.link-badge
 
-&location
-:zd/type zd.prop
+&location zd.prop
 :zd/annotation zd.badge
 
-&linkedin
-:zd/type zd.prop
+&linkedin zd.prop
 :zd/annotation zd.link-badge
 
-&tags
-:zd/type zd.prop
+&tags zd.prop
 :zd/annotation zd.badge
 :zd/data-type zd.symbol
 :zd/ref-type  tag

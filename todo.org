@@ -1,10 +1,15 @@
-* [ ] symbols autocomplete
-* [ ] keys atocomplete
-* [ ] save & rename
-* [ ] default block type (badge, attribute, block)
+* [x] subdocs render
+* [x] save
+* [x] symbols autocomplete
+* [x] default block type (badge, attribute, block)
+* [ ] delete
+* [ ] symbols autocomplete in subdoc name
+* [ ] rename
 * [ ] content navigation
-* [ ] subdocs render
 * [ ] subdoc page
 * [ ] nested menu
 * [ ] new item
 * [ ] search (name, title, desc)
+* [ ] timeline
+* [ ] index
+* [ ] parents puzzle

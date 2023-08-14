@@ -186,6 +186,11 @@
       'index
       (symbol (str/join "." parent)))))
 
+(defn parent-dir [filename]
+  (let [parts (str/split (str filename) #"/")
+        parent (butlast parts)]
+    (str/join "/" parent)))
+
 ;; (parent-name 'a.b.c)
 ;; (parent-name 'a)
 ;; (parent-name 'a.b)
@@ -341,8 +346,10 @@
 
 (defn to-doc
   "return docs from text representation"
-  [ztx docname content & [{docpath :docpath lm :last-modified}]]
-  (zd.parser/parse ztx docname content (cond-> {} docpath (assoc :zd/file docpath) lm (assoc :zd/last-modified lm))))
+  [ztx docname content & [{docpath :docpath lm :last-modified parent :parent}]]
+  (zd.parser/parse ztx docname content (cond-> {}
+                                         parent  (assoc :zd/parent parent)
+                                         docpath (assoc :zd/file docpath) lm (assoc :zd/last-modified lm))))
 
 (defn file-content [ztx docname]
   (let [doc (get-doc ztx docname)]
@@ -355,7 +362,7 @@
   (let [docpath (str dir "/" path)
         docname (path-to-docname path)
         content (slurp docpath)]
-    (to-doc ztx docname content (merge {:docpath docpath} opts))))
+    (to-doc ztx docname content (merge {:docpath docpath :parent (parent-name docname)} opts))))
 
 
 (defn doc-get
@@ -378,7 +385,7 @@
 
 (defn edn-links [acc docname path node]
   (cond
-    (and (symbol? node) (not (= node docname)))
+    (and (not (= [:zd/subdocs] path))  (symbol? node) (not (= node docname)))
     (update-in acc [node docname] (fnil conj #{}) path)
 
     (map? node)
@@ -455,8 +462,9 @@
         path (docname-to-path docname)
         docpath (str dir "/" path)]
     (file-delete ztx docname)
+    (.mkdirs (io/file (parent-dir docpath)))
     (spit docpath content)
-    (let [doc (to-doc ztx docname content {:docpath docpath})
+    (let [doc (to-doc ztx docname content {:docpath docpath :parent (parent-name docname)})
           doc' (symbolize-subdocs doc)]
       (doc-save ztx doc' opts)
       (->> (:zd/subdocs doc)

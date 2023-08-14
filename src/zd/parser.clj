@@ -94,7 +94,7 @@
                  (cond-> {:zd/view []
                           :zd/docname docname}
                    nm (assoc :zd/subdoc? true :zd/parent rootname)
-                   tp (assoc :zd/type tp))))))
+                   tp (assoc :zd/type tp :zd/view [[:zd/type {:type :edn}]]))))))
 
 ;; :start
 ;;   ^ -> annotation | :ann
@@ -244,5 +244,7 @@
                                                  (dissoc :lines)
                                                  (assoc :keys (split-keys (:lines doc) docname))
                                                  (parse-doc docname i)
-                                                 (merge  meta)))))]
+                                                 ;; TODO: handle parent
+                                                 (merge  (dissoc meta :zd/parent))
+                                                 (update :zd/parent (fn [x] (or x (:zd/parent meta))))))))]
     (cond-> doc (seq subdocs) (assoc :zd/subdocs (into [] subdocs)))))

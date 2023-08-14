@@ -74,7 +74,7 @@
                    :zd/parent 'mydoc,
                    :title "S1",
                    :local-ref 'mydoc}
-                  {:zd/view [[:title {:type :edn}]],
+                  {:zd/view [[:zd/type {:type :edn}][:title {:type :edn}]],
                    :zd/docname 'mydoc.subdoc-2
                    :zd/type 'zd/class,
                    :zd/subdoc? true,
@@ -85,7 +85,7 @@
                    :zd/subdoc? true,
                    :zd/parent 'mydoc,
                    :title "Anonimous1"}
-                  {:zd/view [[:title {:type :edn}]],
+                  {:zd/view [[:zd/type {:type :edn}][:title {:type :edn}]],
                    :zd/docname 'mydoc.doc-4
                    :zd/type #{'zd/task 'zd/anything},
                    :zd/subdoc? true,
@@ -93,6 +93,8 @@
                    :title "Anonimous2"}]})
 
   (matcho/match result doc)
+
+  (parser/parse ztx 'mydoc ":title \"doc\"\n&sub zd/class\n" {:zd/parent 'index})
 
   )
 
