@@ -80,11 +80,15 @@
  errors-page
  {:zen/tags #{zen-web/op zen/op}}
 
+ check-errors
+ {:zen/tags #{zen-web/op zen/op}}
+
  api
  {:zen/tags #{zen-web/api}
   :engine zen-web/routemap
   ;; TODO move zen web defaults to zen web core
   ;; :mw [zen-web/defaults]
+  "_errors" {:GET check-errors}
   :GET render-doc
   [:id] {;;:mw [append-doc layout]
          :DELETE delete-doc

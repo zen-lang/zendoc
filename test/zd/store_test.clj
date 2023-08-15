@@ -68,11 +68,11 @@
        '{:where [[e :zd/parent p]]
          :find [e p]
          :order-by [[e :asc] [p :asc]]})
-    '[[index index] [index.sub1 index] [other index] [other.sub1 other]])
+    '[[errors index] [index index] [index.sub1 index] [other index] [other.sub1 other]])
 
   (matcho/match
       (store/get-backlinks ztx 'index)
-    '{[:zd/parent] [index.sub1 other]})
+    '{[:zd/parent] [errors index.sub1 other]})
 
   ;; (println :q (store/datalog-query ztx '{:where [[e :xt/id 'index] [e :title t]] :find [e t]}))
 
@@ -100,7 +100,7 @@
 
   (matcho/match
       (store/get-backlinks ztx 'index)
-    {[:zd/parent] '[index.sub1 other newone]})
+    {[:zd/parent] '[errors index.sub1 newone other]})
 
   (matcho/match (store/doc-get ztx 'newone.sub)
     {:zd/docname 'newone.sub
@@ -241,6 +241,7 @@
     '{:result
       [[b "b"]
        [backref-1 "backref-1"]
+       [errors "Errors"]
        [index "Index"]
        [index.sub1 "Subdoc"]
        [newone "newone"]
@@ -290,6 +291,23 @@
 
     (is (not (contains? (store/backlinked ztx 'index) 'torename)))
     (is (contains? (store/backlinked ztx 'index) 'renamed))
+
+    )
+
+  (testing "root"
+    (matcho/match
+        (store/doc-get ztx 'zd)
+      {:title "Zendoc"})
+    )
+
+  (testing "All errors"
+
+    (is (seq (store/errors ztx)))
+
+    (matcho/match (store/doc-get ztx 'errors)
+      {:zd/all-errors true})
+
+
 
     )
 

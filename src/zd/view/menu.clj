@@ -21,6 +21,8 @@
       :placeholder ":title"
       :value search-text
       :class (c :border :outline-none [:w "100%"] [:rounded 4] :text-base [:px 2] [:py 1])}]]
+   [:div#errors-link {:class (c :flex [:py 1.5] [:space-x 2] :items-center [:text :red-500])}
+    [:div {:class (c :flex-1)} (utils/menu-link ztx 'errors)] [:b#errors-count {:class (c :text-sm)} "?"]]
    (->> (store/menu ztx)
         (map (fn [doc]
                [:div {:class (c :flex [:py 1.5] :items-center :flex-row [:pseudo ":hover>a:last-child" :block] :justify-between)}

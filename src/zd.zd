@@ -4,73 +4,56 @@
 Welcome to zendoc built-in documentation.
 
 
-&class
+&class zd.class
 :title "Class"
-:zd/type zd.class
 
-&prop
+&prop zd.class
 :title "Property"
-:zd/type zd.class
 
-&type
+&type zd.prop
 :title "zd/type"
-:zd/type zd.prop
 :zd/annotation zd.badge
 
-&require
+&require zd.prop
 :title "zd/type"
-:zd/type zd.prop
 :zd/annotation zd.badge
 
-&summary
+&summary zd.prop
 :title "zd/type"
-:zd/type zd.prop
 :zd/annotation zd.badge
 
-&data-type
+&data-type zd.prop
 :title "zd/type"
-:zd/type zd.prop
 :zd/annotation zd.badge
 
-&icon
+&icon zd.prop
 :title "zd/type"
-:zd/type zd.prop
 :zd/annotation zd.hide
 
-&menu-order
+&menu-order zd.prop
 :title "zd/type"
-:zd/type zd.prop
 :zd/annotation zd.badge
 
-&readonly
+&readonly zd.prop
 :title "zd/type"
-:zd/type zd.prop
 :zd/data-type zd.boolean
 :zd/annotation zd.hide
 
-&boolean
-:zd/type zd.class
+&boolean zd.class
 
-&string
-:zd/type zd.class
+&string zd.class
 
-&inst
-:zd/type zd.class
+&inst zd.class
 
-&annotation
-:zd/type zd.prop
+&annotation zd.prop
 :zd/annotation zd.badge
 
 &annotation-class
 
-&hide
-:zd/type zd.annotation-class
+&hide zd.annotation-class
 
-&badge
-:zd/type zd.annotation-class
+&badge zd.annotation-class
 
-&link-badge
-:zd/type zd.annotation-class
+&link-badge zd.annotation-class
 
-&attribute
-:zd/type zd.annotation-class
+&attribute zd.annotation-class

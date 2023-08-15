@@ -182,9 +182,11 @@
 (defn parent-name [docname]
   (let [parts (str/split (str docname) #"\.")
         parent (butlast parts)]
-    (if (empty? parent)
-      'index
-      (symbol (str/join "." parent)))))
+    (if (= 'zd docname)
+      'zd
+      (if (empty? parent)
+        'index
+        (symbol (str/join "." parent))))))
 
 (defn parent-dir [filename]
   (let [parts (str/split (str filename) #"/")
@@ -324,8 +326,7 @@
   (->> (get-in @ztx [:zd/backlinks docname])
        (reduce (fn [acc [docname attrs]]
                  (->> attrs
-                      (reduce (fn [acc path] (update acc path (fn [xs] (conj (or xs []) docname))))
-                              acc))) {})))
+                      (reduce (fn [acc path] (update acc path (fn [xs] (sort (conj (or xs []) docname))))) acc))) {})))
 
 (defn backlinked [ztx docname]
   (->> (get-in @ztx [:zd/backlinks docname])
@@ -499,9 +500,22 @@
                   (filter identity))]
     docs))
 
+(defn load-meta [ztx]
+  (let [doc (-> (to-doc ztx 'zd (slurp (io/resource "zd.zd")) {:parent 'zd})
+                (assoc  :zd/readonly true :zd/parent 'zd))]
+    (put-doc ztx (symbolize-subdocs doc))
+    (->> (:zd/subdocs doc)
+         (mapv #(put-doc ztx %)))
+    (put-doc ztx {:zd/docname 'errors
+                  :zd/view [ [:title] [:zd/all-errors]]
+                  :zd/icon [:fa-solid :fa-triangle-exclamation]
+                  :title "Errors"
+                  :zd/all-errors true})))
+
 (defn dir-load
   "read docs from filesystem and load into memory"
   [ztx dir]
+  (load-meta ztx)
   (->> (dir-read ztx dir)
        (mapv (fn [doc]
                (put-doc ztx (symbolize-subdocs doc))

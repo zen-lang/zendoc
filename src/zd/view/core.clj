@@ -11,6 +11,7 @@
    [zd.view.timeline]
    [zd.view.editor]
    [zd.view.layout :as layout]
+   [zd.view.errors]
    [hiccup.core]))
 
 (defn preview [ztx ctx doc]
@@ -21,5 +22,3 @@
 
 (defn editor [ztx ctx doc content]
   (layout/layout ztx ctx (zd.view.editor/editor ztx ctx doc  content)))
-
-(defn errors [ztx doc])

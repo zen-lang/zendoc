@@ -75,6 +75,14 @@
     {:status 200
      :body (str "/" (:zd/docname doc))}))
 
+(defmethod zen/op 'zd/check-errors
+  [ztx _cfg req & opts]
+  (if-let [errs  (seq (store/errors ztx))]
+    {:status 200
+     :body (str (count errs))}
+    {:status 404
+     :body "0"}))
+
 (defmethod zen/op 'zd/doc-content
   [ztx config {{id :id} :route-params uri :uri hs :headers doc :doc :as req} & opts]
   (let [docname (symbol (or id "index"))
@@ -99,10 +107,6 @@
     {:status 200
      :body (str (store/parent-name docname))}))
 
-(defmethod zen/op 'zd.events/logger
-  [ztx config {ev-name :ev :as ev} & opts]
-  (println (assoc ev ::ts (str (java.util.Date.)))))
-
 (defmethod zen/start 'zd/zendoc
   [ztx config & opts]
   (println :zd/start config)
@@ -114,6 +118,10 @@
   [ztx config state]
   (println :zd/stop state)
   (swap! ztx dissoc :zdb :zd/backlinks))
+
+(defmethod zen/op 'zd.events/logger
+  [ztx config {ev-name :ev :as ev} & opts]
+  (println (assoc ev ::ts (str (java.util.Date.)))))
 
 (comment
 
