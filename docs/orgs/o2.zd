@@ -1,12 +1,11 @@
 :zd/type orgs
 :orgs/site "site"
-:orgs/location loc.Country
+:orgs/location city.Lisboa
 :orgs/linkedin "?"
+:orgs/tags orgs.ehr-vendor
 :title "O2"
 :desc /
 
-
-:broken-link ups
 
 &case-big-data prod.Case
 :need needs.big-data

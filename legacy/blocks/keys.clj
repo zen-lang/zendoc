@@ -37,13 +37,11 @@
      [:i.fa-brands.fa-linkedin]]))
 
 (defmethod methods/renderkey :title
-  [ztx {doc :doc} {title :data :as block}]
-  [:h1 {:class (c :flex :items-center [:m 0] [:py 2] [:border-b :gray-400] [:mb 4]) :id "title"}
+  [ztx {doc :doc} {title :data}]
+  [:h1 {:class (c :flex :items-center [:m 0] [:pt 2] [:pb 1] [:border-b :gray-400] [:mb 4] :text-xl) :id "title"}
    (if-let [img (or (:avatar doc) (:logo doc))]
      [:img {:src img
             :class (c [:w 8] [:h 8] :inline-block [:mr 2] {:border-radius "100%"})}]
      (when-let [icon (or (:icon doc) (:zd/icon doc))]
-       [:i {:class (str (str/join " " (map name icon))
-                        " "
-                        (name (c [:mr 2] [:text :gray-600])))}]))
+       [:i {:class (str (str/join " " (map name icon)) " " (name (c [:mr 2] [:text :gray-600])))}]))
    title])

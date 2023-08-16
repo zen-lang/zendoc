@@ -2,5 +2,27 @@
 :title "Home"
 :zd/icon [:fa-duotone :fa-house-chimney-medical]
 :desc /
-X company wants to gather knowledge and 
-get insights in customer relations.
+
+
+Zendoc allows you to iteratively develop structured knowledge base. 
+Start from text and end up with linked database.
+
+
+:Document /
+
+Your knowledge base consists of documents (or resources). 
+The document is a set of key/value pairs.
+Every document has a name.
+
+:Backlinks /
+
+:Schemas /
+
+:Queries /
+
+Queries
+
+& tasks.Task
+:tasks/assignee person.niquola
+:desc /
+Make an overview of zendoc

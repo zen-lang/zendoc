@@ -55,7 +55,14 @@ var options = {
         }
     },
     symbol: (ctx, token)=>{
-        return ctx.symbols.search(token).map((x)=> { return x.item; });
+        console.log('token',token);
+        let res = ctx.symbols.search(token).map((x)=> { console.log(x.item); return x.item; });
+        if(token == '/'){
+            res.unshift({title: '<entr>', name: "/\n"});
+        } else {
+            res.unshift({name: token, icon: ["fa-solid", "fa-plus"]});
+        }
+        return  res;
     },
     annotation: (ctx, token)=>{
         return ctx.annotations.search(token).map((x)=> { return x.item; });
@@ -171,7 +178,7 @@ var autocompl = (ctx, v)=> {
                             class: ['menu-item'],
                             on:  {click: (ev)=> { ctx.selection = i; insert_selection(ctx); } },
                             els: {icon:  icon,
-                                  name:  {tag: 'b', style: {'padding-right': 5}, text: item.name},
+                                  name:  {tag: 'b', style: {'padding-right': 5}, text: (item.name || '').trim()},
                                   title: {tag: 'span', text: item.title}},
                             style: {padding: 5, 'font-size': 12, cursor: 'point'}};
                 if(i == 0) { opts.style = merge(opts.style, selection_style); }

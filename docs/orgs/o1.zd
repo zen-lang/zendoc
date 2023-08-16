@@ -3,6 +3,7 @@
 :zd/type #{ orgs prod.EHR-Vendor }
 :orgs/site "?"
 :orgs/location country.US
+:orgs/linkedin "todo"
 
 :title "Acme"
 :desc /
@@ -19,7 +20,7 @@
 ^badge
 :prod/partner-since #inst"2011"
 ^badge
-:prod/champion #{ people.john }
+:prod/champion #{ person.ivan }
 
 
 

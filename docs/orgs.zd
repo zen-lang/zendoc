@@ -1,12 +1,10 @@
-:zd/docname orgs
-:zd/docname orgs
 :icon [:fa-duotone :fa-building]
 :menu-order 100
 :zd/type zd.class
-:zd/require #{ :title :orgs/site :orgs/location :orgs/linkedin :orgs/tags }
+:zd/require #{ :title :orgs/site :orgs/location :orgs/linkedin}
 :zd/summary #{ :orgs/tags }
 
-:title "orgs"
+:title "Organizations"
 :desc /
 
 :needs ?/
@@ -26,9 +24,9 @@ e :org/person p
 > e:org/role
 > o
 
-&site
-:zd/type zd.prop
+&site zd.prop
 :zd/annotation zd.link-badge
+:zd/summary true
 
 &location zd.prop
 :zd/annotation zd.badge
@@ -39,4 +37,9 @@ e :org/person p
 &tags zd.prop
 :zd/annotation zd.badge
 :zd/data-type zd.symbol
-:zd/ref-type  tag
+
+&tag zd.class
+:title "Type for tags"
+
+&ehr-vendor orgs.tag
+:title "EHR Vendor"

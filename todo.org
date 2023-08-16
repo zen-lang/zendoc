@@ -6,18 +6,20 @@
 * [x] symbols autocomplete in subdoc name
 * [x] rename
 * [x] fix validation
-* [ ] global errors page
+* [x] global errors page
+* [x] load zd schema
+* [x] index
+* [ ] group backlinks by type [. <- attr [type]]
+* [ ] fix errors on parents during initial load
+* [ ] remove backlinks for :zd/subdocs
+* [ ] do not collect links from subs to parent
 * [ ] new item
-* [ ] load zd schema
 * [ ] content navigation
 * [ ] subdoc page
 * [ ] nested menu
 * [ ] search (name, title, desc)
 * [ ] timeline
-* [ ] index
 * [ ] parents puzzle
-* [ ] remove backlinks for :zd/subdocs
-* [ ] do not collect links from subs to parent
 * [ ] invisible ancor for subdocs
 * [ ] link preview load with ancor
 * [ ] style doc preview

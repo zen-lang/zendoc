@@ -1,7 +1,6 @@
 :title "Macros examples"
 :zd/icon [:fa-duotone :fa-circle-m]
 :menu-order 4
-:tags #{tags.builtin}
 
 
 :office-locations (load "office-locations.json" :json)

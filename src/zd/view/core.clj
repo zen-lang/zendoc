@@ -15,10 +15,13 @@
    [hiccup.core]))
 
 (defn preview [ztx ctx doc]
+  (zd.view.doc/preview ztx ctx doc))
+
+(defn view [ztx ctx doc]
   (zd.view.doc/view ztx ctx doc))
 
 (defn page [ztx ctx doc]
-  (layout/layout-with-menu ztx ctx doc (preview ztx ctx doc)))
+  (layout/layout-with-menu ztx ctx doc (view ztx ctx doc)))
 
 (defn editor [ztx ctx doc content]
   (layout/layout ztx ctx (zd.view.editor/editor ztx ctx doc  content)))

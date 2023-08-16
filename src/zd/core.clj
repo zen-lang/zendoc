@@ -66,7 +66,30 @@
     {:status 200
      :body (hiccup.core/html (view/preview ztx req doc))}))
 
-;; TODO handle rename
+(defmethod zen/op 'zd/new-doc
+  [ztx _cfg {params :params :as req} & opts]
+  {:status 200
+   :body (hiccup.core/html (view/editor ztx req {:zd/docname 'new} ""))})
+
+(defmethod zen/op 'zd/new-preview
+  [ztx _cfg {body :body :as req} & opts]
+  (let [docname 'new
+        content (if (=  BytesInputStream (type body)) (slurp body) body)
+        doc     (store/to-doc ztx docname content {})
+        errors  (store/doc-validate ztx doc)
+        doc (cond-> doc (seq errors) (assoc :zd/errors errors))]
+    {:status 200
+     :body (hiccup.core/html (view/preview ztx req doc))}))
+
+(defmethod zen/op 'zd/create-doc
+  [ztx _cfg { body :body} & opts]
+  (let [content (if (=  BytesInputStream (type body)) (slurp body) body)
+        docname (store/extract-docname content)
+        doc (store/file-save ztx docname content)]
+    {:status 200
+     :body (str "/" (:zd/docname doc))}))
+
+
 (defmethod zen/op 'zd/save-doc
   [ztx _cfg {{id :id} :route-params body :body :as req} & opts]
   (let [docname (symbol id)
@@ -107,6 +130,7 @@
     {:status 200
      :body (str (store/parent-name docname))}))
 
+
 (defmethod zen/start 'zd/zendoc
   [ztx config & opts]
   (println :zd/start config)
@@ -134,5 +158,6 @@
   (:zd/backlinks @ztx)
 
   (config ztx)
+  (store/re-validate ztx)
 
   )

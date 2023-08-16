@@ -321,7 +321,7 @@ main(() => {
 
     // TODO check prefix to use in browser app
     // document.addEventListener('keydown', on_hotkey);
-    document.addEventListener('click', on_link_click);
+    // document.addEventListener('click', on_link_click);
 
     setInterval(()=> {
         fetch('/_errors').then((resp)=> {

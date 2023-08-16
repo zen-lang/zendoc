@@ -29,7 +29,7 @@
                        [:text :gray-600]
                        [:ml 4]
                        [:hover [:text :green-600]])
-             :href (str docname "." "_draft/edit")}
+             :href (str "/new?parent=" docname)}
          [:i.fas.fa-plus]]
 
         container

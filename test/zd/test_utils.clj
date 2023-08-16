@@ -6,10 +6,8 @@
    [hickory.core]
    [matcho.core :as matcho]
    [clojure.java.io :as io]
-   ;; [zd.memstore]
    [clojure.walk]
-   ;; [zd.datalog]
-   )
+   [zd.store :as store])
   (:import [java.nio.file Files Path]))
 
 (def wd (System/getProperty "user.dir"))
@@ -57,12 +55,51 @@
 (defn mk-doc [docname content]
   (spit (str ".tmp/" (str/replace (str docname) #"\\." "/") ".zd") content))
 
+
+
+
 (defn rm-dir [dir]
   (when (Files/exists (path dir) (make-array java.nio.file.LinkOption 0))
     (let [dir (java.io.File. dir)]
       (doseq [f (->> (file-seq dir) (sort) (reverse))]
         (.delete f))
       (.delete dir))))
+
+(defn clear-dir [dir]
+  (rm-dir dir)
+  (mk-dir dir))
+
+(defn context [dir]
+  (clear-dir dir)
+  (zen/new-context {:zd/dir dir}))
+
+
+(defn write-file
+  ([ztx docname content]
+   (let [dir (:zd/dir @ztx)
+         file (store/docname-to-path docname)
+         file-dir (store/parent-dir file)]
+     (mk-dir (str dir "/" file-dir))
+     (spit (str dir "/" file) content)))
+  ([ztx content]
+   (let [dir (:zd/dir @ztx)
+         file (store/docname-to-path (:zd/docname content))
+         file-dir (store/parent-dir file)]
+     (mk-dir (str dir "/" file-dir))
+     (spit (str dir "/" file)
+           (->> (dissoc content :zd/docname)
+                (mapv (fn [[k v]]
+                        (str (pr-str k) " " (pr-str v))))
+                (str/join "\n"))))))
+
+(defn file-exists [ztx file]
+  (let [dir (:zd/dir @ztx)]
+    (.exists (io/file (str dir "/" file)))))
+
+(defmacro doc? [ztx docname pat]
+  `(let [doc# (store/doc-get ~ztx ~docname)]
+     (matcho/match  doc# ~pat)
+     doc#))
 
 (defonce ctx (atom (zen/new-context)))
 

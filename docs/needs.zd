@@ -1,7 +1,7 @@
 :zd/menu-order 110
 :zd/icon [:fa-duotone :fa-lamp]
 
-:title "needs"
+:title "Needs"
 :desc /
 Company Needs
 

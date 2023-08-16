@@ -83,12 +83,24 @@
  check-errors
  {:zen/tags #{zen-web/op zen/op}}
 
+ new-doc
+ {:zen/tags #{zen-web/op zen/op}}
+
+ new-preview
+ {:zen/tags #{zen-web/op zen/op}}
+
+ create-doc
+ {:zen/tags #{zen-web/op zen/op}}
+
  api
  {:zen/tags #{zen-web/api}
   :engine zen-web/routemap
   ;; TODO move zen web defaults to zen web core
   ;; :mw [zen-web/defaults]
   "_errors" {:GET check-errors}
+  "new" {:GET new-doc
+         :POST create-doc
+         "preview" {:POST new-preview}}
   :GET render-doc
   [:id] {;;:mw [append-doc layout]
          :DELETE delete-doc

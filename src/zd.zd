@@ -39,11 +39,17 @@ Welcome to zendoc built-in documentation.
 :zd/data-type zd.boolean
 :zd/annotation zd.hide
 
+;; datatypes
 &boolean zd.class
-
 &string zd.class
-
 &inst zd.class
+&date zd.class
+&number zd.class
+&int zd.class
+&url zd.class
+&symbol zd.class
+&keyword zd.class
+&email zd.class
 
 &annotation zd.prop
 :zd/annotation zd.badge

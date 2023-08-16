@@ -9,7 +9,7 @@
                             [:bg "#fbfbfb"]
                             [:h "100vh"]
                             :overflow-y-auto
-                            [:px 4]
+                            [:px 8]
                             :flex
                             :flex-col
                             :flex-grow
@@ -21,6 +21,8 @@
       :placeholder ":title"
       :value search-text
       :class (c :border :outline-none [:w "100%"] [:rounded 4] :text-base [:px 2] [:py 1])}]]
+   [:a {:class (c :border :rounded :block [:px 2] [:py 1] [:bg :gray-200] [:hover [:bg :gray-300]])
+        :href "/new"} "New Doc"]
    [:div#errors-link {:class (c :flex [:py 1.5] [:space-x 2] :items-center [:text :red-500])}
     [:div {:class (c :flex-1)} (utils/menu-link ztx 'errors)] [:b#errors-count {:class (c :text-sm)} "?"]]
    (->> (store/menu ztx)
@@ -28,7 +30,7 @@
                [:div {:class (c :flex [:py 1.5] :items-center :flex-row [:pseudo ":hover>a:last-child" :block] :justify-between)}
                 (utils/menu-link ztx (:zd/docname doc))
                 [:a {:class (c :cursor-pointer :text-lg [:text :gray-500] :hidden [:hover [:text :green-600]])
-                     :href (str (:zd/docname doc) "." "_draft/edit")}
+                     :href (str "/new?parent=" (:zd/docname doc))}
                  [:i.fas.fa-plus]]])))])
 
 ;; (if (not (str/blank? search-text))

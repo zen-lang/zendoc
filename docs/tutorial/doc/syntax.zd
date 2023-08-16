@@ -20,10 +20,7 @@ content
 :collection #{1 2 3}
 :oth-collection ["string a", "string b", "string c"]
 
-// links to other documents
-:linked-person people.john
-// check that people.john shows backlink
-:person-list #{people.john, people.todd}
+
 
 // multiline keys
 :multiline-text /

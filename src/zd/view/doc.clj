@@ -8,9 +8,8 @@
             [zd.store :as store]))
 
 (defmethod methods/renderkey :title
-  [ztx {doc :doc} {title :data :as block}]
-  [:h1 {:class (c :flex :items-center [:m 0] [:py 2] [:border-b :gray-400] [:mb 4])
-        :id "title"}
+  [ztx ctx {doc :doc title :data :as block}]
+  [:h1 {:class (c :flex :items-center [:m 0] [:pt 2] [:pb 1] [:border-b :gray-400] [:mb 4] :text-2xl) :id "title"}
    (if-let [img (or (:avatar doc) (:logo doc))]
      [:img {:src img
             :class (c [:w 8] [:h 8] :inline-block [:mr 2] {:border-radius "100%"})}]
@@ -19,7 +18,7 @@
    title])
 
 (defmethod methods/renderkey :desc
-  [ztx ctx {kp :key d :data anns :ann :as block}]
+  [ztx ctx block]
   [:div {:class (c {:opacity 0.8})}
    (methods/rendercontent ztx ctx block)])
 
@@ -71,13 +70,15 @@
                   [:py 0.5]
                   [:text "#4B5BA0"]
                   :text-sm
-                  {:font-weight "400"})}
+                  {:font-weight "400" :border-radius "4px 0 0  4px"})}
     k]])
 
 (defmethod methods/renderann :badge
   [ztx ctx {key :key :as block}]
-  [:div {:class (c :border [:my 1] [:mr 2] :inline-flex :items-center :rounded)}
-   [:div {:class (c :inline-block [:px 1] [:bg :gray-100] [:py 0.5] :text-sm [:text :gray-700] {:font-weight "400"})}
+  [:div {:class (c :border [:my 1] [:mr 2] :inline-flex :items-center :rounded :shadow-sm)}
+   [:div {:class (c :inline-block [:px 2] [:bg :gray-100] [:py 0.5] :text-sm [:text :gray-700]
+                    :border-r
+                    {:font-weight "400"  :border-radius "4px 0 0  4px"})}
     key]
    [:div {:class (c [:px 1] [:py 0.5] :inline-block :text-sm)}
     (methods/rendercontent ztx ctx block)]])
@@ -115,25 +116,35 @@
 (defn backlinks-block [ztx backlinks]
   ;; TODO move this logic into storage
   [:div
-   [:div {:class h2} "Backlinks:"]
+   ;; [:div {:class h2} "Backlinks:"]
    (->> backlinks
         (map (fn [[path docnames]]
-               [:div {:class (c [:mb 4])}
-                [:div {:class (c [:mb 2] [:py 1] :border-b :text-lg :font-bold)} (pr-str (first path))]
-                (->> docnames
-                     sort
-                     (map (fn [d]
-                            [:div {:class (c :border-b [:py 1])}
-                             (utils/symbol-link ztx d)])))])))])
+               (when-let [docs (->> docnames
+                                    (sort)
+                                    (seq))]
+                 [:div {:class (c [:mb 4])}
+                  [:div {:class (c [:mb 2] [:pt 1] [:pb 0.5] :flex :items-center :border-b :font-bold [:text :gray-700] [:space-x 2])}
+                   [:i.fa-solid.fa-arrow-left-to-line]
+                   [:div (pr-str (first path))]]
+                  (->> docs
+                       (map (fn [docname]
+                              [:div {:class (c [:py 1] {:border-bottom "1px dotted #f1f1f1"})}
+                               (utils/menu-link ztx docname)])))]))))])
 
 (declare document)
 
+(defn localname [s]
+  (last (str/split (str s) #"\.")))
+
 (defn subdocs-block [ztx ctx subdocs]
   [:div
-   [:div {:class h2} "Subdocs:"]
+   ;; [:div {:class h2} "Subdocs:"]
    (->> subdocs
         (map (fn [doc]
                [:div {:class (c :border [:px 4] [:py 2] [:my 2] :rounded :shadow-sm)}
+                [:a {:id (str "subdoc-" (:zd/docname doc))
+                     :class (c :block :font-bold :border-b [:pt 1] [:pb 0.5] [:text :gray-600])}
+                 "&" (localname (:zd/docname doc))]
                 (document ztx ctx doc)])))])
 
 
@@ -157,11 +168,17 @@
      (backlinks-block ztx backlinks))
    (when-let [subdocs (seq (:zd/subdocs doc))]
      (subdocs-block ztx ctx subdocs))
-   (utils/pprint "doc" (dissoc doc :zd/view))])
+   #_(utils/pprint "doc" (dissoc doc :zd/view))])
 
 (defn view [ztx ctx doc]
   [:div {:class (c [:w 200])}
    [:div (topbar/topbar ztx ctx doc)]
+   (when-let [errors (seq (:zd/errors doc))]
+     (errors-view ztx errors))
+   (document ztx ctx doc)])
+
+(defn preview [ztx ctx doc]
+  [:div {:class (c [:w 200])}
    (when-let [errors (seq (:zd/errors doc))]
      (errors-view ztx errors))
    (document ztx ctx doc)])

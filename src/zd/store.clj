@@ -6,6 +6,7 @@
             [clojure.java.io :as io]
             [zd.zentext]
             [edamame.core]
+            [clojure.set]
             [clojure.string :as str]))
 
 ;; TODO: add zen/events for plugins (like git)
@@ -306,8 +307,10 @@
 
 
 (defn validate-doc [ztx docname]
-  (let [doc (get-doc ztx docname)]
-    (put-errors ztx docname (doc-validate ztx doc))))
+  (let [doc (get-doc ztx docname)
+        errors (doc-validate ztx doc)]
+    (put-errors ztx docname errors)
+    errors))
 
 (defn re-validate
   "re-validate broken resources"
@@ -357,6 +360,7 @@
     (when (.exists (io/file docpath))
       (slurp docpath))))
 
+;; TODO remove dir param
 (defn file-read
   "read file and return vector of doc and subdocs"
   [ztx dir path & [opts]]
@@ -427,7 +431,7 @@
   (update-backlinks ztx doc)
   (update-menu ztx doc)
   (update-keys-index ztx doc)
-  (when-not dont-validate
+  (when (not dont-validate)
     (validate-doc ztx docname)))
 
 ;; emit save event
@@ -452,7 +456,10 @@
          (mapv (fn [docname] (doc-delete ztx docname))))
     (doc-delete ztx docname)
     (clear-menu ztx docname)
-    (when (.exists file) (.delete file))))
+    (when (.exists file) (.delete file))
+    (->> (backlinked ztx docname)
+         (mapv (fn [d] (println :revalidate docname d) (validate-doc ztx d))))
+    doc))
 
 ;; TODO: this dirty think a better way
 (defn extract-docname [content]
@@ -466,8 +473,6 @@
 
 (extract-docname ":a 1\n:zd/docname docname\n:b 1")
 
-;; check that it is identical to what you have now
-;; and skeep if so
 (defn file-save
   "save document content into file and recalculate databases"
   [ztx docname content & [{dont-validate :dont-validate :as opts}]]
@@ -475,21 +480,29 @@
         new-docname (or new-docname docname)
         dir (:zd/dir @ztx)
         path (docname-to-path new-docname)
-        docpath (str dir "/" path)]
-    (file-delete ztx docname)
+        docpath (str dir "/" path)
+        doc (to-doc ztx new-docname content {:docpath docpath :parent (parent-name new-docname)})
+        doc' (symbolize-subdocs doc)]
+    (when-let [old-doc (get-doc ztx docname)] 
+      (if (not (= new-docname docname))
+        (file-delete ztx docname)
+        (let [to-remove (clojure.set/difference (into #{} (:zd/subdocs old-doc)) (into #{} (:zd/subdocs doc')))]
+          (->> to-remove (mapv #(doc-delete ztx %))))))
     (.mkdirs (io/file (parent-dir docpath)))
     (spit docpath content)
-    (let [doc (to-doc ztx new-docname content {:docpath docpath :parent (parent-name new-docname)})
-          doc' (symbolize-subdocs doc)]
-      (doc-save ztx doc' opts)
-      (->> (:zd/subdocs doc)
-           (mapv #(doc-save ztx % opts)))
-      doc)))
+    (doc-save ztx doc' opts)
+    (->> (:zd/subdocs doc)
+         (mapv #(doc-save ztx % opts)))
+    ;; fix broken links to this doc
+    (->> (backlinked ztx new-docname)
+         (mapv (fn [d] (validate-doc ztx d))))
+    doc))
 
 (defn dir-read
   "read docs from filesystem"
-  [ztx dir]
-  (let [dir (io/file dir)
+  [ztx & [dir]]
+  (let [dir (or dir (:zd/dir @ztx))
+        dir (io/file dir)
         dir-path (.getPath dir)
         docs (->> (file-seq dir)
                   (map (fn [f]
@@ -514,17 +527,18 @@
 
 (defn dir-load
   "read docs from filesystem and load into memory"
-  [ztx dir]
-  (load-meta ztx)
-  (->> (dir-read ztx dir)
-       (mapv (fn [doc]
-               (put-doc ztx (symbolize-subdocs doc))
-               (->> (:zd/subdocs doc)
-                    (mapv #(put-doc ztx %))))))
-  (update-docs ztx
-               (fn [_docname doc]
-                 (let [idoc (doc-inference ztx doc)]
-                   (re-index-doc ztx idoc)))))
+  [ztx & [dir]]
+  (let [dir (or dir (:zd/dir @ztx))]
+    (load-meta ztx)
+    (->> (dir-read ztx dir)
+         (mapv (fn [doc]
+                 (put-doc ztx (symbolize-subdocs doc))
+                 (->> (:zd/subdocs doc)
+                      (mapv #(put-doc ztx %))))))
+    (update-docs ztx
+                 (fn [_docname doc]
+                   (let [idoc (doc-inference ztx doc)]
+                     (re-index-doc ztx idoc))))))
 
 (defn menu
   "return navigation"

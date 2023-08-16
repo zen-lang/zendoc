@@ -15,30 +15,25 @@
   (is (=  (store/path-to-docname "a/b/c.zd") 'a.b.c))
   (is (=  (store/child-docname 'a.b 'c) 'a.b.c))
 
-  (def ztx (zen/new-context {:zd/dir ".tmp"}))
-  (tu/rm-dir ".tmp")
-  (tu/mk-dir ".tmp")
+  (def ztx (tu/context ".tmp/integration"))
 
-  (def doc-content ":zd/menu-order 1\n:title \"Index\"\n:attr ref\n&sub1\n:title \"Subdoc\"\n")
-  (def other-content ":zd/menu-order 2\n:title \"Other\"\n:attr ref\n&sub1\n:title \"Subdoc\"\n")
-
-  (spit ".tmp/index.zd" doc-content)
-  (spit ".tmp/other.zd" other-content)
+  (tu/write-file ztx 'index ":zd/menu-order 1\n:title \"Index\"\n&sub1\n:title \"Subdoc\"\n")
+  (tu/write-file ztx 'other ":zd/menu-order 2\n:title \"Other\"\n&sub1\n:title \"Subdoc\"\n")
 
   (matcho/match (store/to-doc ztx 'mydoc doc-content {:parent 'index})
     {:title "Index"
      :zd/parent 'index
      :zd/subdocs [{:title "Subdoc" :zd/parent 'mydoc}]})
 
-  (matcho/match (store/file-read ztx ".tmp" "index.zd")
+  (matcho/match (store/file-read ztx (:zd/dir @ztx) "index.zd")
     {:title "Index"
      :zd/subdocs [{:title "Subdoc"}]})
 
-  (matcho/match (store/dir-read ztx ".tmp")
+  (matcho/match (store/dir-read ztx)
     [{:title "Index"
       :zd/subdocs [{:title "Subdoc" :zd/parent 'index}]}
      {:title "Other"
-      ;; :zd/parent 'index
+      :zd/parent 'index
       :zd/subdocs [{:title "Subdoc" :zd/parent 'other}]}])
 
   (testing "encoding/decoding for datadog"
@@ -56,11 +51,12 @@
    '{:where [[e :xt/id id]]
      :find [(pull e [*])]})
 
-  (store/dir-load ztx ".tmp")
+  (store/dir-load ztx)
 
   (store/encode-query '{:where [[e :xt/id 'index] [e :title t]]
                         :find [e t]})
 
+  (is (nil? (store/errors ztx)))
 
   (matcho/match
       (store/datalog-query
@@ -80,7 +76,7 @@
       (store/datalog-query ztx '{:where [[e :xt/id 'index] [e :title t]] :find [e t]})
     #{['index "Index"]})
 
-  (matcho/match (store/doc-get ztx 'index)
+  (tu/doc? ztx 'index
     {:zd/docname 'index
      :title "Index"
      :zd/subdocs [{:zd/docname 'index.sub1
@@ -92,7 +88,7 @@
 
   (store/file-save ztx 'newone ":title \"newone\"\n&sub\n:title \"newonesub\"")
 
-  (matcho/match (store/doc-get ztx 'newone)
+  (tu/doc? ztx 'newone
     {:zd/docname 'newone
      :title "newone"
      :zd/parent 'index
@@ -102,22 +98,22 @@
       (store/get-backlinks ztx 'index)
     {[:zd/parent] '[errors index.sub1 newone other]})
 
-  (matcho/match (store/doc-get ztx 'newone.sub)
+  (tu/doc?  ztx 'newone.sub
     {:zd/docname 'newone.sub
      :zd/parent 'newone
      :zd/subdoc? true
      :title "newonesub"})
 
   (matcho/match (store/datalog-get ztx 'newone) {:title "newone"})
-  (matcho/match (store/doc-get ztx 'newone) {:title "newone"})
+  (tu/doc?  ztx 'newone {:title "newone"})
 
   (matcho/match (store/datalog-get ztx 'newone.sub) {:title "newonesub"})
-  (matcho/match (store/doc-get ztx 'newone.sub) {:title "newonesub"})
+  (tu/doc?  ztx 'newone.sub {:title "newonesub"})
 
   (store/file-save ztx 'newone ":title \"newone-change\"\n")
 
   (matcho/match (store/datalog-get ztx 'newone) {:title "newone-change"})
-  (matcho/match (store/doc-get ztx 'newone) {:title "newone-change"})
+  (tu/doc? ztx 'newone  {:title "newone-change"})
 
   (is (nil? (store/datalog-get ztx 'newone.sub)))
 
@@ -131,7 +127,7 @@
 
     (store/get-errors ztx 'newone)
 
-    (matcho/match (store/doc-get ztx 'newone)
+    (tu/doc?  ztx 'newone
       {:title "newone"
        :broken 'broken
        :zd/errors [{:type :reference :path [:broken]}]})
@@ -140,7 +136,7 @@
 
     (store/file-save ztx 'newone ":title \"newone\"\n:fixed index")
 
-    (matcho/match (store/doc-get ztx 'newone)
+    (tu/doc? ztx 'newone
       {:title "newone"
        :fixed 'index
        :zd/errors nil?})
@@ -154,38 +150,22 @@
 
     (:zd/backlinks @ztx)
 
-    (matcho/match
-        (store/doc-get ztx 'target)
-      {:title "target"
-       :zd/backlinks {[:ref] '[backref-1 backref-2 backref-2.sub]}})
+    (tu/doc? ztx 'target {:title "target" :zd/backlinks {[:ref] '[backref-1 backref-2 backref-2.sub]}})
 
     (store/file-delete ztx 'backref-2)
 
     (is (nil? (store/doc-get ztx 'backref-2)))
     (is (nil? (store/doc-get ztx 'backref-2.sub)))
 
-    (matcho/match
-        (store/doc-get ztx 'target)
-      {:title "target"
-       :zd/backlinks {[:ref] #(= '[backref-1] %)}})
+    (tu/doc? ztx 'target {:title "target" :zd/backlinks {[:ref] #(= '[backref-1] %)}})
 
 
     (testing "zentext refs"
       (store/file-save ztx 'zentext ":title \"zentext\"\n:desc /\nText #target")
-
       (store/doc-get ztx 'zentext)
-
-      (matcho/match
-          (store/doc-get ztx 'target)
-        {:title "target"
-         :zd/backlinks {[:desc] '[zentext]}})
-
+      (tu/doc? ztx 'target {:title "target" :zd/backlinks {[:desc] '[zentext]}})
       (store/file-delete ztx 'zentext)
-
-      (matcho/match
-          (store/doc-get ztx 'target)
-        {:title "target"
-         :zd/backlinks {'zentext nil?}})
+      (tu/doc? ztx 'target {:title "target" :zd/backlinks {'zentext nil?}})
       )
     )
 
@@ -194,21 +174,12 @@
     (store/file-save ztx 'a ":title \"a\"\n")
     (store/file-save ztx 'b ":title \"b\"\n:ref a")
 
-    (matcho/match
-        (store/doc-get ztx 'b)
-      {:title "b"
-       :zd/errors nil?})
-
-    (matcho/match
-        (store/doc-get ztx 'a)
-      {:title "a"
-       :zd/backlinks {[:ref] ['b]}})
+    (tu/doc? ztx 'b {:title "b" :zd/errors nil?})
+    (tu/doc? ztx 'a {:title "a" :zd/backlinks {[:ref] ['b]}})
 
     (store/file-delete ztx 'a)
 
-    (matcho/match (store/doc-get ztx 'b)
-      {:title "b"
-       :zd/errors [{:type :reference }]}))
+    (tu/doc? ztx 'b {:title "b" :zd/errors [{:type :reference }]}))
 
   (testing "navigation"
     (matcho/match (store/menu ztx)
@@ -257,9 +228,7 @@
   (testing "nested docs"
 
     (store/file-save ztx 'nested.one ":title \"one\"")
-    (matcho/match
-        (store/doc-get ztx 'nested.one)
-      {:title "one"}))
+    (tu/doc? ztx 'nested.one {:title "one"}))
 
   (testing "props"
     (is (clojure.set/subset?  #{":zd/subdoc?" ":broken"} (into #{} (mapv :name (store/props ztx))))))
@@ -267,18 +236,16 @@
   (testing "rename"
     (store/file-save ztx 'torename ":title \"torename\"\n:ref other")
 
-
     (is (store/file-content ztx 'torename))
 
-    (matcho/match (store/doc-get ztx 'torename)
-      {:title "torename"})
+    (tu/doc? ztx 'torename {:title "torename"})
 
     (is (contains? (store/backlinked ztx 'index) 'torename))
 
     (store/file-save ztx 'torename ":zd/docname renamed\n:title \"torename\"\n:ref other")
 
-    (is (.exists (io/file ".tmp/renamed.zd")))
-    (is (not (.exists (io/file ".tmp/torename.zd"))))
+    (is (tu/file-exists ztx "renamed.zd"))
+    (is (not (tu/file-exists ztx "torename.zd")))
 
     (is (nil? (store/doc-get ztx 'torename)))
 
@@ -286,29 +253,93 @@
 
     (is (store/file-content ztx 'renamed))
 
-    (matcho/match (store/doc-get ztx 'renamed)
-      {:title "torename"})
+    (tu/doc? ztx 'renamed {:title "torename"})
 
     (is (not (contains? (store/backlinked ztx 'index) 'torename)))
     (is (contains? (store/backlinked ztx 'index) 'renamed))
 
     )
 
-  (testing "root"
-    (matcho/match
-        (store/doc-get ztx 'zd)
-      {:title "Zendoc"})
-    )
+  (testing "zd root is preloaded"
+    (tu/doc? ztx 'zd {:title "Zendoc"}))
 
-  (testing "All errors"
-
+  (testing "errors page is preloaded"
     (is (seq (store/errors ztx)))
-
-    (matcho/match (store/doc-get ztx 'errors)
-      {:zd/all-errors true})
-
-
+    (tu/doc? ztx 'errors {:zd/all-errors true})
 
     )
 
+  )
+
+(deftest test-link-errors
+  (def ztx (tu/context ".tmp/link-errors"))
+
+  (tu/write-file ztx {:zd/docname 'index :other 'other})
+  (tu/write-file ztx {:zd/docname 'other :index 'index :text "text"})
+  (tu/write-file ztx {:zd/docname 'other.child :index 'index})
+  (tu/write-file ztx {:zd/docname 'other.child2 :index 'index})
+
+  (store/dir-load ztx)
+
+  (tu/doc?
+   ztx 'index
+   {:zd/docname 'index,
+    :other 'other
+    :zd/errors nil?
+    :zd/backlinks {[:index] '[other other.child other.child2]}})
+
+  (tu/doc?
+   ztx 'other.child
+   {:zd/docname 'other.child
+    :zd/errors nil?})
+
+  (is (empty? (store/errors ztx)))
+
+  (store/file-save ztx 'other ":zd/title \"Other\"")
+
+  (is (empty? (store/errors ztx))))
+
+(deftest test-errors-are-fixed)
+
+(deftest test-errors-fixed
+  (def ztx (tu/context ".tmp/errors-fixed"))
+
+  (tu/write-file ztx {:zd/docname 'index :link 'unexisting})
+
+  (store/dir-load ztx)
+
+  (tu/doc?
+   ztx 'index
+   {:zd/docname 'index,
+    :link 'unexisting
+    :zd/errors [{:type :reference,
+                 :message "'unexisting not found",
+                 :path [:link]}]})
+
+  (is (= 1 (count (store/errors ztx))))
+
+  (store/backlinked ztx 'unexisting)
+
+  (store/file-save ztx 'unexisting ":zd/title \"Fixed\"")
+
+  (store/errors ztx)
+
+  (is (empty? (store/errors ztx)))
+  )
+
+(deftest test-errors-appers
+  (def ztx (tu/context ".tmp/errors-appers"))
+
+  (tu/write-file ztx {:zd/docname 'index :link 'existing})
+  (tu/write-file ztx {:zd/docname 'existing})
+
+  (store/dir-load ztx)
+  (store/backlinked ztx 'existing)
+
+  (is (empty? (store/errors ztx)))
+
+  (store/file-delete ztx 'existing)
+
+  (matcho/match (store/errors ztx)
+    {'index [{:type :reference :path [:link]}]})
   )

@@ -157,8 +157,8 @@
           (str/starts-with? l ":")
           (let [ctx (-> (close-annotation ctx)
                         (assoc :key [l]))]
-            (if (str/ends-with? l "/")
-              (let [state (if (str/ends-with? l " /") :zentext :key)]
+            (if (str/ends-with? (str/trim l) "/")
+              (let [state (if (str/ends-with? (str/trim l) " /") :zentext :key)]
                 (recur ls state ctx))
               (let [ctx (close-key ctx)]
                 (recur ls :start ctx))))

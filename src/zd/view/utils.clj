@@ -45,21 +45,30 @@
         [:a {:href (str "/" parent-name "#subdocs-" (:zd/docname res))
              :class (c :inline-flex :items-center [:text "#4B5BA0"] [:hover [:underline]] :whitespace-no-wrap)}
          (icon ztx res opts)
-         (when-not (:compact opts) (or (:title res) (:title parent) s))])
+         (when-not (:compact opts) (or (:title res) (str (:title parent) " (" s ")")))])
       [:a {:href (str "/" s) :class (c :inline-flex :items-center [:text "#4B5BA0"] [:hover [:underline]] :whitespace-no-wrap)}
        (icon ztx res opts)
        (when-not (:compact opts)
          (or (:title res) s))])
     [:a {:href (str "/" s) :class (c [:text :red-600] [:bg :red-100]) :title "Broken Link"} s]))
 
+(def menu-link-c (c :flex :items-center [:space-x 2] [:text :gray-700] [:hover [:text :blue-600]]))
+(def menu-icon-c (c [:w 5] :text-center))
+
 (defn menu-link [ztx s & [opts]]
   (if-let [res (store/get-doc ztx (symbol s))]
     (if (:zd/subdoc? res)
-      [:span "TBD"]
-      [:a {:href (str "/" s)
-           :class (c :flex :items-center [:space-x 2])}
-       [:div {:class (c [:w 5] :text-center)}
-        (icon ztx res opts)]
+      (let [parent-name (get-in res [:zd/parent])
+            parent (store/get-doc ztx parent-name)]
+        [:a {:href (str "/" parent-name "#subdocs-" (:zd/docname res))
+             :class menu-link-c}
+         [:div {:class menu-icon-c}
+          (or (icon ztx res opts) [:i.fa-solid.fa-file])]
+         [:div (when-not (:compact opts)
+                 (str (or s) " (" (str (:title parent) ) ")"))]])
+      [:a {:href (str "/" s) :class menu-link-c}
+       [:div {:class menu-icon-c}
+        (or (icon ztx res opts) [:i.fa-solid.fa-file {:class (name (c [:text :gray-500]))}])]
        [:div
         (when-not (:compact opts)
           (or (:title res) s))]])

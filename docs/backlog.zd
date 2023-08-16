@@ -3,12 +3,9 @@
 
 ^link-badge
 :repo "https://github.com/zen-lang/zendoc"
-
-^badge
 :section "first"
 
-
-:title "Zendoc backlog"
+:title "Backlog"
 :desc /
 
 features and issues
