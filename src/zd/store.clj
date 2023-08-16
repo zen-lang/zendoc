@@ -324,7 +324,6 @@
   doc)
 
 
-
 (defn get-backlinks [ztx docname]
   (->> (get-in @ztx [:zd/backlinks docname])
        (reduce (fn [acc [docname attrs]]

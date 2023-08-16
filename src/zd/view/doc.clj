@@ -119,9 +119,7 @@
    ;; [:div {:class h2} "Backlinks:"]
    (->> backlinks
         (map (fn [[path docnames]]
-               (when-let [docs (->> docnames
-                                    (sort)
-                                    (seq))]
+               (when-let [docs (->> docnames (sort) (seq))]
                  [:div {:class (c [:mb 4])}
                   [:div {:class (c [:mb 2] [:pt 1] [:pb 0.5] :flex :items-center :border-b :font-bold [:text :gray-700] [:space-x 2])}
                    [:i.fa-solid.fa-arrow-left-to-line]

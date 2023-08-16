@@ -39,9 +39,8 @@
        :headers {"Cache-Control" "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"}
        :body   (hiccup.core/html (view/page ztx req doc))}
       {:status 301
-       :headers {"Location" (str "/" (or id "index") "/edit" "?" (:query-string req))
-                 "Cache-Control" "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"}
-       :body "Editor"})
+       :headers {"Location" (str "/new?docname=" id)
+                 "Cache-Control" "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"}})
     (catch Exception e
       {:status 500
        :headers {"Cache-Control" "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"}
@@ -67,9 +66,11 @@
      :body (hiccup.core/html (view/preview ztx req doc))}))
 
 (defmethod zen/op 'zd/new-doc
-  [ztx _cfg {params :params :as req} & opts]
+  [ztx _cfg {{docname :docname parent :parent} :params :as req} & opts]
   {:status 200
-   :body (hiccup.core/html (view/editor ztx req {:zd/docname 'new} ""))})
+   :body (hiccup.core/html (view/editor ztx req {:zd/docname (cond docname (symbol docname)
+                                                                   parent (symbol (str parent ".<>" ))
+                                                                   :else 'new)} ""))})
 
 (defmethod zen/op 'zd/new-preview
   [ztx _cfg {body :body :as req} & opts]

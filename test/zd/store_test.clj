@@ -343,3 +343,49 @@
   (matcho/match (store/errors ztx)
     {'index [{:type :reference :path [:link]}]})
   )
+
+
+
+(deftest test-backlinks
+  (def ztx (tu/context ".tmp/errors-appers"))
+
+  (tu/write-file ztx {:zd/docname 'index})
+  (tu/write-file ztx 'org "
+:zd/type zd.class
+&name zd.prop
+:zd/summary true
+&address zd.prop
+:zd/summary true
+")
+
+  (tu/write-file ztx 'org.o1 "
+:zd/type org
+:org/name \"o1\"
+:org/address \"a1\"
+:extra 5
+")
+
+  (tu/write-file ztx 'org.o2 "
+:zd/type org
+:org/name \"o2\"
+:org/address \"a2\"
+:extra 5
+")
+
+  (store/dir-load ztx)
+
+  (tu/doc? ztx 'org
+           {:zd/backlinks
+            {[:zd/parent 'org]
+             '[{:zd/docname org.o1 :org/name "o1" :extra nil?}
+               {:zd/docname org.o2}]
+
+             [:zd/parent 'zd.prop]
+             '[{:zd/docname org.address}
+               {:zd/docname org.name}]
+
+             [:zd/type 'org]
+             '[{:zd/docname org.o1 :org/name "o1" :extra nil?}
+               {:zd/docname org.o2}]}})
+
+  )

@@ -111,8 +111,7 @@
     [:script {:src "//cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"}]
     [:script {:src "/static/js/core.js"}]
     [:script {:src "https://cdn.jsdelivr.net/npm/mermaid@10.2.4/dist/mermaid.min.js"}]
-
-    [:title "Here"]
+    [:title "zendoc"]
     #_[:script {:src "/static/js/vega.min.js"}]
     [:script {:src "/static/js/quick-score.min.js"}]
     [:script {:src "/static/js/editor.js"}]]
