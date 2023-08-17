@@ -323,18 +323,18 @@ main(() => {
     // document.addEventListener('keydown', on_hotkey);
     // document.addEventListener('click', on_link_click);
 
-    setInterval(()=> {
-        fetch('/_errors').then((resp)=> {
-            if(resp.status == 200){
-                _id('errors-link').style.display = "flex";
-                resp.text().then((t)=>{
-                    _id('errors-count').innerText = t;
-                });
-            } else {
-                _id('errors-link').style.display = "none";
-            }
-        });
-    }, 1000 );
+    // setInterval(()=> {
+    //     fetch('/_errors').then((resp)=> {
+    //         if(resp.status == 200){
+    //             _id('errors-link').style.display = "flex";
+    //             resp.text().then((t)=>{
+    //                 _id('errors-count').innerText = t;
+    //             });
+    //         } else {
+    //             _id('errors-link').style.display = "none";
+    //         }
+    //     });
+    // }, 1000 );
 
     toa(document.getElementsByClassName("zd-toggle")).map(function(el){
         el.querySelector('.zd-block-title').addEventListener("click", function () {

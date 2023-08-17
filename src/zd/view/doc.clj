@@ -98,7 +98,7 @@
 (defmethod methods/renderann :default
   [ztx ctx {kp :key d :data :as block}]
   (let [basic-style (c [:pb 0.2] [:pt 1.5] [:mb 3] :text-lg :border-b)]
-    [:div {:class (c [:py 4])}
+    [:div {:class (c [:py 4] )}
      [:div {:class basic-style}
       [:a {:id kp :href (str "#" (name kp)) :class (c  {:font-weight "600"})} (name kp)]]
      ;; [:pre (pr-str annotations)]
@@ -120,7 +120,7 @@
    (->> backlinks
         (map (fn [[path docnames]]
                (when-let [docs (->> docnames (sort) (seq))]
-                 [:div {:class (c [:mb 4])}
+                 [:div {:class (c [:mb 4] [:mt 2])}
                   [:div {:class (c [:mb 2] [:pt 1] [:pb 0.5] :flex :items-center :border-b :font-bold [:text :gray-700] [:space-x 2])}
                    [:i.fa-solid.fa-arrow-left-to-line]
                    [:div (pr-str (first path))]]

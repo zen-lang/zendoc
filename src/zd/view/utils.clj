@@ -8,6 +8,9 @@
    [zd.store :as store]
    [clojure.string :as str]))
 
+
+(def btn-c (c :border :rounded [:py 1] [:px 2] [:bg :gray-200] :shadow-sm [:hover [:bg :gray-300]]))
+
 (defn get-parent [ztx res]
   (when-let [nm (:zd/name res)]
     (let [pn (->> (str/split (str nm) #"\.")
@@ -24,7 +27,7 @@
       (when-let [parent (get-parent ztx res)]
         (resolve-icon ztx parent)))))
 
-(def icon-c (name (c [:mr 1] [:text :gray-500])))
+(def icon-c (name (c [:mr 1] )))
 
 (defn icon [ztx res & [opts]]
   (let [icon-class (when-let [ic (:icon-class opts)] (name ic))]
@@ -53,7 +56,7 @@
     [:a {:href (str "/" s) :class (c [:text :red-600] [:bg :red-100]) :title "Broken Link"} s]))
 
 (def menu-link-c (c :flex :items-center [:space-x 2] [:text :gray-700] [:hover [:text :blue-600]]))
-(def menu-icon-c (c [:w 5] :text-center))
+(def menu-icon-c (c [:w 5] :text-center {:text-align "center"}))
 
 (defn menu-link [ztx s & [opts]]
   (if-let [res (store/get-doc ztx (symbol s))]

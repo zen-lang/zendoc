@@ -5,6 +5,7 @@
    [zd.methods :as methods]
    [zen-web.core]
    [hiccup.core]
+   [zd.git :as git]
    [zd.view.core :as view])
   (:import [org.httpkit BytesInputStream]))
 
@@ -114,6 +115,13 @@
     {:status 200
      :headers {"Cache-Control" "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"}
      :body  (hiccup.core/html (view/preview ztx req doc))}))
+
+(defmethod zen/op 'zd/git-changes
+  [ztx _cfg {{:keys [id]} :route-params :as req} & opts]
+  (let [changes (git/changes ztx)
+        history (git/history ztx)]
+    {:status 200
+     :body (hiccup.core/html (view/timeline ztx req {:changes changes :history history}))}))
 
 
 (defmethod zen/op 'zd/render-widget
