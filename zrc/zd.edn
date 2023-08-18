@@ -95,12 +95,16 @@
  git-changes
  {:zen/tags #{zen-web/op zen/op}}
 
+ search-page
+ {:zen/tags #{zen-web/op zen/op}}
+
  api
  {:zen/tags #{zen-web/api}
   :engine zen-web/routemap
   ;; TODO move zen web defaults to zen web core
   ;; :mw [zen-web/defaults]
   "_errors" {:GET check-errors}
+  "_search" {:GET search-page}
   "git" {:GET git-changes}
   "new" {:GET new-doc
          :POST create-doc

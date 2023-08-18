@@ -374,6 +374,10 @@
 
   (store/dir-load ztx)
 
+  (store/search ztx "o2")
+  (store/search ztx "")
+  (store/search ztx nil)
+
   (tu/doc? ztx 'org
            {:zd/backlinks
             {[:zd/parent 'org]

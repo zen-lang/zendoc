@@ -55,7 +55,7 @@
          (or (:title res) s))])
     [:a {:href (str "/" s) :class (c [:text :red-600] [:bg :red-100]) :title "Broken Link"} s]))
 
-(def menu-link-c (c :flex :items-center [:space-x 2] [:text :gray-700] [:hover [:text :blue-600]]))
+(def menu-link-c (c :flex :items-center [:space-x 2] [:text :gray-700] [:py 1] [:hover [:text :blue-600] [:bg :gray-100]]))
 (def menu-icon-c (c [:w 5] :text-center {:text-align "center"}))
 
 (defn menu-link [ztx s & [opts]]

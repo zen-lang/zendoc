@@ -123,6 +123,12 @@
     {:status 200
      :body (hiccup.core/html (view/timeline ztx req {:changes changes :history history}))}))
 
+(defmethod zen/op 'zd/search-page
+  [ztx _cfg {params :params :as req} & opts]
+  (let [res (store/search ztx (:query params))]
+    {:status 200
+     :body (hiccup.core/html (view/search ztx req (assoc params :results res)))}))
+
 
 (defmethod zen/op 'zd/render-widget
   [ztx _cfg {{id :id wgt :widget-id} :route-params r :root :keys [doc] :as req} & opts]
@@ -169,4 +175,5 @@
   (config ztx)
   (store/re-validate ztx)
 
-  )
+  
+ )

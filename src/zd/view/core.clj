@@ -13,6 +13,7 @@
    [zd.view.layout :as layout]
    [zd.view.errors]
    [zd.view.utils]
+   [zd.view.search :as search]
    [hiccup.core]))
 
 (defn preview [ztx ctx doc]
@@ -29,3 +30,6 @@
 
 (defn timeline [ztx ctx data]
   (layout/layout-with-menu ztx ctx {:zd/docname 'git} (timeline/view ztx data)))
+
+(defn search [ztx ctx params]
+  (layout/layout-with-menu ztx ctx {:zd/docname 'search} (search/search-view ztx params)))

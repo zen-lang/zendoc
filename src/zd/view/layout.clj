@@ -123,6 +123,7 @@
   (layout ztx ctx
    [:div {:class (c :flex [:h "100%"])}
     (zd.view.menu/menu ztx ctx doc)
-    [:div#page-content {:class (c :flex :flex-grow [:flex-shrink 1] [:py 6] [:px 12] :overflow-y-auto
+    [:div#page-content {:class (c [:py 6] [:px 12] :overflow-y-auto
+                                  :flex-1
                                   {:flex-basis "100%"})}
      cnt]]))

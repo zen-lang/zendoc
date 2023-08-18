@@ -251,11 +251,15 @@ var on_link_click = (ev) => {
     }
 };
 
-var open_search = (ev) => {};
+var open_search = (ev) => {
+    console.log('search');
+    window.location.href = "/_search";
+};
 
 var close_search = (ev) => {};
 
 var on_hotkey = (e) => {
+    console.log('hotkey', e);
     if ((e.ctrlKey || e.altKey || e.key === "Meta") && (e.code === "KeyK")) {
         open_search();
         e.stopPropagation();
@@ -320,7 +324,7 @@ main(() => {
     });
 
     // TODO check prefix to use in browser app
-    // document.addEventListener('keydown', on_hotkey);
+    document.addEventListener('keydown', on_hotkey);
     // document.addEventListener('click', on_link_click);
 
     // setInterval(()=> {

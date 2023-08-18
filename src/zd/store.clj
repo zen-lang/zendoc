@@ -576,5 +576,13 @@
                 :logo logo
                 :icon (or old-ico ico)}))))
 
-
-(defn search [ztx query])
+(defn search [ztx query]
+  (let [parts (str/split (str/lower-case (str/trim (or query ""))) #"\s+")
+        regex (re-pattern (str/join ".*" parts))]
+    (->> (:zdb @ztx)
+         (filter (fn [[k {t :title d :desc :as doc}]]
+                   (and k (re-find regex (str/lower-case (str t " " k " " d))))))
+         (map (fn [[id doc]]
+                 (-> doc (assoc :zd/docname id))))
+         (sort-by :zd/docname)
+         (take 30))))

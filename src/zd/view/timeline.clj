@@ -42,10 +42,12 @@
                                [:span (:user com)]
                                [:span "-"]
                                [:span (:comment com)]]
-                              [:div
+                              [:div {:class (c [:pt 2])}
                                (->> (:files com)
                                     (map (fn [f]
-                                           [:div {:class (c [:ml 4] [:py 0.5])} f])))]])))]])))])
+                                           [:div {:class (c [:ml 4] [:py 0.5] :flex :items-center [:space-x 2])}
+                                            [:i.fa-regular.fa-file {:class (str (c [:gray-400]))}]
+                                            [:space f]])))]])))]])))])
 
 (defn view [ztx {changes :changes history :history}]
   [:div {:class (c [:w 200])}

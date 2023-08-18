@@ -126,7 +126,7 @@
                    [:div (pr-str (first path))]]
                   (->> docs
                        (map (fn [docname]
-                              [:div {:class (c [:py 1] {:border-bottom "1px dotted #f1f1f1"})}
+                              [:div {:class (c {:border-bottom "1px dotted #f1f1f1"})}
                                (utils/menu-link ztx docname)])))]))))])
 
 (declare document)
