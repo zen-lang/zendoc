@@ -4,8 +4,9 @@
             [clojure.string :as str]
             [zd.view.utils :as utils]
             [zd.view.topbar :as topbar]
-            [stylo.core :refer [c]]
-            [zd.store :as store]))
+            [stylo.core :refer [c]]))
+
+(defmethod methods/renderkey :logo [& args])
 
 (defmethod methods/renderkey :title
   [ztx ctx {doc :doc title :data :as block}]
@@ -118,12 +119,13 @@
   [:div
    ;; [:div {:class h2} "Backlinks:"]
    (->> backlinks
+        (sort-by #(str (first %)))
         (map (fn [[path docnames]]
                (when-let [docs (->> docnames (sort) (seq))]
                  [:div {:class (c [:mb 4] [:mt 2])}
                   [:div {:class (c [:mb 2] [:pt 1] [:pb 0.5] :flex :items-center :border-b :font-bold [:text :gray-700] [:space-x 2])}
                    [:i.fa-solid.fa-arrow-left-to-line]
-                   [:div (pr-str (first path))]]
+                   [:div (pr-str path)]]
                   (->> docs
                        (map (fn [docname]
                               [:div {:class (c {:border-bottom "1px dotted #f1f1f1"})}
@@ -156,6 +158,8 @@
 
 (defn document [ztx ctx doc]
   [:div
+   (when-let [errors (seq (:zd/errors doc))]
+     (errors-view ztx errors))
    (->> (:zd/view doc)
         (map (fn [[k annotations]]
                (methods/renderkey ztx ctx {:doc doc
@@ -171,14 +175,10 @@
 (defn view [ztx ctx doc]
   [:div {:class (c [:w 200])}
    [:div (topbar/topbar ztx ctx doc)]
-   (when-let [errors (seq (:zd/errors doc))]
-     (errors-view ztx errors))
    (document ztx ctx doc)])
 
 (defn preview [ztx ctx doc]
   [:div {:class (c [:w 200])}
-   (when-let [errors (seq (:zd/errors doc))]
-     (errors-view ztx errors))
    (document ztx ctx doc)])
 
 ;; TODO:  choose between badge and block based on (type: edn)-> badge; others -> block

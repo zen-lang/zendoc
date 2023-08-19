@@ -324,32 +324,80 @@
   doc)
 
 
-(defn get-backlinks [ztx docname]
-  (->> (get-in @ztx [:zd/backlinks docname])
+(defn get-backlinks [ztx target]
+  (->> (get-in @ztx [:zd/backlinks target])
        (reduce (fn [acc [docname attrs]]
                  (->> attrs
-                      (reduce (fn [acc path] (update acc path (fn [xs] (sort (conj (or xs []) docname))))) acc))) {})))
+                      (reduce (fn [acc path]
+                                (let [doc (get-doc ztx docname)
+                                      ztype (:zd/type doc)]
+                                  (if (not (and (:zd/subdoc? doc) (= target (:zd/parent doc))))
+                                    (if (coll? ztype)
+                                      (->> ztype
+                                           (reduce (fn [acc ztype]
+                                                     (update acc (if ztype (conj path ztype) path)
+                                                             (fn [xs] (sort (conj (or xs []) docname)))))
+                                                   acc))
+                                      (update acc (if ztype (conj path ztype) path)
+                                              (fn [xs] (sort (conj (or xs []) docname)))))
+                                    acc)))
+                              acc))) {})))
 
 (defn backlinked [ztx docname]
   (->> (get-in @ztx [:zd/backlinks docname])
        (keys)
        (into #{})))
 
+
+
+(defn to-property-name [nm]
+  (let [parts  (str/split (str nm) #"\.")]
+    (keyword (str/join "." (butlast parts)) (last parts))))
+
+(to-property-name 'a.b)
+
+(defn schema-clear [ztx docname]
+  (swap! ztx update :zd/schema (fn [sch]
+                                 (cond (get sch docname)
+                                       (dissoc sch docname)))))
+
+(defn get-type [doc]
+  (when-let [tp (:zd/type doc)]
+    (cond (symbol? tp) #{tp}
+          (set? tp) tp
+          :else nil)))
+
+(defn update-schema [ztx doc]
+  (cond (contains? (get-type doc) 'zd.class)
+        (swap! ztx update-in [:zd/schema (:zd/docname doc)] (fn [x] (merge (or x {}) (select-keys doc [:zd/require :zd/summary]))))
+
+        (contains? (get-type doc) 'zd.prop)
+        (let [prop (to-property-name (:zd/docname doc))
+              parent (:zd/parent doc)]
+          (if parent
+            (swap! ztx assoc-in  [:zd/schema parent :zd/props  prop] doc)
+            (println :ERROR "Expected parent" doc)))))
+
+(defn schema [ztx type-name]
+  (get-in  @ztx [:zd/schema type-name]))
+
 ;; emit delete event
 (defn doc-delete
   "delete document"
   [ztx docname]
-  (let [backlinks (backlinked ztx docname)]
+  (let [doc (get-doc ztx docname)
+        backlinks (backlinked ztx docname)]
     (datalog-delete ztx docname)
     (delete-doc ztx docname)
     (backlinks-clear ztx docname)
     (errors-clear ztx docname)
+    (schema-clear ztx docname)
     ;; revalidate docs looking at this doc
     (->> backlinks (mapv #(validate-doc ztx %)))))
 
 (defn to-doc
   "return docs from text representation"
-  [ztx docname content & [{docpath :docpath lm :last-modified parent :parent}]]
+  [ztx docname content & [{docpath :docpath lm :last-modified parent :zd/parent}]]
   (zd.parser/parse ztx docname content (cond-> {}
                                          parent  (assoc :zd/parent parent)
                                          docpath (assoc :zd/file docpath) lm (assoc :zd/last-modified lm))))
@@ -366,7 +414,7 @@
   (let [docpath (str dir "/" path)
         docname (path-to-docname path)
         content (slurp docpath)]
-    (to-doc ztx docname content (merge {:docpath docpath :parent (parent-name docname)} opts))))
+    (to-doc ztx docname content (merge {:docpath docpath :zd/parent (parent-name docname)} opts))))
 
 
 (defn doc-get
@@ -424,12 +472,16 @@
 (defn update-keys-index [ztx doc]
   (swap! ztx update :zd/keys (fn [ks] (into (or ks #{}) (keys doc)))))
 
+
+
+
 (defn re-index-doc [ztx {docname :zd/docname :as doc} & [{dont-validate :dont-validate}]]
   (put-doc ztx doc)
   (datalog-put ztx doc)
   (update-backlinks ztx doc)
   (update-menu ztx doc)
   (update-keys-index ztx doc)
+  (update-schema ztx doc)
   (when (not dont-validate)
     (validate-doc ztx docname)))
 
@@ -442,6 +494,17 @@
     (re-index-doc ztx idoc opts)
     idoc))
 
+(defn children [ztx docname]
+  (when-let [links (get-in @ztx [:zd/backlinks docname])]
+    (->> links
+         (reduce (fn [acc [doc props]]
+                   (->> props
+                        (reduce (fn [acc prop]
+                                  (if (= [:zd/parent] prop)
+                                      (conj acc doc)
+                                      acc))
+                                acc)))
+                 #{}))))
 
 (defn file-delete
   "save document content into file and recalculate databases"
@@ -450,14 +513,18 @@
         path (docname-to-path docname)
         docpath (str dir "/" path)
         doc (get-doc ztx docname)
-        file (io/file docpath)]
+        file (io/file docpath)
+        filedir (io/file (str/replace docname #"\.zd$" ""))]
     (->> (:zd/subdocs doc)
          (mapv (fn [docname] (doc-delete ztx docname))))
     (doc-delete ztx docname)
     (clear-menu ztx docname)
+    (->> (children ztx docname)
+         (mapv (fn [child] (file-delete ztx child))))
     (when (.exists file) (.delete file))
+    (when (.exists filedir) (.delete filedir))
     (->> (backlinked ztx docname)
-         (mapv (fn [d] (println :revalidate docname d) (validate-doc ztx d))))
+         (mapv (fn [d] (validate-doc ztx d))))
     doc))
 
 ;; TODO: this dirty think a better way
@@ -472,19 +539,25 @@
 
 (extract-docname ":a 1\n:zd/docname docname\n:b 1")
 
+
 (defn file-save
   "save document content into file and recalculate databases"
-  [ztx docname content & [{dont-validate :dont-validate :as opts}]]
+  [ztx docname content & [{dont-validate :dont-validate rename :rename :as opts}]]
   (let [[new-docname content] (extract-docname content)
-        new-docname (or new-docname docname)
-        dir (:zd/dir @ztx)
-        path (docname-to-path new-docname)
-        docpath (str dir "/" path)
-        doc (to-doc ztx new-docname content {:docpath docpath :parent (parent-name new-docname)})
-        doc' (symbolize-subdocs doc)]
+        new-docname (or new-docname rename docname)
+        dir         (:zd/dir @ztx)
+        path        (docname-to-path new-docname)
+        docpath     (str dir "/" path)
+        doc         (to-doc ztx new-docname content {:docpath docpath :zd/parent (parent-name new-docname)})
+        doc'        (symbolize-subdocs doc)]
     (when-let [old-doc (get-doc ztx docname)] 
       (if (not (= new-docname docname))
-        (file-delete ztx docname)
+        (do
+          (->> (children ztx docname)
+               (mapv (fn [childname]
+                       (let [new-childname (symbol (str new-docname (subs (str childname) (count (str docname)))))]
+                         (file-save ztx childname (file-content ztx childname) {:rename new-childname})))))
+          (file-delete ztx docname))
         (let [to-remove (clojure.set/difference (into #{} (:zd/subdocs old-doc)) (into #{} (:zd/subdocs doc')))]
           (->> to-remove (mapv #(doc-delete ztx %))))))
     (.mkdirs (io/file (parent-dir docpath)))
@@ -506,14 +579,14 @@
         docs (->> (file-seq dir)
                   (map (fn [f]
                          (let [p (.getPath f)]
-                           (when (str/ends-with? p ".zd")
+                           (when (and (str/ends-with? p ".zd") (.exists f))
                              (let [path (subs p (inc (count dir-path)))]
                                (file-read ztx dir-path path {:last-modified (.lastModified f)}))))))
                   (filter identity))]
     docs))
 
 (defn load-meta [ztx]
-  (let [doc (-> (to-doc ztx 'zd (slurp (io/resource "zd.zd")) {:parent 'zd})
+  (let [doc (-> (to-doc ztx 'zd (slurp (io/resource "zd.zd")) {:zd/parent 'zd})
                 (assoc  :zd/readonly true :zd/parent 'zd))]
     (put-doc ztx (symbolize-subdocs doc))
     (->> (:zd/subdocs doc)
@@ -565,6 +638,7 @@
   [ztx]
   (->> (:zd/keys @ztx)
        (mapv (fn [k] {:name (str k)}))))
+
 
 (defn annotations [ztx] )
 

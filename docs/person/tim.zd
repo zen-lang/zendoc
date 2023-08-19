@@ -1,15 +1,2 @@
 :title "Tim"
 :desc /
-
-
-&hs-memb
-^badge
-:zd/type org.Member
-^badge
-:org/memberSince #inst"2010-01-01"
-^badge
-:org/organization orgs.health-samurai
-^badge
-:org/role org.TechLead
-^badge
-:org/person person.tim

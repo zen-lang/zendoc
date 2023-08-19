@@ -95,6 +95,9 @@
  git-changes
  {:zen/tags #{zen-web/op zen/op}}
 
+ git-commit
+ {:zen/tags #{zen-web/op zen/op}}
+
  search-page
  {:zen/tags #{zen-web/op zen/op}}
 
@@ -105,7 +108,8 @@
   ;; :mw [zen-web/defaults]
   "_errors" {:GET check-errors}
   "_search" {:GET search-page}
-  "git" {:GET git-changes}
+  "git" {:GET  git-changes
+         :POST git-commit}
   "new" {:GET new-doc
          :POST create-doc
          "preview" {:POST new-preview}}

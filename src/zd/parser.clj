@@ -35,7 +35,7 @@
 (defmethod methods/do-parse :? [_ _ s] (str/trim s))
 
 (defmethod methods/do-parse
-  :edn [{parent :parent} _ s]
+  :edn [{parent :zd/parent} _ s]
   (try
     (->> (edamame.core/parse-string s)
          (clojure.walk/postwalk (fn [x] (if (= x '.) parent x))))
@@ -61,7 +61,7 @@
                               (merge acc ann)))
                           (cond-> {:type tp} multiline (assoc :multiline true))))
         data  (if multiline (->> (into [l] ls) (str/join "\n")) l)
-        value (methods/do-parse {:docname docname :parent parent}
+        value (methods/do-parse {:docname docname :zd/parent parent}
                                 (or (:type annotations) :unknown) data)]
     {:key k
      :value value
@@ -237,7 +237,8 @@
 ;; split into documents
 (defn parse [ztx docname text & [meta]]
   (let [lines (->> (get-lines text)
-                   (remove #(str/starts-with? % ";;")))
+                   (remove #(str/starts-with? % ";;"))
+                   (mapv str/trimr))
         [doc & subdocs]  (->> (split-docs lines)
                               (map-indexed (fn [i doc]
                                              (-> doc

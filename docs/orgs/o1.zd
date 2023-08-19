@@ -1,28 +1,18 @@
-:zd/type orgs
+:zd/type prod.org
 
-:zd/type #{ orgs prod.EHR-Vendor }
-:orgs/site "?"
-:orgs/location country.US
-:orgs/linkedin "todo"
+:prod.org/site "?"
+:prod.org/location country.US
+:prod.org/linkedin "todo"
+:prod.org/kind prod.org.Vendor
 
 :title "Acme"
 :desc /
 
 
 
-&partner
-^badge
-:zd/type #{ prod.Partner }
-^badge
-:prod/partner-org orgs.o1
-^badge
-:prod/partner-of orgs.health-samurai
-^badge
-:prod/partner-since #inst"2011"
-^badge
-:prod/champion #{ person.ivan }
-
-
+&partner prod.org.partner
+:organizations #{orgs.health-samurai .}
+:partner-since #inst"2011"
 
 :desc /
 We partnered with Acme

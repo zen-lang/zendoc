@@ -1,10 +1,11 @@
 :title "Health Samurai"
 
 ^badge
-:zd/type orgs
-:orgs/site "https://health-samurai.io"
-:orgs/location #{ country.US }
-:orgs/linkedin "https://www.linkedin.com/company/6653460/admin/feed/posts/"
+:zd/type prod.org
+:prod.org/site "https://health-samurai.io"
+:prod.org/location #{ country.US }
+:prod.org/linkedin "https://www.linkedin.com/company/6653460/admin/feed/posts/"
+:prod.org/kind prod.org.Vendor
 
 :desc /
 
@@ -15,7 +16,6 @@ e :prod/partner-of #orgs.health-samurai
 > e:desc
 > e:prod/champion
 
-
 :members ?/
 
 e :zd/type #org.Member
@@ -24,3 +24,10 @@ e :org/person p
 
 > p
 > e:org/role
+
+&partner prod.org.partner
+:partner-since "2019"
+:organizations #{ orgs.google .}
+:desc /
+
+We tried few times to partner with Google

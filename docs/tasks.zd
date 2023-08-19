@@ -10,12 +10,16 @@
 
 e :zd/type #tasks
 
-> e:tasks/severity
 > e
 > e:tasks/assignee
+> e:tasks/severity
 
-&severity
-:zd/type zd.prop
+&severity zd.prop
 
-&assignee
-:zd/type zd.prop
+&assignee  zd.prop
+
+&severity zd.class
+
+&critical tasks.severity
+:title "Critical"
+:zd/icon [:fa-regular :fa-engine-warning]

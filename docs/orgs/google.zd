@@ -1,0 +1,10 @@
+:zd/type #{ prod.org }
+
+:prod.org/location country.US
+:prod.org/linkedin "?"
+:prod.org/site "google.com"
+:prod.org/kind prod.org.cloud
+
+:title "Google"
+:desc /
+Global organization

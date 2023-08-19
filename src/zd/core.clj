@@ -6,8 +6,14 @@
    [zen-web.core]
    [hiccup.core]
    [zd.git :as git]
+   [clojure.walk]
+   [ring.util.codec]
    [zd.view.core :as view])
   (:import [org.httpkit BytesInputStream]))
+
+
+(defn form-decode [s]
+  (clojure.walk/keywordize-keys (ring.util.codec/form-decode s)))
 
 (defn config [ztx]
   (zen/get-state ztx :zd/config))
@@ -119,9 +125,15 @@
 (defmethod zen/op 'zd/git-changes
   [ztx _cfg {{:keys [id]} :route-params :as req} & opts]
   (let [changes (git/changes ztx)
-        history (git/history ztx)]
+        history (git/history ztx 100)]
     {:status 200
      :body (hiccup.core/html (view/timeline ztx req {:changes changes :history history}))}))
+
+(defmethod zen/op 'zd/git-commit
+  [ztx _cfg {params :params :as req} & opts]
+  (println :? params)
+  {:status 200
+   :body (hiccup.core/html [:pre (pr-str (form-decode (slurp (:body req))))])})
 
 (defmethod zen/op 'zd/search-page
   [ztx _cfg {params :params :as req} & opts]
@@ -131,12 +143,13 @@
 
 
 (defmethod zen/op 'zd/render-widget
-  [ztx _cfg {{id :id wgt :widget-id} :route-params r :root :keys [doc] :as req} & opts]
-  (if-not (nil? doc)
-    {:status 200
-     :body (methods/widget ztx {:widget (keyword wgt) :root r :request req} doc)}
-    {:status 200
-     :body [:div "Error: " id " is not found"]}))
+  [ztx _cfg {{id :id wgt :widget-id} :route-params r :root :as req} & opts]
+  (let [doc (store/doc-get ztx (symbol id))]
+    (if-not (nil? doc)
+      {:status 200
+       :body (hiccup.core/html (methods/widget ztx {:widget (keyword wgt) :root r :request req} doc))}
+      {:status 200
+       :body (hiccup.core/html [:div "Error: " id " is not found"])})))
 
 (defmethod zen/op 'zd/delete-doc
   [ztx _cfg {{:keys [id]} :route-params :as req} & opts]
@@ -149,7 +162,7 @@
 (defmethod zen/start 'zd/zendoc
   [ztx config & opts]
   (println :zd/start config)
-  (swap! ztx assoc :zd/dir (or (:dir config) "docs"))
+  (swap! ztx update :zd/dir (fn [x] (or x (:dir config) "docs")))
   (store/dir-load ztx (:dir config))
   config)
 
@@ -162,18 +175,23 @@
   [ztx config {ev-name :ev :as ev} & opts]
   (println (assoc ev ::ts (str (java.util.Date.)))))
 
+(defn start [& [dir]]
+  (let [ztx (zen/new-context {:zd/dir dir})]
+    (zen/read-ns ztx 'zd)
+    (zen/start-system ztx 'zd/system)
+    ztx))
+
+(defn stop [ztx]
+  (zen/stop-system ztx))
+
 (comment
+  (def ztx (start))
 
-  (def ztx (zen/new-context {}))
-
-  (zen/read-ns ztx 'zd)
-  (zen/start-system ztx 'zd/system)
-  (zen/stop-system ztx)
+  (stop ztx)
 
   (:zd/backlinks @ztx)
 
   (config ztx)
   (store/re-validate ztx)
 
-  
  )

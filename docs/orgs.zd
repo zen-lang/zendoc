@@ -1,8 +1,7 @@
 :icon [:fa-duotone :fa-building]
 :menu-order 100
-:zd/type zd.class
-:zd/require #{ :title :orgs/site :orgs/location :orgs/linkedin}
 :zd/summary #{ :orgs/tags }
+:zd/child-type prod.org
 
 :title "Organizations"
 :desc /
@@ -23,23 +22,3 @@ e :org/person p
 > p
 > e:org/role
 > o
-
-&site zd.prop
-:zd/annotation zd.link-badge
-:zd/summary true
-
-&location zd.prop
-:zd/annotation zd.badge
-
-&linkedin zd.prop
-:zd/annotation zd.link-badge
-
-&tags zd.prop
-:zd/annotation zd.badge
-:zd/data-type zd.symbol
-
-&tag zd.class
-:title "Type for tags"
-
-&ehr-vendor orgs.tag
-:title "EHR Vendor"

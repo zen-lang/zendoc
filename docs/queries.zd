@@ -1,23 +1,20 @@
-:zd/docname queries
-:zd/docname queries
 :title "Queries"
 :icon [:fa-brands :fa-searchengin]
 
 :desc /
 
 :menu-order 10
-:query ?/
 
-e :zd/parent #people
+
+:query ?/
+e :zd/parent #person
 > e
-> e:role
-> e:title
+
 
 :items ?/
 
 e :type :needs
 e :value v
-
 
 > (min v)
 > (max v)

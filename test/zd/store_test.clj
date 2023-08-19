@@ -20,7 +20,7 @@
   (tu/write-file ztx 'index ":zd/menu-order 1\n:title \"Index\"\n&sub1\n:title \"Subdoc\"\n")
   (tu/write-file ztx 'other ":zd/menu-order 2\n:title \"Other\"\n&sub1\n:title \"Subdoc\"\n")
 
-  (matcho/match (store/to-doc ztx 'mydoc doc-content {:parent 'index})
+  (matcho/match (store/to-doc ztx 'mydoc ":zd/menu-order 1\n:title \"Index\"\n&sub1\n:title \"Subdoc\"\n" {:zd/parent 'index})
     {:title "Index"
      :zd/parent 'index
      :zd/subdocs [{:title "Subdoc" :zd/parent 'mydoc}]})
@@ -68,7 +68,8 @@
 
   (matcho/match
       (store/get-backlinks ztx 'index)
-    '{[:zd/parent] [errors index.sub1 other]})
+    '{[:zd/parent] [errors  other]})
+
 
   ;; (println :q (store/datalog-query ztx '{:where [[e :xt/id 'index] [e :title t]] :find [e t]}))
 
@@ -96,7 +97,8 @@
 
   (matcho/match
       (store/get-backlinks ztx 'index)
-    {[:zd/parent] '[errors index.sub1 newone other]})
+    {[:zd/parent] '[errors newone other]})
+
 
   (tu/doc?  ztx 'newone.sub
     {:zd/docname 'newone.sub
@@ -350,10 +352,12 @@
   (def ztx (tu/context ".tmp/errors-appers"))
 
   (tu/write-file ztx {:zd/docname 'index})
+
   (tu/write-file ztx 'org "
 :zd/type zd.class
+:zd/summary  [:org/name :org/address]
+:zd/require #{:org/name}
 &name zd.prop
-:zd/summary true
 &address zd.prop
 :zd/summary true
 ")
@@ -374,22 +378,62 @@
 
   (store/dir-load ztx)
 
+  (matcho/match
+      (store/schema ztx 'org)
+    '{:zd/props
+      #:org{:address #:zd{:docname org.address}
+            :name #:zd{:docname org.name}}
+      :zd/require #{:org/name},
+      :zd/summary [:org/name :org/address]})
+
+
   (store/search ztx "o2")
   (store/search ztx "")
   (store/search ztx nil)
 
   (tu/doc? ztx 'org
            {:zd/backlinks
-            {[:zd/parent 'org]
-             '[{:zd/docname org.o1 :org/name "o1" :extra nil?}
-               {:zd/docname org.o2}]
+            '{[:zd/parent org] [org.o1 org.o2,] [:zd/type org] [org.o1 org.o2]}})
 
-             [:zd/parent 'zd.prop]
-             '[{:zd/docname org.address}
-               {:zd/docname org.name}]
+  )
 
-             [:zd/type 'org]
-             '[{:zd/docname org.o1 :org/name "o1" :extra nil?}
-               {:zd/docname org.o2}]}})
+(deftest test-rename
+  (def ztx (tu/context ".tmp/test-rename"))
+
+  (tu/write-file ztx {:zd/docname 'org})
+  (tu/write-file ztx {:zd/docname 'org.o1})
+  (tu/write-file ztx {:zd/docname 'org.o2})
+  (tu/write-file ztx {:zd/docname 'org.o2.item1})
+
+  (store/dir-load ztx)
+
+  (is (tu/file-exists ztx "org.zd"))
+  (is (tu/file-exists ztx "org/o1.zd"))
+  (is (tu/file-exists ztx "org/o2.zd"))
+  (is (tu/file-exists ztx "org/o2/item1.zd"))
+
+  (matcho/match
+      (store/children ztx 'org)
+    #{'org.o2 'org.o1})
+
+  (store/file-save ztx 'org ":zd/docname organization")
+
+  (is (tu/file-exists ztx "organization.zd"))
+  (is (tu/file-exists ztx "organization/o1.zd"))
+  (is (tu/file-exists ztx "organization/o2.zd"))
+  (is (tu/file-exists ztx "organization/o2/item1.zd"))
+
+
+  (is (not (tu/file-exists ztx "org.zd")))
+  (is (not (tu/file-exists ztx "org/o1.zd")))
+  (is (not (tu/file-exists ztx "org/o2.zd")))
+  (is (not (tu/file-exists ztx "org/o2/item1.zd")))
+
+  (store/file-delete ztx 'organization)
+
+  (is (not (tu/file-exists ztx "organization.zd")))
+  (is (not (tu/file-exists ztx "organization/o1.zd")))
+  (is (not (tu/file-exists ztx "organization/o2.zd")))
+  (is (not (tu/file-exists ztx "organization/o2/item1.zd")))
 
   )

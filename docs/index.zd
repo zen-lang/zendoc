@@ -11,18 +11,39 @@ Start from text and end up with linked database.
 :Document /
 
 Your knowledge base consists of documents (or resources). 
-The document is a set of key/value pairs.
-Every document has a name.
+The document is a set of key/value pairs - properties.
+Every document has a name - `namespace.name` and stored as `namespace/name.zd` file (just replace `.` with `/` and suffix with `.zd`.
+
+Documents can be nested - for example `organizations.acme` will be the child of `organzation` document. On a data level that means `organizations.acme` will have a property `:zd.parent organization`.
+
+```zd
+:title "Title"
+:reference otherdoc
+:desc /
+
+Here is a multiline text
+Text
+
+```
 
 :Backlinks /
+
+Properties with symbols (just name without quotation) like `:zd/friend person.niquola` are considered as a links. Zendoc tracks the links and in 
+`person.niquola` you will see the backlinks to all documents refferring `niquola`.
 
 :Schemas /
 
 :Queries /
 
 Queries
+```zd
+:query ?/
+e :parent #organizaition
+> e
 
-& tasks.Task
+```
+
+&make-overview tasks
 :tasks/assignee person.niquola
 :desc /
 Make an overview of zendoc

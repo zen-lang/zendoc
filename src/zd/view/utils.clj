@@ -46,10 +46,10 @@
       (let [parent-name (get-in res [:zd/parent])
             parent (store/get-doc ztx parent-name)]
         [:a {:href (str "/" parent-name "#subdocs-" (:zd/docname res))
-             :class (c :inline-flex :items-center [:text "#4B5BA0"] [:hover [:underline]] :whitespace-no-wrap)}
+             :class (c :inline-flex :items-center [:text :blue-700] [:hover [:underline]] :whitespace-no-wrap)}
          (icon ztx res opts)
          (when-not (:compact opts) (or (:title res) (str (:title parent) " (" s ")")))])
-      [:a {:href (str "/" s) :class (c :inline-flex :items-center [:text "#4B5BA0"] [:hover [:underline]] :whitespace-no-wrap)}
+      [:a {:href (str "/" s) :class (c :inline-flex :items-center [:text :blue-700] [:hover [:underline]] :whitespace-no-wrap)}
        (icon ztx res opts)
        (when-not (:compact opts)
          (or (:title res) s))])
@@ -68,7 +68,7 @@
          [:div {:class menu-icon-c}
           (or (icon ztx res opts) [:i.fa-solid.fa-file])]
          [:div (when-not (:compact opts)
-                 (str (or s) " (" (str (:title parent) ) ")"))]])
+                 (str s " (" (str (:title parent) ) ")"))]])
       [:a {:href (str "/" s) :class menu-link-c}
        [:div {:class menu-icon-c}
         (or (icon ztx res opts) [:i.fa-solid.fa-file {:class (name (c [:text :gray-500]))}])]

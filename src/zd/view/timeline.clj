@@ -7,10 +7,11 @@
    [clojure.string :as str]))
 
 (defn changes-view [ztx changes]
-  [:div
+  [:form {:action "/git" :method "POST"}
    [:div {:class (c :font-bold :text-lg :border-b :flex [:space-x 4] [:py 0.5] :divide-y)}
     [:div {:class (c :flex-1)} "Changes"]]
    [:textarea {:class (c [:my 4] :border [:px 4] :block [:py 2] :rounded {:width "100%"})
+               :name "comment"
                :placeholder "Comment"}]
    [:div
     (->> changes

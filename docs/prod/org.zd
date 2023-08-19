@@ -1,0 +1,29 @@
+:zd/type zd.class
+:zd/require #{:title :prod.org/kind :prod.org/linkedin }
+:title "Organization"
+
+&site zd.prop
+:zd/annotation zd.link-badge
+:zd/summary true
+
+&location zd.prop
+:zd/annotation zd.badge
+
+&linkedin zd.prop
+:zd/annotation zd.link-badge
+
+&tags zd.prop
+:zd/annotation zd.badge
+:zd/data-type zd.symbol
+
+&kind zd.prop
+:title "Type for tags"
+
+&ehr-vendor zd.class
+:title "EHR Vendor"
+
+&cloud zd.class
+:title "Cloud"
+
+&partner zd.class
+:zd/require #{:organizations :partner-since}

@@ -8,11 +8,6 @@
 
 :desc /
 
-& org.Member
-:org/memberSince #inst"2005-01-01"
-:org/memberOf orgs.health-samurai
-:org/role org.CTO
-:org/person person.niquola
 
 
 & tasks

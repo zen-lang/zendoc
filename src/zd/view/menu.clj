@@ -25,8 +25,10 @@
      [:div {:class utils/menu-icon-c} [:i.fa-solid.fa-search]]
      [:div "Search"]]
 
-    [:div#errors-link {:class (c :flex [:py 1.5] [:space-x 2] :items-center [:text :red-500])}
-     [:div {:class (c :flex-1)} (utils/menu-link ztx 'errors)] [:b#errors-count {:class (c :text-sm)} (count (store/errors ztx))]]
+    (let [cnt (count (or (store/errors ztx) []))]
+      (when (> cnt 0)
+        [:div#errors-link {:class (c :flex [:py 1.5] [:space-x 2] :items-center [:text :red-500])}
+         [:div {:class (c :flex-1)} (utils/menu-link ztx 'errors)] [:b#errors-count {:class (c :text-sm)} cnt]]))
 
     [:a {:class utils/menu-link-c :href "/git"}
      [:div {:class utils/menu-icon-c} [:i.fa-solid.fa-timeline]]
@@ -34,8 +36,7 @@
 
     [:a {:class utils/menu-link-c :href "/new"}
      [:div {:class utils/menu-icon-c} [:i.fa-solid.fa-circle-plus]]
-     [:div "New Doc"]]
-    ]
+     [:div "New Doc"]]]
 
    [:hr {:class (c [:my 4])}]
    (->> (store/menu ztx)

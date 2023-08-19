@@ -1,8 +1,9 @@
-:zd/type orgs
-:orgs/site "site"
-:orgs/location city.Lisboa
-:orgs/linkedin "?"
-:orgs/tags orgs.ehr-vendor
+:zd/type prod.org
+:prod.org/site "site"
+:prod.org/location city.Lisboa
+:prod.org/linkedin "?"
+:prod.org/kind prod.org.ehr-vendor
+
 :title "O2"
 :desc /
 
