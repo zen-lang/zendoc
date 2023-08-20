@@ -105,3 +105,8 @@
                  [])
          seq)))
 
+(defn summary [ztx schema & [doc]]
+  (when-let [summary (get-in @ztx [:zd/schema schema :zd/summary])]
+    (if doc 
+      (select-keys doc summary)
+      summary)))

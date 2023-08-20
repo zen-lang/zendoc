@@ -4,6 +4,7 @@
             [clojure.string :as str]
             [zd.view.utils :as utils]
             [zd.view.topbar :as topbar]
+            [zd.store :as store]
             [stylo.core :refer [c]]))
 
 (defmethod methods/renderkey :logo [& args])
@@ -114,8 +115,11 @@
 
 (def h2 (c :text-xl :font-bold [:py 1] :border-b [:mt 2]))
 
+(def th-c (c [:px 2] [:py 1] :border [:bg :gray-100]))
+(def td-c (c [:px 2] [:py 1] :border))
+
+;; TODO: move this logic to store
 (defn backlinks-block [ztx backlinks]
-  ;; TODO move this logic into storage
   [:div
    ;; [:div {:class h2} "Backlinks:"]
    (->> backlinks
@@ -125,11 +129,37 @@
                  [:div {:class (c [:mb 4] [:mt 2])}
                   [:div {:class (c [:mb 2] [:pt 1] [:pb 0.5] :flex :items-center :border-b :font-bold [:text :gray-700] [:space-x 2])}
                    [:i.fa-solid.fa-arrow-left-to-line]
-                   [:div (pr-str path)]]
-                  (->> docs
-                       (map (fn [docname]
-                              [:div {:class (c {:border-bottom "1px dotted #f1f1f1"})}
-                               (utils/menu-link ztx docname)])))]))))])
+                   (let [tp (last path)]
+                     (if (symbol? tp)
+                       (list
+                        [:div (str/join " " (butlast path))]
+                        (utils/symbol-link ztx tp))
+
+                       [:div (str/join " " path)]))]
+                  (if-let [summary (store/summary ztx (last path))]
+                    [:table
+                     [:thead
+                      [:th {:class th-c} "Doc"]
+                      (->> summary
+                           (map (fn [col]
+                                  [:th {:class th-c :title (str col)} (name col)])))]
+                     [:tbody
+                      (->> docs
+                           (map (fn [docname]
+                                  [:tr
+                                   [:td {:class td-c} (utils/menu-link ztx docname)]
+                                   (let [doc (store/get-doc ztx docname)]
+                                     (->> summary
+                                          (map (fn [col]
+                                                 [:td {:class td-c :title (str col)}
+                                                  (if-let [v (get doc col)]
+                                                    (render-edn ztx {} v)
+                                                    "~")]))))])))]]
+                    [:div
+                     (->> docs
+                          (map (fn [docname]
+                                 [:div {:class (c {:border-bottom "1px dotted #f1f1f1"})}
+                                  (utils/menu-link ztx docname)])))])]))))])
 
 (declare document)
 

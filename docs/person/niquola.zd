@@ -1,9 +1,9 @@
 
+:zd/type person
 :foaf.based_near #{ country.Portugal city.Lisboa city.Estoril}
-^badge
 :person/email "niquola@gmail.com"
-^badge
 :person/telegram "niquola"
+:person/organization orgs.health-samurai
 :title "Nikolai Ryzhikov"
 
 :desc /

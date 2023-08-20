@@ -4,6 +4,7 @@
 :prod.org/linkedin "?"
 :prod.org/site "google.com"
 :prod.org/kind prod.org.cloud
+:prod.org/number-of-employees 100000
 
 :title "Google"
 :desc /

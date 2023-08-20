@@ -352,6 +352,7 @@
 (defn schema [ztx type-name]
   (get-in  @ztx [:zd/schema type-name]))
 
+
 ;; emit delete event
 (defn doc-delete
   "delete document"
@@ -405,6 +406,11 @@
 (defn doc-summary
   "return doc summary based on class"
   [ztx docname])
+
+(defn summary
+  "return doc summary based on class"
+  [ztx schemaname]
+  (zd.schema/summary ztx schemaname))
 
 (defn edn-links [acc docname path node]
   (cond

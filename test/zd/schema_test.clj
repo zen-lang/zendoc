@@ -56,4 +56,15 @@
   (t/is (empty? (schema/validate ztx 'int {:value 1})))
   (t/is (seq (schema/validate ztx 'int {:value 10.1})))
 
+
+
+
+  (schema/add-schema ztx 'summary {:zd/summary [:a :b]})
+
+  (schema/summary ztx 'summary)
+
+  (matcho/match
+      (schema/summary ztx 'summary {:a 1 :b 2 :c 3})
+    {:a 1, :b 2})
+
   )
