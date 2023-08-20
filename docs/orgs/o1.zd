@@ -3,7 +3,7 @@
 :prod.org/site "?"
 :prod.org/location country.US
 :prod.org/linkedin "todo"
-:prod.org/kind prod.org.Vendor
+:prod.org/kind prod.org.vendor
 
 :title "Acme"
 :desc /

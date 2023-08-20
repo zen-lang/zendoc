@@ -315,8 +315,12 @@
    {:zd/docname 'index,
     :link 'unexisting
     :zd/errors [{:type :reference,
-                 :message "'unexisting not found",
+                 :message "`unexisting` not found",
                  :path [:link]}]})
+
+  ;; (assert false "!")
+
+  (store/errors ztx)
 
   (is (= 1 (count (store/errors ztx))))
 

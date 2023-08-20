@@ -32,3 +32,16 @@ features and issues
 * [ ] validate subdocs while edit
 * [ ] :zd/type inference with :zd/child-type and :zd/subclass
 * [ ] implement file upload
+* [ ] subdoc in-the-middle of doc (close with? &&?)
+
+
+```zd
+ :title "Bla bla"
+
+ &subdoc Class
+ :title "Subdoc"
+ &
+
+ :another attribute
+
+```

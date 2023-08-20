@@ -5,7 +5,7 @@
 :prod.org/site "https://health-samurai.io"
 :prod.org/location #{ country.US }
 :prod.org/linkedin "https://www.linkedin.com/company/6653460/admin/feed/posts/"
-:prod.org/kind prod.org.Vendor
+:prod.org/kind prod.org.vendor
 
 :desc /
 

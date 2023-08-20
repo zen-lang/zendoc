@@ -1,3 +1,0 @@
-:title "Favicon request"
-:desc /
-http request for favicon is treated like request for document rendering

@@ -19,8 +19,14 @@
 &kind zd.prop
 :title "Type for tags"
 
+&vendor zd.class
+:title "Vendor"
+
 &ehr-vendor zd.class
 :title "EHR Vendor"
+:zd/subclass-of prod.org.vendor
+
+
 
 &cloud zd.class
 :title "Cloud"

@@ -5,6 +5,7 @@
             [clojure.walk]
             [clojure.java.io :as io]
             [zd.zentext]
+            [zd.schema]
             [edamame.core]
             [clojure.set]
             [clojure.string :as str]))
@@ -269,45 +270,15 @@
 (defn get-errors [ztx docname]
   (get-in @ztx [:zd/errors docname]))
 
-(defn validate-refs [ztx doc]
-  (->> doc
-       (reduce
-        (fn [acc [k v]]
-          (if (symbol? v)
-            (if-not (get (:zdb @ztx) v)
-              (conj acc {:type :reference :message (str "'" v " not found") :path [k]})
-              acc)
-            (if (set? v)
-              (->> v
-                   (reduce (fn [acc x]
-                             (if (and (symbol? x) (not (get (:zdb @ztx) x)))
-                               (conj acc {:type :reference :message (str "'" x " not found") :path [k]})
-                               acc))
-                           acc))
-              acc)))
-        [])))
 
 (defn doc-validate
   "validate document"
   [ztx doc]
-  (let [cls (when-let [tp (:zd/type doc)] (if (set? tp) tp #{tp}))
-        errors
-        (->> cls
-             (mapcat
-              (fn [cn]
-                (let [c (get (:zdb @ztx) cn)]
-                  (->> (:zd/require c)
-                       (reduce (fn [acc k]
-                                 (if (contains? doc k)
-                                   acc
-                                   (conj acc {:type :require :message "require" :path [k] :schema cn})))
-                               []))))))
-        errors (into errors (into (validate-refs ztx doc)))]
-    errors))
+  (zd.schema/validate ztx (:zd/type doc) doc))
 
 
 (defn validate-doc [ztx docname]
-  (let [doc (get-doc ztx docname)
+  (let [doc    (get-doc ztx docname)
         errors (doc-validate ztx doc)]
     (put-errors ztx docname errors)
     errors))
