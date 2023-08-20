@@ -1,9 +1,7 @@
 
-^badge
 :zd/type zd.class
-^badge
 :zd/require #{ :person/email }
-
+:zd/summary [:person/email :person/telegram ]
 :title "Person"
 :icon [:fa-duotone :fa-person]
 :desc /
@@ -22,13 +20,8 @@ m :zd/type #org.Member
 > m:org/role
 > m:org/memberSince
 
-:check ?/
-
-e :zd/type #person 
-> e
 
 &email zd.prop
 :zd/data-type zd.string
-:zd/annotation zd.badge
 :desc /
 Email of person

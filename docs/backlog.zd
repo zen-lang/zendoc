@@ -1,4 +1,4 @@
-:menu-order 1
+:menu-order 20
 :icon [:fa-solid :fa-rectangle-list]
 
 ^link-badge

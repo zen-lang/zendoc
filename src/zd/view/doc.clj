@@ -26,7 +26,7 @@
 
 (defn render-edn [ztx ctx data]
   (cond
-    (or (string? data) (number? data)) (pr-str data)
+    (or (string? data) (number? data)) (str data)
     (symbol? data) (utils/symbol-link ztx data)
     (keyword? data) [:span {:class (c [:text :green-700])} (str data)]
 

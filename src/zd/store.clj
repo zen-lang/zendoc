@@ -238,7 +238,9 @@
 
 (defn put-doc
   [ztx {docname :zd/docname :as doc}]
-  (swap! ztx assoc-in [:zdb docname] (assoc doc :zd/parent (parent-name docname)))
+  (if (and doc docname)
+    (swap! ztx assoc-in [:zdb docname] (assoc doc :zd/parent (parent-name docname)))
+    (println :? doc))
   doc)
 
 (defn walk-docs
@@ -274,7 +276,7 @@
 (defn doc-validate
   "validate document"
   [ztx doc]
-  (zd.schema/validate ztx (:zd/type doc) doc))
+  (zd.schema/validate ztx doc))
 
 
 (defn validate-doc [ztx docname]
@@ -320,17 +322,9 @@
        (into #{})))
 
 
-
-(defn to-property-name [nm]
-  (let [parts  (str/split (str nm) #"\.")]
-    (keyword (str/join "." (butlast parts)) (last parts))))
-
-(to-property-name 'a.b)
-
 (defn schema-clear [ztx docname]
-  (swap! ztx update :zd/schema (fn [sch]
-                                 (cond (get sch docname)
-                                       (dissoc sch docname)))))
+  (zd.schema/remove-class ztx docname)
+  (zd.schema/remove-prop ztx docname))
 
 (defn get-type [doc]
   (when-let [tp (:zd/type doc)]
@@ -340,14 +334,10 @@
 
 (defn update-schema [ztx doc]
   (cond (contains? (get-type doc) 'zd.class)
-        (swap! ztx update-in [:zd/schema (:zd/docname doc)] (fn [x] (merge (or x {}) (select-keys doc [:zd/require :zd/summary]))))
+        (zd.schema/add-class ztx doc)
 
         (contains? (get-type doc) 'zd.prop)
-        (let [prop (to-property-name (:zd/docname doc))
-              parent (:zd/parent doc)]
-          (if parent
-            (swap! ztx assoc-in  [:zd/schema parent :zd/props  prop] doc)
-            (println :ERROR "Expected parent" doc)))))
+        (zd.schema/add-prop ztx doc)))
 
 (defn schema [ztx type-name]
   (get-in  @ztx [:zd/schema type-name]))

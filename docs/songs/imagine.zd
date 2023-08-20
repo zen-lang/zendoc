@@ -1,0 +1,6 @@
+:zd/type music.song
+
+:music/song-name "Imagine"
+:music/written-by artists.john-lenon
+:title "Imagine"
+:date #inst"1976"

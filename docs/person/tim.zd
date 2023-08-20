@@ -1,3 +1,4 @@
 :zd/type person
+:person/email "time@hs.io"
 :title "Tim"
 :desc /

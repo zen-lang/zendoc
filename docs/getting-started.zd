@@ -3,7 +3,19 @@
 :icon [:fa-brands :fa-dochub]
 :menu-order 1
 
-^title "About"
 :desc /
 
-zendoc tutorial as demo knowledge base
+In this tutorial we will create a simple knowlege base for music
+
+:Intall /
+
+:Create /
+
+:Edit /
+
+:Delete /
+
+:Vaidate /
+
+:Query /
+

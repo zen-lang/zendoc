@@ -1,10 +1,8 @@
 (ns zd.store-test
   (:require
    [zd.store :as store]
-   [zen.core :as zen]
    [matcho.core :as matcho]
    [clojure.set]
-   [clojure.java.io :as io]
    [clojure.test :refer [deftest is testing]]
    [zd.test-utils :as tu]))
 
@@ -301,12 +299,12 @@
 
   (is (empty? (store/errors ztx))))
 
-(deftest test-errors-are-fixed)
-
 (deftest test-errors-fixed
   (def ztx (tu/context ".tmp/errors-fixed"))
 
   (tu/write-file ztx {:zd/docname 'index :link 'unexisting})
+
+  (:zd/classes @ztx)
 
   (store/dir-load ztx)
 
@@ -381,15 +379,6 @@
 ")
 
   (store/dir-load ztx)
-
-  (matcho/match
-      (store/schema ztx 'org)
-    '{:zd/props
-      #:org{:address #:zd{:docname org.address}
-            :name #:zd{:docname org.name}}
-      :zd/require #{:org/name},
-      :zd/summary [:org/name :org/address]})
-
 
   (store/search ztx "o2")
   (store/search ztx "")

@@ -4,36 +4,88 @@
 :desc /
 
 
-Zendoc allows you to iteratively develop structured knowledge base. 
-Start from text and end up with linked database.
-
+Zendoc allows you to iteratively develop structured & linked knowledge base starting from text!
 
 :Document /
 
-Your knowledge base consists of documents (or resources). 
-The document is a set of key/value pairs - properties.
-Every document has a name - `namespace.name` and stored as `namespace/name.zd` file (just replace `.` with `/` and suffix with `.zd`.
+The core concept of Zendoc revolves around the notion of a "document." In the system, a document is stored as a file with a ".zd" extension on the disk and is also represented as a record in the database.  Document names are mapped to file system by replacing `.` with `/` - so `person.niquola` will be located in `person/niquola.zd` file.
 
-Documents can be nested - for example `organizations.acme` will be the child of `organzation` document. On a data level that means `organizations.acme` will have a property `:zd.parent organization`.
+The ".zd" format employs a specialized, lightweight syntax for recording data.
+Importantly, each document consists of a set of key-value pairs. 
+
+The entire document is composed of keys, which start at the very beginning of lines with a colon `:keyname`. On the same line after any number of spaces you can put the *value* in [[a https://github.com/edn-format/edn EDN]] format.
 
 ```zd
+;; string should be in ""
 :title "Title"
-:reference otherdoc
-:desc /
+:number 1000
+;; dates should be #inst"[date]"
+:date #inst"2012"
+;; symbol (unquoted string)
+:person person.niquola
+;; #{...} is a set - unordered collection of unique values
+:tags #{tags.postgres tags.clojure}
+;; [...] is a vector - ordered collection of values
+:interests [tags.fhir tags.rdf]
+```
 
-Here is a multiline text
-Text
+If on key line ends with `/` the following lines untill next key are
+treated as multiline string in #zentext format.
+
+```zd
+
+:zentext-key /
+Here is a long text which shoud not start with ':'
+Text will stop here where new key ':mardown' starts
+
+:another-key /
+Here is a markdown text
 
 ```
 
+:Links /
+
+Values of type `symbol` work as references to other docs. For example:
+
+```zd
+:zd/docnmae person.nikolai
+:name "Nikolai"
+:friend-of #{ person.ivan person.john }
+```
+
+Document `person.nikolai` refers documents `person.ivan` and `person.john` and will appear in as a link.
+
 :Backlinks /
 
-Properties with symbols (just name without quotation) like `:zd/friend person.niquola` are considered as a links. Zendoc tracks the links and in 
-`person.niquola` you will see the backlinks to all documents refferring `niquola`.
+Links are bi-directional and if document `a` refers document `b` by some 
+ :property. You will see "backlink" to `a` in `b`.
+
+:Menu /
+
+To make document appear in menu you should set property `:zd/menu-order` into a number, which will work as an order for menu.
+
+```zd
+:title "Intro"
+:zd/menu-order 1
+:text /
+----
+:title "Chapter 1"
+:zd/menu-order 2
+:text /
+```
 
 :Schemas /
 
+Documents can be categorized and validated by schemas. 
+Schema is a document with `:zd/type zd.class`. One or multiple schemas
+can be linked to document by `:zd/type` property.
+Schema document may force required fields by `:zd/required #{:prop1 :prop2}`
+
+Property can be defined by document with `:zd/type zd.property`. Data type restrictions can be specified with property `:zd/data-type [zd.string zd.symbole zd.int]`. "Property document is translated into namespaced keys by following rules `name.space.prop-name` -> `:name.space/prop-name`
+
 :Queries /
+
+Zendoc has built-in datalog engine [[a xtdb ]] to query knowledge base. There are two dialects - official **xtdb** and **simplified** version.
 
 Queries
 ```zd
@@ -42,8 +94,3 @@ e :parent #organizaition
 > e
 
 ```
-
-&make-overview tasks
-:tasks/assignee person.niquola
-:desc /
-Make an overview of zendoc

@@ -1,5 +1,36 @@
+(ns zd.schema
+  (:require [clojure.string :as str]))
 
-(ns zd.schema)
+
+(defn to-keyname [docname]
+  (let [parts (str/split (str docname) #"\.")]
+    (keyword (str/join "." (butlast parts)) (last parts))))
+
+;; TODO: implement other API
+(defn add-class [ztx {docname :zd/docname :as doc}]
+  (swap! ztx assoc-in [:zd/classes docname] doc)
+  doc)
+
+(defn remove-class [ztx docname]
+  (swap! ztx update :zd/classes dissoc docname)
+  docname)
+
+(defn get-class [ztx docname]
+  (get-in @ztx [:zd/classes docname]))
+
+(defn add-prop [ztx {docname :zd/docname :as doc}]
+  (let [keyname (to-keyname docname)]
+    (swap! ztx assoc-in [:zd/props keyname] doc)
+    doc))
+
+(defn remove-prop [ztx docname]
+  (let [keyname (to-keyname docname)]
+    (swap! ztx update :zd/props dissoc keyname)
+    docname))
+
+(defn get-prop  [ztx keyname]
+  (get-in @ztx [:zd/props keyname]))
+
 
 (defn infere [ztx schema doc]
   )
@@ -9,7 +40,6 @@
 
 (defmethod validate-rule :default
   [ztx errors rule-name rule-value k v]
-  (println :unknown rule-name)
   errors)
 
 (defmethod validate-type :default
@@ -51,21 +81,15 @@
                  (validate-rule ztx errors rule-name rule-value k v))
                errors)))
 
-(defn add-schema [ztx docname schema]
-  (swap! ztx assoc-in [:zd/schema docname] schema)
-  schema)
 
 ;; TODO: fix this hack with empty schema
-(defn get-schema [ztx docnames]
-  (if (nil? docnames)
-    [{}]
+(defn get-schema [ztx doc]
+  (when-let [docnames (:zd/type doc)]
     (let [docnames (if (symbol? docnames) #{docnames} docnames)]
-      (-> (->> docnames
-               (map (fn [docname]
-                      (get-in @ztx [:zd/schema docname])))
-               (filter identity)
-               (seq))
-          (or [{}])))))
+      (->> docnames
+           (map (fn [docname] (get-class ztx docname)))
+           (filter identity)
+           (seq)))))
 
 
 (defn validate-refs [ztx errors k v]
@@ -82,31 +106,31 @@
         :else errors))
 
 ;; TODO one walk over data (not per schema)
-(defn validate [ztx schemaname doc]
-  (let [schemas (get-schema ztx schemaname)]
-    (->> schemas
-         (reduce (fn [errors schema]
-                   (let [errors (->> (:zd/require schema)
-                                     (reduce (fn [errors prop]
-                                               (if (not (contains? doc prop))
-                                                 (conj errors {:type :required
-                                                               :message (str prop " is required")
-                                                               :path [prop]})
-                                                 errors))
-                                             errors))]
-                     (->> doc
-                          (reduce (fn [errors [k v]]
-                                    (let [errors (if-let [prop-schema (get-in schema [:zd/props k])]
-                                                   (validate-prop ztx errors prop-schema k v)
-                                                   errors)
-                                          errors (validate-refs ztx errors k v)]
-                                      errors))
-                                  errors))))
-                 [])
-         seq)))
+(defn validate [ztx doc]
+  (let [schemas (get-schema ztx doc)
+        errors (->> schemas
+                    (reduce (fn [errors schema]
+                              (->> (:zd/require schema)
+                                   (reduce (fn [errors prop]
+                                             (if (not (contains? doc prop))
+                                               (conj errors {:type :required
+                                                             :message (str prop " is required")
+                                                             :path [prop]})
+                                               errors))
+                                           errors)))
+                            []))]
+    (->> doc
+         (reduce (fn [errors [k v]]
+                   (let [errors (if-let [prop-schema (get-prop ztx k)]
+                                  (validate-prop ztx errors prop-schema k v)
+                                  errors)
+                         errors (validate-refs ztx errors k v)]
+                     errors))
+                 errors))))
+
 
 (defn summary [ztx schema & [doc]]
-  (when-let [summary (get-in @ztx [:zd/schema schema :zd/summary])]
-    (if doc 
+  (when-let [summary (get-in @ztx [:zd/classes schema :zd/summary])]
+    (if doc
       (select-keys doc summary)
       summary)))

@@ -1,0 +1,4 @@
+:zd/type person
+
+:person/email "email"
+:title "Andrew X"

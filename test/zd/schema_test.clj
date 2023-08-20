@@ -10,56 +10,64 @@
 
 (t/deftest test-schema
 
-  (def ztx (zen/new-context {}))
+  (def ztx (zen/new-context {:zdb {'req {} 's.str {}}}))
 
-  (schema/add-schema ztx 'req {:zd/require [:a :b]})
+  (schema/add-class ztx  {:zd/docname 'req :zd/require [:a :b]})
+
+  (:zd/classes @ztx)
+  (:zdb @ztx)
+
 
   (matcho/match
-   (schema/validate ztx #{'req} {})
+   (schema/validate ztx {:zd/type 'req})
     [{:type :required, :message ":a is required", :path [:a]}
      {:type :required, :message ":b is required", :path [:b]}])
 
-  (t/is (empty? (schema/validate ztx #{'req} {:a 1 :b 1})))
+  (matcho/match
+      (schema/validate ztx {:zd/type #{'req}})
+    [{:type :required, :message ":a is required", :path [:a]}
+     {:type :required, :message ":b is required", :path [:b]}])
 
+  (t/is (empty? (schema/validate ztx  {:zd/type #{'req} :a 1 :b 1})))
 
-  (schema/add-schema ztx 'str {:zd/props {:title {:zd/data-type 'zd.string}}})
+  (schema/add-prop ztx {:zd/docname 's.str :zd/type 'zd.prop :zd/data-type 'zd.string})
 
   (matcho/match
-      (schema/validate ztx 'str  {:title 1})
+      (schema/validate ztx {:s/str 1})
     [{:type :type :message string?}])
 
-  (t/is (empty? (schema/validate ztx  'str {:title "title"})))
+  (t/is (empty? (schema/validate ztx {:s/str "str"})))
 
-  (schema/add-schema ztx 'num {:zd/props {:value {:zd/data-type 'zd.number}}})
+  (schema/add-prop ztx {:zd/docname 's.number :zd/data-type 'zd.number})
   (matcho/match
-      (schema/validate ztx 'num {:value "x"})
+      (schema/validate ztx {:s/number "x"})
     [{:type :type :message string?}])
 
-  (t/is (empty? (schema/validate ztx 'num {:value 1})))
-  (t/is (empty? (schema/validate ztx 'num {:value 1.1})))
+  (t/is (empty? (schema/validate ztx {:s/number 1})))
+  (t/is (empty? (schema/validate ztx {:s/number 1.1})))
 
 
-  (schema/add-schema ztx 'sym {:zd/props {:value {:zd/data-type 'zd.symbol}}})
+  (schema/add-prop ztx {:zd/docname 's.symbol :zd/data-type 'zd.symbol})
 
   (swap! ztx assoc-in [:zdb 'symbol] {})
+
   (matcho/match
-      (schema/validate ztx 'sym {:value "x"})
+      (schema/validate ztx {:s/symbol "x"})
     [{:type :type :message string?}])
 
   (matcho/match
-      (schema/validate ztx 'sym {:value 'wrong})
+      (schema/validate ztx  {:s/symbol 'wrong})
     [{:type :reference :message string?}])
 
-  (t/is (empty? (schema/validate ztx 'sym {:value 'symbol})))
+  (t/is (empty? (schema/validate ztx {:s/symbol 'symbol})))
 
-  (schema/add-schema ztx 'int {:zd/props {:value {:zd/data-type 'zd.int}}})
-  (t/is (empty? (schema/validate ztx 'int {:value 1})))
-  (t/is (seq (schema/validate ztx 'int {:value 10.1})))
+  (schema/add-prop ztx {:zd/docname 's.int :zd/data-type 'zd.int})
 
+  (t/is (empty? (schema/validate ztx {:s/int 1})))
+  (t/is (seq (schema/validate ztx {:s/int 10.1})))
+  (t/is (seq (schema/validate ztx {:s/int ""})))
 
-
-
-  (schema/add-schema ztx 'summary {:zd/summary [:a :b]})
+  (schema/add-class ztx {:zd/docname 'summary :zd/summary [:a :b]})
 
   (schema/summary ztx 'summary)
 

@@ -66,7 +66,7 @@
 
 (defmethod methods/inline-method :code
   [ztx m s ctx]
-  [:code {:class (c [:px 1.5] [:py 1] [:bg :gray-200]
+  [:code {:class (c [:px 1.5] [:py 0.5] [:bg :gray-100] [:text :pink-600]
                     :text-sm
                     {:border-radius "4px"
                      :font-family "ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace"})}
