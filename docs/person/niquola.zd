@@ -12,7 +12,7 @@
 &hs-emp prod.org.employee
 :emp/since #inst"2001"
 :emp/organization orgs.health-samurai
-:emp/role prod.orgs.CTO
+:emp/role prod.org.CTO
 :emp/person .
 
 & tasks

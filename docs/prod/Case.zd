@@ -1,10 +1,13 @@
 :zd/type zd.class
 :zd/icon [:fa-duotone :fa-suitcase]
 :zd/summary [:zd/parent :need :desc]
-:zd/require [:prod.Case/severity ]
+:zd/require #{}
 :title "Case"
 :desc /
 
 
 &severty zd.prop
 :zd/data-type zd.symbol
+
+&critical prod.Case.severty
+:title "Critical"

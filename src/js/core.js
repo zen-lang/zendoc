@@ -259,7 +259,6 @@ var open_search = (ev) => {
 var close_search = (ev) => {};
 
 var on_hotkey = (e) => {
-    console.log('hotkey', e);
     if ((e.ctrlKey || e.altKey || e.key === "Meta") && (e.code === "KeyK")) {
         open_search();
         e.stopPropagation();

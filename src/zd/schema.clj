@@ -24,6 +24,7 @@
 (defn add-prop [ztx {docname :zd/docname :as doc}]
   (let [keyname (to-keyname docname)]
     (swap! ztx assoc-in [:zd/props keyname] doc)
+    (swap! ztx update :zd/keys (fn [ks] (conj (or ks #{}) keyname)))
     doc))
 
 (defn remove-prop [ztx docname]
@@ -36,6 +37,7 @@
 
 
 (defn infere [ztx schema doc]
+
   )
 
 (defmulti validate-rule (fn [ztx errors rules rule-name rule-value k v] rule-name))

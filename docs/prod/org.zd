@@ -8,7 +8,6 @@ Class for organization
 
 &site zd.prop
 :zd/annotation zd.link-badge
-:zd/summary true
 
 &location zd.prop
 :zd/annotation zd.badge
@@ -42,3 +41,6 @@ Class for organization
 
 &employee zd.class
 :zd/require #{:emp/organization :emp/person :emp/role}
+
+&CTO zd.class
+:title "CTO"

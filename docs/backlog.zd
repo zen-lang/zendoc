@@ -15,13 +15,14 @@ features and issues
 * [x] rename parent should rename directory and all children
 * [x] delete parent should delete directory of children
 * [x] implement zd.summary on backlinks
+* [x] unnamespaced keys as _.keyname
+* [x] zd.props for autocomplete
 * [ ] refactor errors to separate page (not doc)
-* [ ] unnamespaced keys as _.keyname
 * [ ] validation of optional set/array
 * [ ] do not allow to override existing doc with new document
 * [ ] implement git pull (automatic) and push
 * [ ] work on documentation
-* [ ] zd.annotations and zd.props for autocomplete
+* [ ] zd.annotations 
 * [ ] do not suggest + if exact symbol exists
 * [ ] fix ctrl-l conflict with browser for autocomplete
 * [ ] create an example sematic knowledge base - about semantic technologies

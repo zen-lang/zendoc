@@ -28,4 +28,5 @@ Here is desc
 &todo tasks
 :tasks/assignee person.niquola
 :tasks/severity tasks.critical
-:title "Update profile"
+:desc /
+update profile

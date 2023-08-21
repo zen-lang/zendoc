@@ -148,7 +148,7 @@
                       (->> docs
                            (map (fn [docname]
                                   [:tr
-                                   [:td {:class td-c} (utils/menu-link ztx docname)]
+                                   [:td {:class td-c} (utils/symbol-link ztx docname)]
                                    (let [doc (store/get-doc ztx docname)]
                                      (->> summary
                                           (map (fn [col]

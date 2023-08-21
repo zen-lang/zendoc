@@ -1,6 +1,6 @@
 :zd/menu-order 100
 :zd/icon [:fa-regular :fa-clipboard-check]
-^badge
+:zd/summary [:desc]
 :zd/type zd.class
 :title "Tasks"
 :desc /

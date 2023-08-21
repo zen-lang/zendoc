@@ -132,7 +132,7 @@ var autocompl = (ctx, v)=> {
             pos_type='annotation';
             token_start = i;
             break;
-        } else if(c == ':' && (p_aln || j == 1) && is_in_key(btxt)) {
+        } else if(c == ':' ) {
             console.log('here');
             pos_type = 'key';
             token_start = i;
