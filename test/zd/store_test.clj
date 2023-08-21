@@ -318,15 +318,13 @@
 
   ;; (assert false "!")
 
-  (store/errors ztx)
-
-  (is (= 1 (count (store/errors ztx))))
+  (matcho/match
+      (store/errors ztx)
+    '{index [{:type :reference, :message "`unexisting` not found", :path [:link]}]})
 
   (store/backlinked ztx 'unexisting)
 
   (store/file-save ztx 'unexisting ":zd/title \"Fixed\"")
-
-  (store/errors ztx)
 
   (is (empty? (store/errors ztx)))
   )

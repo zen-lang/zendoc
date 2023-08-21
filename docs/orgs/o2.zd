@@ -8,13 +8,20 @@
 :desc /
 
 
-&case-big-data prod.Case
+& prod.Case
 :need needs.big-data
+:prod.Case/date #inst"2023-06-07"
+:prod.Case/severity prod.Case.critical
 :desc /
 We have 30M of patients
 
-&case-ccd prod.Case
+& prod.Case
 :need needs.hl7
+:case /
+Here is desc
+
+& prod.Case
+:need needs.sql-on-fhir
 :case /
 Here is desc
 

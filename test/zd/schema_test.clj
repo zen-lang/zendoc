@@ -75,4 +75,16 @@
       (schema/summary ztx 'summary {:a 1 :b 2 :c 3})
     {:a 1, :b 2})
 
+
+  (schema/add-prop ztx {:zd/docname '_.title :zd/data-type 'zd.string})
+  (schema/get-prop ztx :title)
+
+  (t/is (not (empty? (schema/validate ztx {:title 1}))))
+
+
+  (schema/add-prop ztx {:zd/docname '_.date :zd/data-type 'zd.date})
+
+  (t/is (not (empty? (schema/validate ztx {:date 1}))))
+  (t/is (empty? (schema/validate ztx {:date #inst"2011"})))
+
   )

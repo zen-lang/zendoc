@@ -10,15 +10,9 @@
             [clojure.set]
             [clojure.string :as str]))
 
-;; TODO: add zen/events for plugins (like git)
-;; doc/delete
-;; doc/update
-;; file/update
-;; file/delete
-;; TODO: support for macros
-;; TODO: implement search
-;; TODO: index of keys from props and existing keys
-;; TODO: implement summary
+;; dir - one
+;; index.zd - fixed entry point
+;; everything is sync
 
 (defn get-db [ztx]
   (if-let [db (:db @ztx)]
@@ -440,8 +434,6 @@
   (swap! ztx update :zd/keys (fn [ks] (into (or ks #{}) (keys doc)))))
 
 
-
-
 (defn re-index-doc [ztx {docname :zd/docname :as doc} & [{dont-validate :dont-validate}]]
   (put-doc ztx doc)
   (datalog-put ztx doc)
@@ -449,6 +441,7 @@
   (update-menu ztx doc)
   (update-keys-index ztx doc)
   (update-schema ztx doc)
+  ;; this used while initial load - load then validate
   (when (not dont-validate)
     (validate-doc ztx docname)))
 
@@ -495,7 +488,9 @@
     doc))
 
 ;; TODO: this dirty think a better way
-(defn extract-docname [content]
+(defn extract-docname
+  "look for zd/docname in content"
+  [content]
   (let [lines (zd.parser/get-lines content)
         docname-line (->> lines (filter #(str/starts-with? % ":zd/docname")) (first))
         docname (when docname-line (when-let [s (-> docname-line (str/split #"\s+") (second))] (symbol s)))
@@ -517,7 +512,7 @@
         docpath     (str dir "/" path)
         doc         (to-doc ztx new-docname content {:docpath docpath :zd/parent (parent-name new-docname)})
         doc'        (symbolize-subdocs doc)]
-    (when-let [old-doc (get-doc ztx docname)] 
+    (when-let [old-doc (get-doc ztx docname)]
       (if (not (= new-docname docname))
         (do
           (->> (children ztx docname)
@@ -525,6 +520,7 @@
                        (let [new-childname (symbol (str new-docname (subs (str childname) (count (str docname)))))]
                          (file-save ztx childname (file-content ztx childname) {:rename new-childname})))))
           (file-delete ztx docname))
+        ;; calculate removed subdocs
         (let [to-remove (clojure.set/difference (into #{} (:zd/subdocs old-doc)) (into #{} (:zd/subdocs doc')))]
           (->> to-remove (mapv #(doc-delete ztx %))))))
     (.mkdirs (io/file (parent-dir docpath)))
@@ -552,7 +548,9 @@
                   (filter identity))]
     docs))
 
-(defn load-meta [ztx]
+(defn load-meta
+  "load zd schema"
+  [ztx]
   (let [doc (-> (to-doc ztx 'zd (slurp (io/resource "zd.zd")) {:zd/parent 'zd})
                 (assoc  :zd/readonly true :zd/parent 'zd))]
     (put-doc ztx (symbolize-subdocs doc))

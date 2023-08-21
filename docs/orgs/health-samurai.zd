@@ -9,6 +9,15 @@
 
 :desc /
 
+:employees ?/
+
+emp :emp/organization #orgs.health-samurai
+emp :emp/person p
+> p 
+> emp:emp/role
+> emp:emp/since
+> emp:emp/untill
+
 :partners ?/
 
 e :prod/partner-of #orgs.health-samurai

@@ -1,0 +1,6 @@
+:zd/type music.song
+
+:music/written-by artists.bethoven
+:title "Moon Sonate"
+:date #inst"1750"
+:music/song-name "Moon Sonate"

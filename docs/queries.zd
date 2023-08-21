@@ -10,6 +10,11 @@
 e :zd/parent #person
 > e
 
+:songs ?/
+
+e :music/song-name n
+> e
+> n
 
 :items ?/
 

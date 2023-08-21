@@ -6,9 +6,14 @@
 :person/organization orgs.health-samurai
 :title "Nikolai Ryzhikov"
 
+
 :desc /
 
-
+&hs-emp prod.org.employee
+:emp/since #inst"2001"
+:emp/organization orgs.health-samurai
+:emp/role prod.orgs.CTO
+:emp/person .
 
 & tasks
 :tasks/assignee person.tim

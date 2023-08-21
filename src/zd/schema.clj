@@ -3,8 +3,11 @@
 
 
 (defn to-keyname [docname]
-  (let [parts (str/split (str docname) #"\.")]
-    (keyword (str/join "." (butlast parts)) (last parts))))
+  (let [parts (str/split (str docname) #"\.")
+        ns (str/join "." (butlast parts))]
+    (if (= ns "_")
+      (keyword (last parts))
+      (keyword ns (last parts)))))
 
 ;; TODO: implement other API
 (defn add-class [ztx {docname :zd/docname :as doc}]
@@ -69,6 +72,12 @@
   [ztx errors _ k v]
   (if (and v (not (symbol? v)))
     (conj errors {:type :type :path [k] :message (str "Expected symbol, got " (type v))})
+    errors))
+
+(defmethod validate-type 'zd.date
+  [ztx errors _ k v]
+  (if (and v (not (inst? v)))
+    (conj errors {:type :type :path [k] :message (str "Expected inst, got " (type v))})
     errors))
 
 (defmethod validate-rule :zd/data-type

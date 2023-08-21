@@ -8,6 +8,10 @@
 :title "Acme"
 :desc /
 
+&contract prod.contract
+:start #inst""
+:desc /
+Contract
 
 
 &partner prod.org.partner

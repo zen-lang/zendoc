@@ -39,3 +39,6 @@ Class for organization
 
 &partner zd.class
 :zd/require #{:organizations :partner-since}
+
+&employee zd.class
+:zd/require #{:emp/organization :emp/person :emp/role}

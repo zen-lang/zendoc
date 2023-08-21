@@ -14,13 +14,16 @@ features and issues
 
 * [x] rename parent should rename directory and all children
 * [x] delete parent should delete directory of children
+* [x] implement zd.summary on backlinks
+* [ ] refactor errors to separate page (not doc)
+* [ ] unnamespaced keys as _.keyname
+* [ ] validation of optional set/array
 * [ ] do not allow to override existing doc with new document
 * [ ] implement git pull (automatic) and push
 * [ ] work on documentation
 * [ ] zd.annotations and zd.props for autocomplete
 * [ ] do not suggest + if exact symbol exists
 * [ ] fix ctrl-l conflict with browser for autocomplete
-* [ ] implement zd.summary on backlinks
 * [ ] create an example sematic knowledge base - about semantic technologies
 * [ ] build jar
 * [ ] code highlight for zd/, end and code
@@ -29,6 +32,7 @@ features and issues
 * [ ] structured write api
 * [ ] fix macros
 * [ ] nested navigation
+* [ ] menu subsections
 * [ ] validate subdocs while edit
 * [ ] :zd/type inference with :zd/child-type and :zd/subclass
 * [ ] implement file upload
