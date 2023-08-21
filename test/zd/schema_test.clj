@@ -61,6 +61,19 @@
 
   (t/is (empty? (schema/validate ztx {:s/symbol 'symbol})))
 
+
+  (schema/add-prop ztx {:zd/docname 's.symbol-maybeset :zd/data-type 'zd.symbol :zd/maybe-set? true})
+
+  (t/is (empty? (schema/validate ztx {:s/symbol-maybeset 'symbol})))
+  (t/is (empty? (schema/validate ztx {:s/symbol-maybeset #{'symbol}})))
+
+
+
+  (schema/add-prop ztx {:zd/docname 's.symbol-set :zd/data-type 'zd.symbol :zd/set? true})
+  (t/is (not (empty? (schema/validate ztx {:s/symbol-set 'symbol}))))
+  (t/is (empty? (schema/validate ztx {:s/symbol-set #{'symbol}})))
+
+
   (schema/add-prop ztx {:zd/docname 's.int :zd/data-type 'zd.int})
 
   (t/is (empty? (schema/validate ztx {:s/int 1})))
@@ -86,5 +99,7 @@
 
   (t/is (not (empty? (schema/validate ztx {:date 1}))))
   (t/is (empty? (schema/validate ztx {:date #inst"2011"})))
+
+
 
   )

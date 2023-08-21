@@ -1,0 +1,2 @@
+:zd/type zd.class
+:zd/require #{:contract/start :contract/end :contract/organization }

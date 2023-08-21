@@ -28,6 +28,7 @@
   (cond
     (or (string? data) (number? data)) (str data)
     (symbol? data) (utils/symbol-link ztx data)
+    (inst? data)    (str data)
     (keyword? data) [:span {:class (c [:text :green-700])} (str data)]
 
     (coll? data)
@@ -200,7 +201,7 @@
      (backlinks-block ztx backlinks))
    (when-let [subdocs (seq (:zd/subdocs doc))]
      (subdocs-block ztx ctx subdocs))
-   #_(utils/pprint "doc" (dissoc doc :zd/view))])
+   (utils/pprint "doc" (dissoc doc :zd/view))])
 
 (defn view [ztx ctx doc]
   [:div {:class (c [:w 200])}

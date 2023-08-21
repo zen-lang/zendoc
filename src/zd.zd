@@ -6,40 +6,48 @@ Welcome to zendoc built-in documentation.
 
 &class zd.class
 :title "Class"
+:zd/data-type zd.symbol
+:zd/maybe-set? true
 
 &prop zd.class
 :title "Property"
 
 &type zd.prop
-:title "zd/type"
-:zd/annotation zd.badge
+:title ":zd/type"
+:zd/data-type zd.symbol
+:zd/ref-type zd.data-type
+:zd/maybe-set? true
 
 &require zd.prop
-:title "zd/type"
-:zd/annotation zd.badge
+:title ":zd/require"
+:zd/data-type zd.keyword
+:zd/set? true
 
 &summary zd.prop
-:title "zd/type"
-:zd/annotation zd.badge
+:title ":zd/summary"
+:zd/data-type zd.keyword
+:zd/vector? true
+
 
 &data-type zd.prop
-:title "zd/type"
-:zd/annotation zd.badge
+:title ":zd/data-type"
+:zd/data-type zd.symbol
 
 &icon zd.prop
 :title "zd/type"
-:zd/annotation zd.hide
+:zd/data-type zd.keyword
+:zd/vector? true
 
 &menu-order zd.prop
 :title "zd/type"
-:zd/annotation zd.badge
+:zd/data-type zd.int
 
 &readonly zd.prop
-:title "zd/type"
 :zd/data-type zd.boolean
-:zd/annotation zd.hide
 
 ;; datatypes
+&set zd.class
+&vector zd.class
 &boolean zd.class
 &string zd.class
 &inst zd.class

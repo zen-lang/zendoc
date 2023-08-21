@@ -61,14 +61,26 @@
     {:status 200
      :body (hiccup.core/html (view/editor ztx req doc content))}))
 
+;;TODO: move to store and write tests
+(defn preview-doc [ztx doc]
+  (let [errors  (store/doc-validate ztx doc)
+        doc (cond-> doc (seq errors) (assoc :zd/errors errors))
+        doc (if (:zd/subdocs doc)
+              (-> doc (update :zd/subdocs (fn [subdocs]
+                                            (->> subdocs
+                                                 (mapv (fn [subdoc]
+                                                         (let [errors  (store/doc-validate ztx subdoc)]
+                                                           (cond-> subdoc (seq errors) (assoc :zd/errors errors)))))))))
+              doc)]
+    doc))
+
 ;; TODO: add validation and inference
 (defmethod zen/op 'zd/render-preview
   [ztx _cfg {{id :id} :route-params body :body :as req} & opts]
   (let [docname (symbol id)
         content (if (=  BytesInputStream (type body)) (slurp body) body)
         doc     (store/to-doc ztx docname content {})
-        errors  (store/doc-validate ztx doc)
-        doc (cond-> doc (seq errors) (assoc :zd/errors errors))]
+        doc (preview-doc ztx doc)]
     {:status 200
      :body (hiccup.core/html (view/preview ztx req doc))}))
 
@@ -84,8 +96,7 @@
   (let [docname 'new
         content (if (=  BytesInputStream (type body)) (slurp body) body)
         doc     (store/to-doc ztx docname content {})
-        errors  (store/doc-validate ztx doc)
-        doc (cond-> doc (seq errors) (assoc :zd/errors errors))]
+        doc (preview-doc ztx doc)]
     {:status 200
      :body (hiccup.core/html (view/preview ztx req doc))}))
 

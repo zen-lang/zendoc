@@ -527,7 +527,10 @@
     (spit docpath content)
     (doc-save ztx doc' opts)
     (->> (:zd/subdocs doc)
-         (mapv #(doc-save ztx % opts)))
+         (mapv (fn [subdoc]
+                 (doc-save ztx subdoc opts)
+                 (->> (backlinked ztx (:zd/docname subdoc))
+                      (mapv (fn [d] (validate-doc ztx d)))))))
     ;; fix broken links to this doc
     (->> (backlinked ztx new-docname)
          (mapv (fn [d] (validate-doc ztx d))))

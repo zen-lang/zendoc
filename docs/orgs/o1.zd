@@ -8,8 +8,8 @@
 :title "Acme"
 :desc /
 
-&contract prod.contract
-:start #inst""
+&contract contract
+:start #inst"2023-07"
 :desc /
 Contract
 

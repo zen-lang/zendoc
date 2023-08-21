@@ -1,6 +1,6 @@
 :icon [:fa-duotone :fa-building]
 :menu-order 100
-:zd/summary #{ :orgs/tags }
+:zd/summary [:orgs/tags ]
 :zd/child-type prod.org
 
 :title "Organizations"
