@@ -1,2 +1,34 @@
 :zd/menu-order 2
 :title "Zentext"
+:desc /
+
+Zentext syntax is markdown-like syntax
+
+
+:code /
+Examples of code hieghtlight:
+
+
+```code js
+var x = 1;
+function(x) {
+  return x + x;
+}
+
+````
+
+```code clj
+(def a 1)
+```
+
+```code edn
+{:a 1}
+```
+
+```zd
+:key value
+:anothor-key 100
+:desc /
+ Here is a text
+ Multiline #some
+```

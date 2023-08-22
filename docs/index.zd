@@ -83,6 +83,8 @@ Schema document may force required fields by `:zd/required #{:prop1 :prop2}`
 
 Property can be defined by document with `:zd/type zd.property`. Data type restrictions can be specified with property `:zd/data-type [zd.string zd.symbole zd.int]`. "Property document is translated into namespaced keys by following rules `name.space.prop-name` -> `:name.space/prop-name`
 
+There is a special document with name `_` and properties defined as children of it will not need namespece - i.e. `_.title zd.prop` will define `:title` property. But we heighly recomend to define most of properties as namespaced, this will help you in queries!
+
 :Queries /
 
 Zendoc has built-in datalog engine [[a xtdb ]] to query knowledge base. There are two dialects - official **xtdb** and **simplified** version.

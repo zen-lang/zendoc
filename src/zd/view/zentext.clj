@@ -126,10 +126,35 @@
   [:span {:class (c [:text :red-600] [:bg :red-100])} (str "No inline-method for " m " arg:" arg)])
 
 (defmethod methods/process-block "code" [ztx _ lang cnt]
-  [:div.code-block
-   [:pre {:class (c :text-sm)
-          :style {:position "relative" :white-space "pre-wrap"}}
-    [:code {:style {:word-wrap "break-word"} :class (str "language-" lang " hljs")} cnt]]])
+  (let [id (str "code-" (hash cnt))]
+    [:div.code-block
+     [:pre {:class (c :text-sm)
+            :style {:position "relative" :white-space "pre-wrap"}}
+      [:i.fa-solid.fa-copy.copy-button {:class (name (c :border [:p 2] :rounded
+                                                        [:text :gray-500]
+                                                        [:hover
+                                                         [:text :orange-600]
+                                                         [:bg :gray-200]]
+                                                        :cursor-pointer
+                                                        {:position "absolute" :right "0.5rem" :top "0.5rem"}))}]
+      [:code {:id id :style {:word-wrap "break-word"} :class [(str "language-" lang " hljs") (name (c :rounded [:p 2]))]} cnt]
+      [:script (str "hljs.highlightElement(document.getElementById('" id "'));")]]]))
+
+(defmethod methods/process-block "zd" [ztx _ lang cnt]
+  (let [id (str "code-" (hash cnt))]
+    [:div.code-block {:style {:position "relative" :white-space "pre-wrap"}}
+     [:i.fa-solid.fa-copy.copy-button {:class (name (c :border [:p 2] :rounded
+                                                       [:text :gray-500]
+                                                       [:hover
+                                                        [:text :orange-600]
+                                                        [:bg :gray-200]]
+                                                       :cursor-pointer
+                                                       {:position "absolute"  :right "0.5rem" :top "0.5rem"}))}]
+     [:pre {:class (c :text-sm :rounded [:p 4] [:bg :gray-100]
+                      :shadow-sm :border
+                      {:font-family "Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace"})}
+      [:code {:id id :style {:word-wrap "break-word"}} cnt]
+      [:script (str "zdhl('" id "');")]]]))
 
 (defmethod methods/process-block :default [ztx tp args cnt]
   [:pre {:params args :tp tp}

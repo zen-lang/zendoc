@@ -19,6 +19,18 @@ var auto_close = (key, textarea) => {
     }
 }
 
+var zdhl= (elid)=> {
+    let el = document.getElementById(elid);
+    let code = el.parentElement;
+    let v = el.innerText;
+    code.innerHTML = v
+        .replace(/:[a-zA-Z0-9][-.:\/_a-zA-Z0-9]+/gi, (x)=> {return `<b style='color:green'>${x}</b>`;})
+        .replace(/#[-.:_a-zA-Z0-9]+/gi, (x)=> {return `<b style='color:blue'>${x}</b>`;})
+        .replace(/\^[-_a-zA-Z0-9]+/gi,  (x)=> {return `<b style='color:orange'>${x}</b>`;})
+        .replace(/(\(\([^\)]+\)\))/gi,  (x)=> { return `<b style='color:purple'>${x}</b>`; })
+        .replace(/(\[\[[^\]]+\]\])/gi,  (x)=> { return `<b style='color:purple'>${x}</b>`; });
+};
+
 var hl = (ctx, v)=>{
     var t = ctx.editor.els.textarea;
     var h = ctx.editor.els.hl;
