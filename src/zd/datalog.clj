@@ -34,7 +34,6 @@
   (let [[k v] (str/split (str/trim (subs l 1)) #"\s+" 2)
         k (str/trim k)
         v (try (edamame.core/parse-string v) (catch Exception _e (println :datalog.edn/error v) v))]
-    (println :instr k (pr-str v))
     (if k
       (add-instruction acc (keyword k) v)
       acc)))

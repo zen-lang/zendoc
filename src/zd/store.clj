@@ -97,7 +97,7 @@
   [ztx {docname :zd/docname :as doc}]
   (if (and doc docname)
     (swap! ztx assoc-in [:zdb docname] (assoc doc :zd/parent (parent-name docname)))
-    (println :? doc))
+    (println :put/error doc))
   doc)
 
 (defn walk-docs
@@ -109,7 +109,7 @@
 (defn update-docs [ztx f]
   (doseq [[docname doc] (:zdb @ztx)]
     (if docname
-      (put-doc ztx (f docname doc))
+      (f docname doc)
       (println :bad-doc doc))))
 
 (defn put-errors [ztx docname errors]
@@ -136,8 +136,8 @@
   (zd.schema/validate ztx doc))
 
 
-(defn validate-doc [ztx docname]
-  (let [doc    (get-doc ztx docname)
+(defn validate-doc [ztx docname & [doc]]
+  (let [doc    (or (get-doc ztx docname) doc)
         errors (doc-validate ztx doc)]
     (put-errors ztx docname errors)
     errors))
@@ -151,7 +151,7 @@
 (defn doc-inference
   "run inference"
   [ztx doc]
-  doc)
+  (zd.schema/infere ztx doc))
 
 
 (defn get-backlinks [ztx target]
@@ -441,7 +441,8 @@
     (update-docs ztx
                  (fn [_docname doc]
                    (let [idoc (doc-inference ztx doc)]
-                     (re-index-doc ztx idoc))))))
+                     (re-index-doc ztx idoc)
+                     idoc)))))
 
 (defn menu
   "return navigation"

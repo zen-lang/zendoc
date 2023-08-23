@@ -424,3 +424,22 @@
   (is (not (tu/file-exists ztx "organization/o2/item1.zd")))
 
   )
+
+(deftest test-inference
+  (def ztx (tu/context ".tmp/test-inference"))
+
+  (tu/write-file ztx {:zd/docname 'index})
+  (tu/write-file ztx {:zd/docname 'org  :zd/child-type 'org :zd/require #{:a :b}})
+  (tu/write-file ztx {:zd/docname 'org.o1})
+
+  (store/dir-load ztx)
+
+  (matcho/match
+   (store/doc-get ztx 'org.o1)
+   #:zd{:errors
+        [{:type :required, :message ":b is required", :path [:b]}
+         {:type :required, :message ":a is required", :path [:a]}]})
+
+  (store/errors ztx)
+
+  )

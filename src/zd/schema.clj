@@ -19,7 +19,8 @@
   docname)
 
 (defn get-class [ztx docname]
-  (get-in @ztx [:zd/classes docname]))
+  (or (get-in @ztx [:zd/classes docname])
+      (get-in @ztx [:zdb docname])))
 
 (defn add-prop [ztx {docname :zd/docname :as doc}]
   (let [keyname (to-keyname docname)]
@@ -35,10 +36,15 @@
 (defn get-prop  [ztx keyname]
   (get-in @ztx [:zd/props keyname]))
 
-
-(defn infere [ztx schema doc]
-
-  )
+(defn infere [ztx doc]
+  (if-let [tp (and (nil? (:zd/type doc))
+                   (when-let [p (:zd/parent doc)]
+                     (or (get-in @ztx [:zdb p :zd/child-type])
+                         (get-in @ztx [:zd/classes p :zd/child-type]))))]
+    (-> doc
+        (assoc :zd/type tp)
+        (update :zd/infered (fn [x] (conj (or x []) :zd/type))))
+    doc))
 
 (defmulti validate-rule (fn [ztx errors rules rule-name rule-value k v] rule-name))
 (defmulti validate-type (fn [ztx errors rules type-name k v] type-name))
@@ -56,6 +62,13 @@
   [ztx errors rules _ k v]
   (if (and v (not (string? v)))
     (conj errors {:type :type :path [k] :message (str "Expected string, got " (type v))})
+    errors))
+
+
+(defmethod validate-type 'zd.boolean
+  [ztx errors rules _ k v]
+  (if (and v (not (boolean? v)))
+    (conj errors {:type :type :path [k] :message (str "Expected boolean, got " (type v))})
     errors))
 
 (defmethod validate-type 'zd.number

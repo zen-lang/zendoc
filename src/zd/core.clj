@@ -142,7 +142,6 @@
 
 (defmethod zen/op 'zd/git-commit
   [ztx _cfg {params :params :as req} & opts]
-  (println :? params)
   {:status 200
    :body (hiccup.core/html [:pre (pr-str (form-decode (slurp (:body req))))])})
 
@@ -197,7 +196,7 @@
 
 (comment
   (def ztx (start))
-  
+
   (stop ztx)
 
   (:zd/backlinks @ztx)
