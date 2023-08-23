@@ -11,8 +11,8 @@
 c :zd/type #prod.Case
 c :need n
 
-> n
-> (count c)
+> n | need
+> (count c) | count
 
 :ctos ?/
 

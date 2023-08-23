@@ -5,6 +5,8 @@
 :desc /
 Company Needs
 
+:test (csv 1,2,3)
+
 :needs ?/
 
 c :zd/type #prod.Case

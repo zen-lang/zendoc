@@ -51,8 +51,6 @@
 
   (store/dir-load ztx)
 
-  (store/encode-query '{:where [[e :xt/id 'index] [e :title t]]
-                        :find [e t]})
 
   (is (nil? (store/errors ztx)))
 
@@ -207,7 +205,7 @@
 
   (matcho/match
       (->
-       (store/datalog-sugar-query ztx "e :xt/id id\n> e\n> e:title\n")
+       (store/datalog-sugar-query ztx "e :xt/id id\n> e\n> e:title\n < asc e")
        (update :result #(sort-by first %)))
     '{:result
       [[b "b"]
@@ -218,9 +216,7 @@
        [newone "newone"]
        [other "Other"]
        [other.sub1 "Subdoc"]
-       [target "target"],]
-     :query {:where [[e :xt/id id]] :find [(pull e [:xt/id :title])]},
-     :columns [nil :title]})
+       [target "target"]]})
 
 
   (store/to-doc ztx 'mydoc ":title \"title\"\n^badge\n:key /\n value\n^ann 1\n:another some/\ntext")

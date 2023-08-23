@@ -6,6 +6,7 @@
             [clojure.java.io :as io]
             [zd.zentext]
             [zd.schema]
+            [zd.datalog :as datalog]
             [edamame.core]
             [clojure.set]
             [clojure.string :as str]))
@@ -13,150 +14,6 @@
 ;; dir - one
 ;; index.zd - fixed entry point
 ;; everything is sync
-
-(defn get-db [ztx]
-  (if-let [db (:db @ztx)]
-    db
-    (let [db (xt/start-node {})]
-      (swap! ztx assoc :db db)
-      db)))
-
-(defn encode-query [q]
-  (clojure.walk/postwalk (fn [x] (if (and (list? x) (= 'quote (first x)))
-                                  (str "'" (second x))
-                                  x)) q))
-
-(defn encode-data [q]
-  (clojure.walk/postwalk (fn [x] (if (symbol? x) (str "'" x) x)) q))
-
-(defn decode-data [res]
-  (clojure.walk/postwalk
-   (fn [x] (if (and (string? x) (str/starts-with? x "'")) (symbol (subs x 1)) x))
-   res))
-
-(defn datalog-put [ztx data]
-  (assert (:zd/docname data) (pr-str data))
-  (let [db (get-db ztx)
-        data (if (:xt/id data) data (assoc data :xt/id (:zd/docname data)))
-        res (xt/submit-tx db [[::xt/put (encode-data (dissoc data :zd/docname :zd/view))]])]
-    (xt/sync db)
-    res))
-
-(defn datalog-delete [ztx docname]
-  (let [db (get-db ztx)
-        res (xt/submit-tx db [[::xt/evict (str "'" docname)]])]
-    (xt/sync db)
-    res))
-
-(defn datalog-get [ztx id]
-  (let [db (get-db ztx)]
-    (decode-data (xt/entity (xt/db db) (str "'" id)))))
-
-;; cache based on database status
-(defn datalog-query
-  "run datalog query"
-  [ztx query & params]
-  (let [db (get-db ztx)]
-    (-> (apply xt/q (xt/db db) (encode-query query) params)
-        (decode-data))))
-
-
-(defn parse-query [q]
-  (let [xs (->> (str/split q #"\n")
-                (mapv str/trim)
-                (remove (fn [s] (or (str/blank? s) (str/starts-with? s "\\")))))
-        columns   (->> xs
-                       (filterv #(re-matches #"^\s?>.*" %))
-                       (mapv #(subs % 1))
-                       (mapv str/trim)
-                       (filterv #(not (str/blank? %)))
-                       (mapv (fn [x]
-                               (if (str/starts-with? x "(")
-                                 ['expr (edamame.core/parse-string x {:regex true})]
-                                 (let [[e k] (str/split x #":" 2)]
-                                   [(symbol e) (cond
-                                                 (= k "*") (symbol k)
-                                                 :else (keyword k))])))))
-        index (atom {})
-        find-items (->> (group-by first columns)
-                        (reduce (fn [acc [k xs]]
-                                  (if (= 'expr k)
-                                    (->> (mapv second xs)
-                                         (reduce (fn [acc e]
-                                                   (swap! index assoc e (count acc))
-                                                   (conj acc e))
-                                                 acc))
-                                    (let [cs (->> (mapv second xs) (dedupe) (into []))]
-                                      (swap! index assoc k (count acc))
-                                      (if (seq (filter (fn [x] (contains? #{'* :?} x)) cs))
-                                        (conj acc (list 'pull k ['*]))
-                                        (if (= cs [nil])
-                                          (conj acc k)
-                                          (conj acc (list 'pull k (mapv (fn [x] (if (nil? x) :xt/id x))cs))))))))
-                                []))
-        where-items
-        (->> xs
-             (filterv (every-pred #(not (str/ends-with? % " :asc"))
-                                  #(not (str/ends-with? % " :desc"))
-                                  #(not (re-matches #"^\s?>.*" %))))
-             (mapv (fn [x] (let [res (edamame.core/parse-string (str/replace (str "[" x "]") #"#"  ":symbol/")
-                                                                {:regex true})]
-                             (cond
-                               (list? (get res 1))
-                               (vector res)
-
-                               :else
-                               res)
-                             ))))
-        where (->> where-items
-                   (mapv (fn [x]
-                           (clojure.walk/postwalk
-                            (fn [y]
-                              (if (and (keyword? y) (= "symbol" (namespace y)))
-                                (str "'" (name y))
-                                y)) x))))
-
-        ;; TODO: fix order by
-        order-items
-        (->> xs
-             (filterv (every-pred #(or (str/ends-with? % " :asc")
-                                       (str/ends-with? % " :desc"))
-                                  #(not (re-matches #"^\s?>.*" %))))
-             (mapv (fn [x] (edamame.core/parse-string (str/replace (str "[" x "]") #"#"  ":symbol/") {:regex true}))))
-
-        order
-        (->> order-items
-             (mapv (fn [x]
-                     (clojure.walk/postwalk
-                       (fn [y]
-                         (if (and (keyword? y) (= "symbol" (namespace y)))
-                           (str "'" (name y))
-                           y)) x))))]
-    (into {:where where
-           :order-by order
-           :find find-items
-           :columns columns
-           :index @index} )))
-
-
-(defn datalog-sugar-query [ztx q]
-  (let [q (parse-query q)
-        idx (:index q)
-        res (->>
-             (datalog-query ztx (dissoc q :columns :index))
-             (mapv (fn [x]
-                     (->> (:columns q)
-                          (mapv (fn [[e c]]
-                                  (cond
-                                    (nil? c)  (or (get-in x [(get idx e) :xt/id]) (get-in x [(get idx e)]))
-                                    (list? c) (get-in x [(get idx c)])
-                                    (= c '*)  (get-in x [(get idx e)])
-                                    (= c :?)  (keys (get-in x [(get idx e)]))
-                                    :else     (get-in x [(get idx e) c]))))))))
-        cols (->> (:columns q) (mapv second))]
-    {:result res
-     :query (dissoc q :columns :index)
-     :columns cols}))
 
 (defn *docname-to-path [docname]
   (-> (->> (str/split (str docname) #"\.") (str/join "/"))
@@ -169,6 +26,12 @@
       (str/split #"/")
       (->> (str/join "."))
       (symbol)))
+
+(def datalog-query datalog/datalog-query)
+(def datalog-sugar-query datalog/datalog-sugar-query)
+(def encode-data datalog/encode-data)
+(def decode-data datalog/decode-data)
+(def datalog-get datalog/datalog-get)
 
 (def path-to-docname (memoize *path-to-docname))
 
@@ -343,7 +206,7 @@
   [ztx docname]
   (let [doc (get-doc ztx docname)
         backlinks (backlinked ztx docname)]
-    (datalog-delete ztx docname)
+    (datalog/datalog-delete ztx docname)
     (delete-doc ztx docname)
     (backlinks-clear ztx docname)
     (errors-clear ztx docname)
@@ -436,7 +299,7 @@
 
 (defn re-index-doc [ztx {docname :zd/docname :as doc} & [{dont-validate :dont-validate}]]
   (put-doc ztx doc)
-  (datalog-put ztx doc)
+  (datalog/datalog-put ztx doc)
   (update-backlinks ztx doc)
   (update-menu ztx doc)
   (update-keys-index ztx doc)
