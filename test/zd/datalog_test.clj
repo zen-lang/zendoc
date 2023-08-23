@@ -156,10 +156,22 @@ z (count x)
           '{:result [[typed]],
             :columns ["x"]})
 
+
+  (match? "x :zd/type c\n> x\n< desc (count c)"
+          '{:result [[typed]],
+            :columns ["x"]})
+
+  (match-parse "x :zd/type c\n> x\n< desc (count c)" {})
+
   (match-parse "x :zd/type c\n> (count x) | cnt" {})
 
   (match? "x :zd/type c\n>c \n>(count x) | cnt"
           '{:result [[zd.class 1]],
+            :query {:where [[x :zd/type c]], :find [c (count x)]},})
+
+  (match? "x :zd/type c\n>c \n>(count x) | cnt\n< desc (count x)"
+          '{:result [[zd.class 1]],
+            :columns ["c" "cnt"]
             :query {:where [[x :zd/type c]], :find [c (count x)]},})
 
   (datalog/datalog-query ztx '{:where [[x :zd/type c]]

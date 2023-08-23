@@ -27,12 +27,14 @@
 
 (defmethod add-instruction :default
   [acc k v]
-  (println :unknown/instraction k v)
+  (println :unknown/instruction k v)
   acc)
 
 (defn parse-instruction [acc l]
-  (let [[_ k v] (str/split (subs l 1) #"\s")
-        v (try (edamame.core/parse-string v) (catch Exception _e v))]
+  (let [[k v] (str/split (str/trim (subs l 1)) #"\s+" 2)
+        k (str/trim k)
+        v (try (edamame.core/parse-string v) (catch Exception _e (println :datalog.edn/error v) v))]
+    (println :instr k (pr-str v))
     (if k
       (add-instruction acc (keyword k) v)
       acc)))
@@ -176,24 +178,27 @@
 ;;   :else     (get-in x [(get idx e) c]))
 
 (defn datalog-sugar-query [ztx q]
-  (let [q   (parse-query q)
-        res (->> (datalog-query ztx (dissoc q :columns :index))
-                 (mapv (fn [x]
-                         (loop [[{prop :prop :as c} & cs] (:columns q)
-                                i 0
-                                acc []]
-                           (if (and (nil? c) (empty? cs))
-                             acc
-                             (cond (:hidden c)
-                                   (recur cs (inc i) acc)
-                                   (= :* prop)
-                                   (recur cs (inc i) (conj acc (get x i)))
-                                   (= :? prop)
-                                   (recur cs (inc i) (conj acc (keys (get x i))))
-                                   prop
-                                   (recur cs (inc i) (conj acc (get-in x [i prop])))
-                                   :else
-                                   (recur cs (inc i) (conj acc (get x i)))))))))]
-    {:result  res
-     :query   (dissoc q :columns :index)
-     :columns (mapv :label (:columns q))}))
+  (try
+    (let [q   (parse-query q)
+          res (->> (datalog-query ztx (dissoc q :columns :index))
+                   (mapv (fn [x]
+                           (loop [[{prop :prop :as c} & cs] (:columns q)
+                                  i 0
+                                  acc []]
+                             (if (and (nil? c) (empty? cs))
+                               acc
+                               (cond (:hidden c)
+                                     (recur cs (inc i) acc)
+                                     (= :* prop)
+                                     (recur cs (inc i) (conj acc (get x i)))
+                                     (= :? prop)
+                                     (recur cs (inc i) (conj acc (keys (get x i))))
+                                     prop
+                                     (recur cs (inc i) (conj acc (get-in x [i prop])))
+                                     :else
+                                     (recur cs (inc i) (conj acc (get x i)))))))))]
+      {:result  res
+       :query   (dissoc q :columns :index)
+       :columns (->> (:columns q) (remove :hidden) (mapv :label))})
+    (catch Exception e
+      {:error (.getMessage e)})))

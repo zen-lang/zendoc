@@ -7,9 +7,6 @@
             [stylo.core :refer [c]]
             [zd.methods :as methods]))
 
-
-
-
 (defn render-table-value [ztx v block]
   (cond
     (symbol? v) (utils/symbol-link ztx v)
@@ -24,7 +21,8 @@
 
 (defmethod methods/rendercontent :?
   [ztx _ctx {data :data :as block}]
-  (let [{res :result cols :columns q :query} (store/datalog-sugar-query ztx data)]
+  (let [{err :error res :result cols :columns q :query} (store/datalog-sugar-query ztx data)]
+    (when err [:div {:class (c [:bg :red-100] [:border :red-500] [:p 4])} err])
     [:div
      [:table
       (into [:thead]
@@ -40,4 +38,4 @@
                (for [v vs]
                  [:td {:key v :class (c :border [:px 2] [:py 1] {:vertical-align "top"})}
                   (render-table-value ztx v block)])]))]
-     (utils/pprint "query" (dissoc q :columns :index :args))]))
+     (utils/pprint "query" q)]))
