@@ -1,5 +1,6 @@
 (ns zd.store
   (:require [zen.core :as zen]
+            [clj-jgit.porcelain :as git]
             [zd.parser]
             [xtdb.api :as xt]
             [clojure.walk]
@@ -18,6 +19,14 @@
 (defn *docname-to-path [docname]
   (-> (->> (str/split (str docname) #"\.") (str/join "/"))
       (str ".zd")))
+
+(def ident
+  ;; TODO support for other os ?
+  {:name ["id_rsa" "id_dsa" "id_ecdsa" "id_ed25519" "pubkey"]
+   :trust-all? true
+   :key-dir (if (.isDirectory (io/file "keystore"))
+              (str (System/getProperty "user.dir") "/keystore")
+              (str (System/getProperty "user.home") "/.ssh"))})
 
 (def docname-to-path (memoize *docname-to-path))
 
@@ -329,6 +338,22 @@
                                 acc)))
                  #{}))))
 
+(defn commit-delete
+  "remove file from git index and push new commit"
+  [ztx docpath docname]
+  (when-let [repo (:zd/repo @ztx)]
+    (git/with-identity ident
+      (git/git-pull repo {:ff-mode :ff :rebase-mode :none :strategy :ours})
+      (let [{:keys [missing]} (git/git-status repo)
+            git-config (git/git-config-load repo)
+            uname (or (.getString git-config "user" nil "name") "unknown editor")
+            email (or (.getString git-config "user" nil "email") "unknown-editor@zendoc.me")]
+        (doseq [m missing]
+          (when (str/includes? docpath m)
+            (git/git-rm repo m)
+            (git/git-commit repo (str "Delete " docname) :committer {:name uname :email email}))))
+      (future (git/git-push repo)))))
+
 (defn file-delete
   "save document content into file and recalculate databases"
   [ztx docname]
@@ -346,6 +371,7 @@
          (mapv (fn [child] (file-delete ztx child))))
     (when (.exists file) (.delete file))
     (when (.exists filedir) (.delete filedir))
+    (commit-delete ztx docpath docname)
     (->> (backlinked ztx docname)
          (mapv (fn [d] (validate-doc ztx d))))
     doc))
@@ -364,6 +390,25 @@
 
 (extract-docname ":a 1\n:zd/docname docname\n:b 1")
 
+(defn commit-changes
+  "commit added, changed files and push"
+  [ztx docpath docname]
+  (when-let [repo (:zd/repo @ztx)]
+    (git/with-identity ident
+      (let [;; TODO sync all untracked docs at gitsync start?
+            {:keys [untracked modified] :as status} (git/git-status repo)
+            git-config (git/git-config-load repo)]
+        (git/git-pull repo {:ff-mode :ff :rebase-mode :none :strategy :ours})
+        (doseq [m (into untracked modified)]
+          (when (str/includes? docpath m)
+            (let [uname (or (.getString git-config "user" nil "name") "unknown editor")
+                  email (or (.getString git-config "user" nil "email") "unknown-editor@zendoc.me")]
+              (git/git-add repo m)
+              (let [msg (if (contains? untracked m)
+                          (str "Create " docname)
+                          (str "Edit " docname))]
+                (git/git-commit repo msg :committer {:name uname :email email}))))
+          (future (git/git-push repo)))))))
 
 (defn file-save
   "save document content into file and recalculate databases"
@@ -388,6 +433,7 @@
           (->> to-remove (mapv #(doc-delete ztx %))))))
     (.mkdirs (io/file (parent-dir docpath)))
     (spit docpath content)
+    (commit-changes ztx docpath new-docname)
     (doc-save ztx doc' opts)
     (->> (:zd/subdocs doc)
          (mapv (fn [subdoc]
@@ -428,11 +474,19 @@
                   :title "Errors"
                   :zd/all-errors true})))
 
+(defn load-repo [ztx]
+  (git/with-identity ident
+    (let [repo (git/load-repo (System/getProperty "user.dir"))
+          pull-result (git/git-pull repo {:ff-mode :ff :rebase-mode :none :strategy :ours})]
+      (when (.isSuccessful pull-result)
+        (swap! ztx assoc :zd/repo repo)))))
+
 (defn dir-load
   "read docs from filesystem and load into memory"
   [ztx & [dir]]
   (let [dir (or dir (:zd/dir @ztx))]
     (load-meta ztx)
+    (load-repo ztx)
     (->> (dir-read ztx dir)
          (mapv (fn [doc]
                  (put-doc ztx (symbolize-subdocs doc))
