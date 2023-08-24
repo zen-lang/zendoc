@@ -1,9 +1,35 @@
-:title "Queries"
 :icon [:fa-brands :fa-searchengin]
-
+:menu-order 10
+:title "Queries"
 :desc /
 
-:menu-order 10
+You can query documents in knowledge base using datalog dialect
+
+```zd
+:q ?/
+e :zd/type #music.song
+e :music/written-by m
+> e | Song
+> m | Artist
+```
+
+This query may be read as: 
+* Find me all `e` such that `:zd/type = music.song`
+* Join all `m` referenced by `e :music/written-by`
+* first column reference to `e` with title "Song"
+* second column reference to `m` with title "Artist"
+
+```zd
+:q ?/
+e :zd/type #music.song
+e :music/written-by m
+> m | Artist
+> (count e) | Number of songs
+< desc (count e)
+```
+
+
+
 
 
 :query ?/
@@ -12,9 +38,8 @@ e :zd/parent #person
 
 :songs ?/
 
-e :music/song-name n
+e :zd/type #music.song
 > e
-> n
 
 :items ?/
 

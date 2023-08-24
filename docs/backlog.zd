@@ -18,7 +18,7 @@ features and issues
 * [x] unnamespaced keys as _.keyname
 * [x] zd.props for autocomplete
 * [ ] refactor errors to separate page (not doc)
-* [ ] validation of optional set/array
+* [x] validation of optional set/array
 * [ ] do not allow to override existing doc with new document
 * [ ] implement git pull (automatic) and push
 * [ ] work on documentation

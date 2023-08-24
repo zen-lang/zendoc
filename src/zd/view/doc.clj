@@ -61,6 +61,7 @@
                   [:div (str "No table impl for " k ", " cnt-type)]
                   [:div (pr-str d)]])]))
 
+
 (defmethod methods/renderann :link-badge
   [ztx ctx {data :data k :key}]
   [:div {:class (c :border [:m 1]  :inline-flex :rounded [:p 0])}
@@ -85,6 +86,15 @@
     key]
    [:div {:class (c [:px 1] [:py 0.5] :inline-block :text-sm)}
     (methods/rendercontent ztx ctx block)]])
+
+(defn badge [ztx ctx key data]
+  [:div {:class (c :border [:my 1] [:mr 2] :inline-flex :items-center :rounded :shadow-sm)}
+   [:div {:class (c :inline-block [:px 2] [:bg :gray-100] [:py 0.5] :text-sm [:text :gray-700]
+                    :border-r
+                    {:font-weight "400"  :border-radius "4px 0 0  4px"})}
+    key]
+   [:div {:class (c [:px 1] [:py 0.5] :inline-block :text-sm)}
+    (render-edn ztx ctx data)]])
 
 (defmethod methods/renderann :attribute
   [ztx ctx {k :key :as block}]
@@ -191,6 +201,10 @@
   [:div
    (when-let [errors (seq (:zd/errors doc))]
      (errors-view ztx errors))
+   (->> (:zd/infered doc)
+        (map (fn [x]
+               [:div {:class (c {:opacity "0.7"})}
+                (badge ztx ctx x (get doc x))])))
    (->> (:zd/view doc)
         (map (fn [[k annotations]]
                (methods/renderkey ztx ctx {:doc doc
