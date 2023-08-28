@@ -204,4 +204,6 @@
   (config ztx)
   (store/re-validate ztx)
 
+  (edamame.core/parse-string "{%name name %type fhir/Patient}")
+
  )

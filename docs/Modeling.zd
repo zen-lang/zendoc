@@ -116,7 +116,7 @@ If property has a `zd.same-as` zendoc will do the inference of this attributes.
 
 You may search it as
 
-```datalog
+```zd
  e :foaf/name "Nikolai"
  > e
 ```

@@ -114,7 +114,8 @@
     [:title "zendoc"]
     #_[:script {:src "/static/js/vega.min.js"}]
     [:script {:src "/static/js/quick-score.min.js"}]
-    [:script {:src "/static/js/editor.js"}]]
+    [:script {:src "/static/js/editor.js"}]
+    ]
    [:body {:class (c :overflow-hidden [:h "100vh"] [:text "#353B50"])}
     content
     [:script "mermaid.initialize({ startOnLoad: false});"]]])

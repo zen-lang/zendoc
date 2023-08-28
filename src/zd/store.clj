@@ -475,11 +475,12 @@
                   :zd/all-errors true})))
 
 (defn load-repo [ztx]
-  (git/with-identity ident
-    (let [repo (git/load-repo (System/getProperty "user.dir"))
-          pull-result (git/git-pull repo {:ff-mode :ff :rebase-mode :none :strategy :ours})]
-      (when (.isSuccessful pull-result)
-        (swap! ztx assoc :zd/repo repo)))))
+  (when (:gitsync @ztx)
+    (git/with-identity ident
+      (let [repo (git/load-repo (System/getProperty "user.dir"))
+            pull-result (git/git-pull repo {:ff-mode :ff :rebase-mode :none :strategy :ours})]
+        (when (.isSuccessful pull-result)
+          (swap! ztx assoc :zd/repo repo))))))
 
 (defn dir-load
   "read docs from filesystem and load into memory"

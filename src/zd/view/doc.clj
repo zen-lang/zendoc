@@ -91,7 +91,8 @@
   [:div {:class (c :border [:my 1] [:mr 2] :inline-flex :items-center :rounded :shadow-sm)}
    [:div {:class (c :inline-block [:px 2] [:bg :gray-100] [:py 0.5] :text-sm [:text :gray-700]
                     :border-r
-                    {:font-weight "400"  :border-radius "4px 0 0  4px"})}
+                    {:font-weight "400"  :border-radius "4px 0 0  4px"
+                     :opacity "0.6"})}
     key]
    [:div {:class (c [:px 1] [:py 0.5] :inline-block :text-sm)}
     (render-edn ztx ctx data)]])
@@ -202,9 +203,7 @@
    (when-let [errors (seq (:zd/errors doc))]
      (errors-view ztx errors))
    (->> (:zd/infered doc)
-        (map (fn [x]
-               [:div {:class (c {:opacity "0.7"})}
-                (badge ztx ctx x (get doc x))])))
+        (map (fn [x] (badge ztx ctx x (get doc x)))))
    (->> (:zd/view doc)
         (map (fn [[k annotations]]
                (methods/renderkey ztx ctx {:doc doc
