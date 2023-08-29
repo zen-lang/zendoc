@@ -185,8 +185,8 @@
   [ztx config {ev-name :ev :as ev} & opts]
   (println (assoc ev ::ts (str (java.util.Date.)))))
 
-(defn start [& [dir]]
-  (let [ztx (zen/new-context {:zd/dir dir})]
+(defn start [& [dir gitsync]]
+  (let [ztx (zen/new-context {:zd/dir dir :zd/gitsync gitsync})]
     (zen/read-ns ztx 'zd)
     (zen/start-system ztx 'zd/system)
     ztx))

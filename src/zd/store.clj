@@ -475,7 +475,7 @@
                   :zd/all-errors true})))
 
 (defn load-repo [ztx]
-  (when (:gitsync @ztx)
+  (when (:zd/gitsync @ztx)
     (git/with-identity ident
       (let [repo (git/load-repo (System/getProperty "user.dir"))
             pull-result (git/git-pull repo {:ff-mode :ff :rebase-mode :none :strategy :ours})]

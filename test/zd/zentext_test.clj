@@ -1,6 +1,7 @@
 (ns zd.zentext-test
   (:require
    ;; [zd.api]
+   [zd.view.zentext]
    [zd.zentext :as zentext]
    [zen.core :as zen]
    [matcho.core :as matcho]
