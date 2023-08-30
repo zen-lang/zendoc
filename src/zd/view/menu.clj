@@ -26,9 +26,14 @@
      [:div "Search"]]
 
     (let [cnt (count (or (store/errors ztx) []))]
-      (when (> cnt 0)
+      (if (> cnt 0)
         [:div#errors-link {:class (c :flex [:py 1.5] [:space-x 2] :items-center [:text :red-500])}
-         [:div {:class (c :flex-1)} (utils/menu-link ztx 'errors)] [:b#errors-count {:class (c :text-sm)} cnt]]))
+         [:div {:class (c :flex-1)} (utils/menu-link ztx 'errors)] [:b#errors-count {:class (c :text-sm)} cnt]]
+        [:form {:method "POST"
+                :class (c [:py 0] :flex :items-center [:space-x 2] {:margin-block-end 0 :font-size "inherited"})
+                :action "/_revalidate"}
+         [:div {:class utils/menu-icon-c} [:i.fa-solid.fa-check]]
+         [:button {:class (c [:py 1] :text-base)} "Validate"]]))
 
     [:a {:class utils/menu-link-c :href "/git"}
      [:div {:class utils/menu-icon-c} [:i.fa-solid.fa-timeline]]

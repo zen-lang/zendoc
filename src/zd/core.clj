@@ -169,6 +169,13 @@
     {:status 200
      :body (str (store/parent-name docname))}))
 
+(defmethod zen/op 'zd/re-validate
+  [ztx _cfg _req & opts]
+  (store/re-validate ztx)
+  {:status 301
+   :headers {"Location" "/errors"
+             "Cache-Control" "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"}})
+
 
 (defmethod zen/start 'zd/zendoc
   [ztx config & opts]
@@ -199,6 +206,7 @@
   (def ztx (start nil true))
 
   (def ztx (start))
+
 
   (stop ztx)
 

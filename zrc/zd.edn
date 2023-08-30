@@ -101,6 +101,9 @@
  search-page
  {:zen/tags #{zen-web/op zen/op}}
 
+ re-validate
+ {:zen/tags #{zen-web/op zen/op}}
+
  api
  {:zen/tags #{zen-web/api}
   :engine zen-web/routemap
@@ -108,6 +111,7 @@
   ;; :mw [zen-web/defaults]
   "_errors" {:GET check-errors}
   "_search" {:GET search-page}
+  "_revalidate" {:POST re-validate}
   "git" {:GET  git-changes
          :POST git-commit}
   "new" {:GET new-doc
