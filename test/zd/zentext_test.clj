@@ -153,7 +153,9 @@ select 1
     [:div
      [:div.code-block
       [:pre {}
-       [:code {} "select 1"]]]])
+       [:i.fa-solid.fa-copy.copy-button {}]
+       [:code {} "select 1"]
+       [:script string?]]]])
 
   (match "
 * list 1
@@ -257,7 +259,7 @@ select 1
                 [[:a {:href "/people.niquola"} 'people.niquola]])
 
   (match-inline "Here is inline code `funciton()`"
-                [string? [:code {:class :c-1320827498} "funciton()"]])
+                [string? [:code {} "funciton()"]])
 
   (match-inline "Here is **bold**"
                 [string? [:b "bold"]])

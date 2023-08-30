@@ -9,7 +9,8 @@
    [clojure.walk]
    [ring.util.codec]
    [zd.view.core :as view])
-  (:import [org.httpkit BytesInputStream]))
+  (:import [org.httpkit BytesInputStream]
+           [java.io ByteArrayOutputStream]))
 
 
 (defn form-decode [s]
@@ -195,15 +196,22 @@
   (zen/stop-system ztx))
 
 (comment
+  (def ztx (start nil true))
+
   (def ztx (start))
 
   (stop ztx)
 
   (:zd/backlinks @ztx)
 
+  (def out (ByteArrayOutputStream.))
+
+  (-> (.diff (:zd/repo @ztx))
+      (.setShowNameAndStatusOnly true)
+      (.setOutputStream out)
+      (.call))
+
   (config ztx)
   (store/re-validate ztx)
 
-  (edamame.core/parse-string "{%name name %type fhir/Patient}")
-
- )
+  (edamame.core/parse-string "{%name name %type fhir/Patient}"))
