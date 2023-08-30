@@ -1,6 +1,58 @@
-:menu-order 3
-:title "zentext"
+:zd/menu-order 2
+:title "Zentext"
+:desc /
 
-:summary md/
+Zentext syntax is markdown-like syntax
 
-zentext format
+:links /
+
+Link to existing document can be done as `#doc.name`
+Link to external pages `[link](title)` or `[[a link title]]`
+Link to person - `@person.name` 
+
+:lists /
+
+:images /
+
+
+:code /
+Examples of code hieghtlight:
+
+
+```code js
+var x = 1;
+function(x) {
+  return x + x;
+}
+
+````
+
+```code clj
+(def a 1)
+```
+
+```code edn
+{:a 1}
+```
+
+```zd
+:key value
+:anothor-key 100
+:desc /
+ Here is a text
+ Multiline #some
+```
+
+```http
+GET /Patient?param
+@header: header
+---
+@response-header: ....
+resourceType: Patient
+gender: male
+```
+
+```sql
+SELECT * FROM patient
+LIMIT 10
+```

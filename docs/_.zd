@@ -1,0 +1,5 @@
+:title "Global Schema"
+
+
+&date zd.prop
+:zd/data-type zd.date

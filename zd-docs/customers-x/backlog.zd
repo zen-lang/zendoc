@@ -1,0 +1,14 @@
+:menu-order 1
+:icon [:fa-solid :fa-rectangle-list]
+
+^link-badge
+:repo "https://github.com/zen-lang/zendoc"
+
+^badge
+:section "first"
+
+
+:title "Zendoc backlog"
+:desc /
+
+features and issues

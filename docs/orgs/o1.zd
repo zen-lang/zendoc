@@ -1,0 +1,36 @@
+:zd/type prod.org
+
+:prod.org/site "?"
+:prod.org/location country.US
+:prod.org/linkedin "todo"
+:prod.org/kind prod.org.vendor
+
+:title "Acme"
+:desc /
+
+&contract contract
+:contract/start #inst"2023-07"
+:contract/organization .
+:desc /
+Contract
+
+
+&partner prod.org.partner
+:organizations #{orgs.health-samurai .}
+:partner-since #inst"2011"
+
+:desc /
+We partnered with Acme
+
+
+&case-big-data prod.Case
+:need needs.big-data
+:title "Big Data Case"
+:desc /
+Here is desc
+
+&case-hl7  prod.Case
+:need needs.hl7
+:title "HL7 Case"
+:desc /
+Here is desc

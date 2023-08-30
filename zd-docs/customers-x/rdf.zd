@@ -1,0 +1,9 @@
+:title "rdf"
+:desc /
+RDF schema
+
+&Property
+:rdf.type rdf.Property
+
+&type
+:rdf.type rdf.Property

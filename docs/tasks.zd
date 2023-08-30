@@ -1,0 +1,25 @@
+:zd/menu-order 100
+:zd/icon [:fa-regular :fa-clipboard-check]
+:zd/summary [:desc]
+:zd/type zd.class
+:title "Tasks"
+:desc /
+
+
+:table ?/
+
+e :zd/type #tasks
+
+> e
+> e:tasks/assignee
+> e:tasks/severity
+
+&severity zd.prop
+
+&assignee  zd.prop
+
+&severity zd.class
+
+&critical tasks.severity
+:title "Critical"
+:zd/icon [:fa-regular :fa-engine-warning]

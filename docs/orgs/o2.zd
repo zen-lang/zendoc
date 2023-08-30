@@ -1,0 +1,32 @@
+:zd/type prod.org
+:prod.org/site "site"
+:prod.org/location city.Lisboa
+:prod.org/linkedin "?"
+:prod.org/kind prod.org.ehr-vendor
+
+:title "O2"
+:desc /
+
+
+& prod.Case
+:need needs.big-data
+:prod.Case/date #inst"2023-06-07"
+:prod.Case/severity prod.Case.critical
+:desc /
+We have 30M of patients
+
+& prod.Case
+:need needs.hl7
+:case /
+Here is desc
+
+& prod.Case
+:need needs.sql-on-fhir
+:case /
+Here is desc
+
+&todo tasks
+:tasks/assignee person.niquola
+:tasks/severity tasks.critical
+:desc /
+update profile

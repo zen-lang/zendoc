@@ -1,178 +1,203 @@
 (ns zd.datalog
-  (:require [zen.core :as zen]
+  (:require [xtdb.api :as xt]
             [clojure.walk]
             [clojure.string :as str]
-            [edamame.core]
-            [xtdb.api :as xt]))
-
-(defn get-state [ztx]
-  (get-in @ztx [:zen/state :datalog :state]))
-
-(defn submit [ztx data]
-  (if-let [{n :node} (get-state ztx)]
-    (xt/submit-tx n [[::xt/put data]])
-    :no/xtdb))
-
-(defn evict [ztx data]
-  (if-let [{n :node} (get-state ztx)]
-    (xt/submit-tx n [[::xt/evict data]])
-    :no/xtdb))
+            [edamame.core]))
 
 
-(defn query [ztx query & params]
-  (if-let [{n :node} (get-state ztx)]
-    (clojure.walk/postwalk
-     (fn [x] (if (and (string? x) (str/starts-with? x "'"))
-              (symbol (subs x 1))
-              x))
-     (apply xt/q (xt/db n) query params))
-    :no/xtdb))
+(defmulti add-instruction (fn [acc k v] k))
 
-(defn evict-by-query [ztx q]
-  (doseq [res (query ztx q)]
-    (evict ztx (str "'" (first res))))
-  (xt/sync (:node (get-state ztx))))
+(defmethod add-instruction :limit
+  [acc k v]
+  (if (int? v)
+    (assoc acc :limit v)
+    acc))
 
+(defmethod add-instruction :desc
+  [acc k v]
+  (-> acc
+      (update :order-by (fn [x] (conj (or x []) [v :desc])))
+      (update :columns (fn [x]  (conj (or x []) {:name v :hidden true})))))
 
-(defn flatten-doc [ztx {{dn :docname :as m} :zd/meta :as doc}]
-  (let [meta (->> m
-                  (map (fn [[k v]] [(keyword "meta" (name k)) v]))
-                  (into {}))
-        doc (-> (dissoc doc :zd/backlinks :zd/subdocs :zd/meta)
-            (merge meta)
-            (assoc :xt/id (str "'" (:docname m))))]
-    (clojure.walk/postwalk (fn [x] (if (symbol? x) (str "'" x) x)) doc)))
+(defmethod add-instruction :asc
+  [acc k v]
+  (-> acc
+      (update :order-by (fn [x] (conj (or x []) [v :asc])))
+      (update :columns (fn [x]  (conj (or x []) {:name v :hidden true})))))
 
-;; TODO rename to zd.datalog
-(defmethod zen/op 'zd/query
-  [ztx config params & [session]]
-  (query ztx params))
+(defmethod add-instruction :default
+  [acc k v]
+  (println :unknown/instruction k v)
+  acc)
 
-(defmethod zen/op 'zd/submit
-  [ztx _config params & [_session]]
-  (submit ztx params))
+(defn parse-instruction [acc l]
+  (let [[k v] (str/split (str/trim (subs l 1)) #"\s+" 2)
+        k (str/trim k)
+        v (try (edamame.core/parse-string v) (catch Exception _e (println :datalog.edn/error v) v))]
+    (if k
+      (add-instruction acc (keyword k) v)
+      acc)))
 
-(defmethod zen/op 'zd.events/datalog-sync
-  [ztx _config {_ev :ev doc :params} & [_session]]
-  (let [xtdb-doc (flatten-doc ztx doc)
-        result (submit ztx xtdb-doc)]
-    ;; TODO und where does result go in pub/sub
-    (doseq [[k sd] (:zd/subdocs doc)]
-      (let [pid (get-in doc [:zd/meta :docname])
-            id (str "'" pid  "." (name k))]
-        (submit ztx (assoc (flatten-doc ztx sd) :xt/id id :parent (str "'" pid) :zd/subdoc true))))
-    result))
+(defn symbolize [x]
+  (clojure.walk/postwalk
+   (fn [y]
+     (if (and (keyword? y) (= "symbol" (namespace y)))
+       (str "'" (name y))
+       y)) x))
 
-(defmethod zen/op 'zd.events/datalog-delete
-  [ztx _config {{dn :docname} :params} & [_session]]
-  (cond
-    (or (string? dn) (symbol? dn)) (evict ztx (str dn))))
+(defn parse-condition [acc x]
+  (let [res (edamame.core/parse-string (str/replace (str "[" x "]") #"#"  ":symbol/") {:regex true})]
+    (update acc :where conj (symbolize res))))
 
-(defmethod zen/start 'zd.engines/datalog
-  [ztx {zd-config :zendoc :as config} & opts]
-  (let [{r :root} (zen/get-symbol ztx zd-config)]
-    {:config config
-     :root r
-     :node (xt/start-node {:xtdb.lucene/lucene-store {}})}))
+(defn parse-select [acc x]
+  (let [x (str/trim (subs x 1))
+        [x lbl] (mapv str/trim (str/split x #"\|" 2))]
+    (if (str/starts-with? x "(")
+      (update acc :columns conj {:name 'expr
+                                 :expr (edamame.core/parse-string x {:regex true})
+                                 :label (or lbl x)})
+      (let [[e k] (str/split x #":" 2)
+            k  (cond (= k "*") (symbol k) :else (keyword k))]
+        (update acc :columns conj {:name (symbol e)
+                                   :prop k
+                                   :label (or lbl e)})))))
 
-(defmethod zen/stop 'zd.engines/datalog
-  [ztx config {n :node}]
-  (.close n))
+(defn auto-columns [query]
+  (if (and (seq (:where query)) (empty? (:columns query)))
+    (assoc query :columns
+           (->> (:where query)
+                (reduce (fn [fnd expr]
+                          (->> expr
+                               (reduce (fn [fnd s] (if (symbol? s)
+                                                    (conj fnd {:name s :label (str s)})
+                                                    fnd))
+                                       fnd)))
+                        [])))
+    query))
 
+#_(->> (group-by :name (:columns query))
+     (reduce (fn [acc [k xs]]
+               (if (= 'expr k)
+                 (->> (mapv :expr xs)
+                      (reduce (fn [acc e]
+                                (swap! index assoc e (count acc))
+                                (conj acc e))
+                              acc))
+                 (let [cs (->> (mapv :prop xs) (dedupe) (into []))]
+                   (swap! index assoc k (count acc))
+                   (if (seq (filter (fn [x] (contains? #{'* :?} x)) cs))
+                     (conj acc (list 'pull k ['*]))
+                     (if (= cs [nil])
+                       (conj acc k)
+                       (conj acc (list 'pull k (mapv (fn [x] (if (nil? x) :xt/id x))cs))))))))
+             []))
+
+(defn make-find [query]
+  (let [index (atom {})
+        fnd   (->> (:columns query)
+                   (mapv (fn [{nm :name prop :prop expr :expr}]
+                           (cond
+                             (contains? #{'* :?} prop) (list 'pull nm ['*])
+                             prop (list 'pull nm [prop])
+                             expr expr
+                             :else nm))))]
+    (assoc query :find fnd :index @index)))
 
 (defn parse-query [q]
-  (let [xs (->> (str/split q #"\n")
-                (mapv str/trim)
-                (remove (fn [s] (or (str/blank? s) (str/starts-with? s "\\")))))
-        columns   (->> xs
-                       (filterv #(re-matches #"^\s?>.*" %))
-                       (mapv #(subs % 1))
-                       (mapv str/trim)
-                       (filterv #(not (str/blank? %)))
-                       (mapv (fn [x]
-                               (if (str/starts-with? x "(")
-                                 ['expr (edamame.core/parse-string x {:regex true})]
-                                 (let [[e k] (str/split x #":" 2)]
-                                   [(symbol e) (cond
-                                                 (= k "*") (symbol k)
-                                                 :else (keyword k))])))))
-        index (atom {})
-        find-items (->> (group-by first columns)
-                        (reduce (fn [acc [k xs]]
-                                  (if (= 'expr k)
-                                    (->> (mapv second xs)
-                                         (reduce (fn [acc e]
-                                                   (swap! index assoc e (count acc))
-                                                   (conj acc e))
-                                                 acc))
-                                    (let [cs (->> (mapv second xs) (dedupe) (into []))]
-                                      (swap! index assoc k (count acc))
-                                      (if (seq (filter (fn [x] (contains? #{'* :?} x)) cs))
-                                        (conj acc (list 'pull k ['*]))
-                                        (if (= cs [nil])
-                                          (conj acc k)
-                                          (conj acc (list 'pull k (mapv (fn [x] (if (nil? x) :xt/id x))cs))))))))
-                                []))
-        where-items
-        (->> xs
-             (filterv (every-pred #(not (str/ends-with? % " :asc"))
-                                  #(not (str/ends-with? % " :desc"))
-                                  #(not (re-matches #"^\s?>.*" %))))
-             (mapv (fn [x] (let [res (edamame.core/parse-string (str/replace (str "[" x "]") #"#"  ":symbol/")
-                                                                {:regex true})]
-                             (cond
-                               (list? (get res 1))
-                               (vector res)
+  (let [query (loop [[l & ls] (str/split q #"\n")
+                     acc {:where [] :columns []}]
+                (if (and (nil? l) (empty? ls))
+                  acc
+                  (let [l (str/trim l)]
+                    (cond
+                      (str/blank? l) (recur ls acc)
+                      (str/starts-with? l "//") (recur ls acc)
+                      (str/starts-with? l ">") (recur ls (parse-select acc l))
+                      (str/starts-with? l "<") (recur ls (parse-instruction acc l))
+                      :else (recur ls (parse-condition acc l))))))]
+    (-> query
+        (auto-columns)
+        (make-find))))
 
-                               :else
-                               res)
-                             ))))
-        where (->> where-items
+;; dir - one
+;; index.zd - fixed entry point
+;; everything is sync
+
+(defn get-db [ztx]
+  (if-let [db (:db @ztx)]
+    db
+    (let [db (xt/start-node {})]
+      (swap! ztx assoc :db db)
+      db)))
+
+(defn encode-query [q]
+  (clojure.walk/postwalk (fn [x] (if (and (list? x) (= 'quote (first x)))
+                                  (str "'" (second x))
+                                  x)) q))
+
+(defn encode-data [q]
+  (clojure.walk/postwalk (fn [x] (if (symbol? x) (str "'" x) x)) q))
+
+(defn decode-data [res]
+  (clojure.walk/postwalk
+   (fn [x] (if (and (string? x) (str/starts-with? x "'")) (symbol (subs x 1)) x))
+   res))
+
+(defn datalog-put [ztx data]
+  (assert (:zd/docname data) (pr-str data))
+  (let [db (get-db ztx)
+        data (if (:xt/id data) data (assoc data :xt/id (:zd/docname data)))
+        res (xt/submit-tx db [[::xt/put (encode-data (dissoc data :zd/docname :zd/view))]])]
+    (xt/sync db)
+    res))
+
+(defn datalog-delete [ztx docname]
+  (let [db (get-db ztx)
+        res (xt/submit-tx db [[::xt/evict (str "'" docname)]])]
+    (xt/sync db)
+    res))
+
+(defn datalog-get [ztx id]
+  (let [db (get-db ztx)]
+    (decode-data (xt/entity (xt/db db) (str "'" id)))))
+
+;; cache based on database status
+(defn datalog-query
+  "run datalog query"
+  [ztx query & params]
+  (let [db (get-db ztx)]
+    (-> (apply xt/q (xt/db db) (encode-query query) params)
+        (decode-data))))
+
+;; (cond
+;;   (nil? c)  (or (get-in x [(get idx e) :xt/id]) (get-in x [(get idx e)]))
+;;   (list? c) (get-in x [(get idx c)])
+;;   (= c '*)  (get-in x [(get idx e)])
+;;   (= c :?)  (keys (get-in x [(get idx e)]))
+;;   :else     (get-in x [(get idx e) c]))
+
+(defn datalog-sugar-query [ztx q]
+  (try
+    (let [q   (parse-query q)
+          res (->> (datalog-query ztx (dissoc q :columns :index))
                    (mapv (fn [x]
-                           (clojure.walk/postwalk
-                            (fn [y]
-                              (if (and (keyword? y) (= "symbol" (namespace y)))
-                                (str "'" (name y))
-                                y)) x))))
-
-        order-items
-        (->> xs
-             (filterv (every-pred #(or (str/ends-with? % " :asc")
-                                       (str/ends-with? % " :desc"))
-                                  #(not (re-matches #"^\s?>.*" %))))
-             (mapv (fn [x] (edamame.core/parse-string (str/replace (str "[" x "]") #"#"  ":symbol/") {:regex true}))))
-
-        order
-        (->> order-items
-             (mapv (fn [x]
-                     (clojure.walk/postwalk
-                       (fn [y]
-                         (if (and (keyword? y) (= "symbol" (namespace y)))
-                           (str "'" (name y))
-                           y)) x))))]
-    (into {:where where
-           :order order
-           :find find-items
-           :columns columns
-           :index @index} )))
-
-
-(defn sugar-query [ztx q]
-  (let [q (parse-query q)
-        _ (def q q)
-        idx (:index q)
-        res (->>
-             (query ztx (dissoc q :columns :index))
-             (mapv (fn [x]
-                     (->> (:columns q)
-                          (mapv (fn [[e c]]
-                                  (cond
-                                    (nil? c)  (or (get-in x [(get idx e) :xt/id]) (get-in x [(get idx e)]))
-                                    (list? c) (get-in x [(get idx c)])
-                                    (= c '*)  (get-in x [(get idx e)])
-                                    (= c :?)  (keys (get-in x [(get idx e)]))
-                                    :else     (get-in x [(get idx e) c]))))))))
-        cols (->> (:columns q) (mapv second))]
-    {:result res
-     :query (dissoc q :columns :index)
-     :columns cols}))
+                           (loop [[{prop :prop :as c} & cs] (:columns q)
+                                  i 0
+                                  acc []]
+                             (if (and (nil? c) (empty? cs))
+                               acc
+                               (cond (:hidden c)
+                                     (recur cs (inc i) acc)
+                                     (= :* prop)
+                                     (recur cs (inc i) (conj acc (get x i)))
+                                     (= :? prop)
+                                     (recur cs (inc i) (conj acc (keys (get x i))))
+                                     prop
+                                     (recur cs (inc i) (conj acc (get-in x [i prop])))
+                                     :else
+                                     (recur cs (inc i) (conj acc (get x i)))))))))]
+      {:result  res
+       :query   (dissoc q :columns :index)
+       :columns (->> (:columns q) (remove :hidden) (mapv :label))})
+    (catch Exception e
+      {:error (.getMessage e)})))

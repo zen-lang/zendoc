@@ -1,0 +1,25 @@
+* [x] subdocs render
+* [x] save
+* [x] symbols autocomplete
+* [x] default block type (badge, attribute, block)
+* [x] delete
+* [x] symbols autocomplete in subdoc name
+* [x] rename
+* [x] fix validation
+* [x] global errors page
+* [x] load zd schema
+* [x] index
+* [ ] group backlinks by type [. <- attr [type]]
+* [ ] fix errors on parents during initial load
+* [ ] remove backlinks for :zd/subdocs
+* [ ] do not collect links from subs to parent
+* [ ] new item
+* [ ] content navigation
+* [ ] subdoc page
+* [ ] nested menu
+* [ ] search (name, title, desc)
+* [ ] timeline
+* [ ] parents puzzle
+* [ ] invisible ancor for subdocs
+* [ ] link preview load with ancor
+* [ ] style doc preview

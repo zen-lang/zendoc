@@ -1,0 +1,22 @@
+:title "Music Schema"
+:zd/type zd.class
+:zd/menu-order 200
+
+&song zd.class
+:zd/require #{:music/song-name :title :music/written-by :date}
+:zd/summary [:music/written-by :date]
+:title "Song"
+
+&artist zd.class
+:zd/require #{:music/artist-name}
+:title "Artist"
+
+&song-name zd.prop
+:zd/data-type zd.string
+
+&artist-name zd.prop
+:zd/data-type zd.string
+
+&written-by zd.prop
+:zd/data-type zd.symbol
+:zd/link-class music.artist

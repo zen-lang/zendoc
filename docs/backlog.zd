@@ -1,0 +1,52 @@
+:menu-order 20
+:icon [:fa-solid :fa-rectangle-list]
+
+^link-badge
+:repo "https://github.com/zen-lang/zendoc"
+:section "first"
+
+:title "Backlog"
+:desc /
+
+features and issues
+
+:backlog /
+
+* [x] rename parent should rename directory and all children
+* [x] delete parent should delete directory of children
+* [x] implement zd.summary on backlinks
+* [x] unnamespaced keys as _.keyname
+* [x] zd.props for autocomplete
+* [ ] refactor errors to separate page (not doc)
+* [x] validation of optional set/array
+* [ ] do not allow to override existing doc with new document
+* [ ] implement git pull (automatic) and push
+* [ ] work on documentation
+* [ ] zd.annotations 
+* [ ] do not suggest + if exact symbol exists
+* [ ] fix ctrl-l conflict with browser for autocomplete
+* [ ] create an example sematic knowledge base - about semantic technologies
+* [ ] build jar
+* [ ] code highlight for zd/, end and code
+* [ ] paging/search on backlinks
+* [ ] track local changes untill commit
+* [ ] structured write api
+* [ ] fix macros
+* [ ] nested navigation
+* [ ] menu subsections
+* [ ] validate subdocs while edit
+* [ ] :zd/type inference with :zd/child-type and :zd/subclass
+* [ ] implement file upload
+* [ ] subdoc in-the-middle of doc (close with? &&?)
+
+
+```zd
+ :title "Bla bla"
+
+ &subdoc Class
+ :title "Subdoc"
+ &
+
+ :another attribute
+
+```

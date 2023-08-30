@@ -1,0 +1,3 @@
+:zd/type person
+:person/email "ivan@hs.io"
+:title "Ivan"

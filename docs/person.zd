@@ -1,0 +1,27 @@
+
+:zd/type zd.class
+:zd/require #{ :person/email }
+:zd/summary [:person/email :person/telegram ]
+:title "Person"
+:icon [:fa-duotone :fa-person]
+:desc /
+
+:menu-order 102
+
+:persons ?/
+
+e :zd/type #person
+m :org/organization o
+m :org/person e
+m :zd/type #org.Member
+
+> m:org/organization
+> e
+> m:org/role
+> m:org/memberSince
+
+
+&email zd.prop
+:zd/data-type zd.string
+:desc /
+Email of person

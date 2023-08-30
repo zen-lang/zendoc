@@ -1,0 +1,20 @@
+:title "Getting Started"
+:section "first"
+:icon [:fa-brands :fa-dochub]
+:menu-order 1
+
+:desc /
+
+In this tutorial we will create a simple knowlege base for music
+
+:Install /
+
+:Create /
+
+:Edit /
+
+:Delete /
+
+:Vaidate /
+
+:Query /

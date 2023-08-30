@@ -1,0 +1,24 @@
+
+:zd/type person
+:foaf.based_near #{ country.Portugal city.Lisboa city.Estoril}
+:person/email "niquola@gmail.com"
+:person/telegram "niquola"
+:person/organization orgs.health-samurai
+:title "Nikolai Ryzhikov"
+
+
+:desc /
+
+&hs-emp prod.org.employee
+:emp/since #inst"2001"
+:emp/organization orgs.health-samurai
+:emp/role prod.org.CTO
+:emp/person .
+
+& tasks
+:tasks/assignee person.tim
+:tasks/severity tasks.critical
+:title "Finish Profile"
+:desc /
+
+Complete Profile for Nikolai

@@ -19,6 +19,18 @@ var auto_close = (key, textarea) => {
     }
 }
 
+var zdhl= (elid)=> {
+    let el = document.getElementById(elid);
+    let code = el.parentElement;
+    let v = el.innerText;
+    code.innerHTML = v
+        .replace(/:[a-zA-Z0-9][-.:\/_a-zA-Z0-9]+/gi, (x)=> {return `<b style='color:green'>${x}</b>`;})
+        .replace(/#[-.:_a-zA-Z0-9]+/gi, (x)=> {return `<b style='color:blue'>${x}</b>`;})
+        .replace(/\^[-_a-zA-Z0-9]+/gi,  (x)=> {return `<b style='color:orange'>${x}</b>`;})
+        .replace(/(\(\([^\)]+\)\))/gi,  (x)=> { return `<b style='color:purple'>${x}</b>`; })
+        .replace(/(\[\[[^\]]+\]\])/gi,  (x)=> { return `<b style='color:purple'>${x}</b>`; });
+};
+
 var hl = (ctx, v)=>{
     var t = ctx.editor.els.textarea;
     var h = ctx.editor.els.hl;
@@ -55,7 +67,14 @@ var options = {
         }
     },
     symbol: (ctx, token)=>{
-        return ctx.symbols.search(token).map((x)=> { return x.item; });
+        console.log('token',token);
+        let res = ctx.symbols.search(token).map((x)=> { console.log(x.item); return x.item; });
+        if(token == '/'){
+            res.unshift({title: '<entr>', name: "/\n"});
+        } else {
+            res.unshift({name: token, icon: ["fa-solid", "fa-plus"]});
+        }
+        return  res;
     },
     annotation: (ctx, token)=>{
         return ctx.annotations.search(token).map((x)=> { return x.item; });
@@ -125,7 +144,8 @@ var autocompl = (ctx, v)=> {
             pos_type='annotation';
             token_start = i;
             break;
-        } else if(c == ':' && (p_aln || j == 1) && is_in_key(btxt)) {
+        } else if(c == ':' ) {
+            console.log('here');
             pos_type = 'key';
             token_start = i;
             break;
@@ -170,7 +190,7 @@ var autocompl = (ctx, v)=> {
                             class: ['menu-item'],
                             on:  {click: (ev)=> { ctx.selection = i; insert_selection(ctx); } },
                             els: {icon:  icon,
-                                  name:  {tag: 'b', style: {'padding-right': 5}, text: item.name},
+                                  name:  {tag: 'b', style: {'padding-right': 5}, text: (item.name || '').trim()},
                                   title: {tag: 'span', text: item.title}},
                             style: {padding: 5, 'font-size': 12, cursor: 'point'}};
                 if(i == 0) { opts.style = merge(opts.style, selection_style); }
@@ -268,8 +288,7 @@ var sanitize = (s) => {
     return s.replace(/[\u0020\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]/g, " ");
 };
 
-var _render = (ev)=>  {
-    var content = sanitize(ev.target.value);
+var _render = (content)=>  {
     fetch(`/${ctx.doc}/preview`, {method: 'POST', body: content}).then((resp)=> {
         resp.text().then((txt)=> {
             ctx.preview.innerHTML = txt;
@@ -287,7 +306,7 @@ var render = debounce(_render, 300);
 var on_editor_keyup = (ctx, ev) => {
 
     if (!ctx.in_chrome){
-        render(ev);
+        render(sanitize(ev.target.value));
     }
 
     if(ctx.skip_up) {
@@ -332,13 +351,13 @@ var caret_style  = merge(poss, {color: transparent,
 var textarea_style = merge(poss, {overflow: 'hidden', position: absolute, margin: 0, top: 0, left: 0});
 
 var editor = (zendoc) => {
-    var symIdx = new quickScore.QuickScore(zendoc.symbols, ["name", "title"]);
+    var symIdx = new quickScore.QuickScore(zendoc.symbols || [], ["name", "title"]);
     symIdx.config.maxIterations = 1000;
-    var keysIdx = new quickScore.QuickScore(zendoc.keys, ["name"]);
+    var keysIdx = new quickScore.QuickScore(zendoc.keys || [], ["name"]);
     keysIdx.config.maxIterations = 1000;
-    var iconsIdx = new quickScore.QuickScore(zendoc.icons, ["name", "title"]);
+    var iconsIdx = new quickScore.QuickScore(zendoc.icons || [], ["name", "title"]);
     iconsIdx.config.maxIterations = 1000;
-    var annotationsIdx = new quickScore.QuickScore(zendoc.annotations, ["name"]);
+    var annotationsIdx = new quickScore.QuickScore(zendoc.annotations || [], ["name"]);
     annotationsIdx.config.maxIterations = 1000;
 
     var ctx = {symbols: symIdx, keys: keysIdx, icons: iconsIdx, annotations: annotationsIdx, doc: zendoc.doc};
@@ -411,11 +430,11 @@ var editor = (zendoc) => {
                            pop: {tag: 'div', style: popup_style }}});
     hl(ctx, zendoc.text);
 
-    var preview = new DOMParser().parseFromString(zendoc.preview, "text/html");
+    // var preview = new DOMParser().parseFromString(zendoc.preview, "text/html");
 
     // TODO think if in_chrome is still needed
     if(! in_chrome) {
-        ctx.preview = el({tag: 'div', html: preview.documentElement.textContent,
+        ctx.preview = el({tag: 'div', html: 'loading...', // preview.documentElement.textContent,
                           style: {height: 'calc(100vh - 20px)',
                                   padding: 20,
                                   width: '60vw',
@@ -428,6 +447,7 @@ var editor = (zendoc) => {
     }
     window.ctx = ctx;
 
+    render(zendoc.text);
     update_widgets();
     return ctx;
 };

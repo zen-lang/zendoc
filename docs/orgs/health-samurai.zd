@@ -1,0 +1,42 @@
+:title "Health Samurai"
+
+^badge
+:zd/type prod.org
+:prod.org/site "https://health-samurai.io"
+:prod.org/location #{ country.US }
+:prod.org/linkedin "https://www.linkedin.com/company/6653460/admin/feed/posts/"
+:prod.org/kind prod.org.vendor
+
+:desc /
+
+:employees ?/
+
+emp :emp/organization #orgs.health-samurai
+emp :emp/person p
+> p 
+> emp:emp/role
+> emp:emp/since
+> emp:emp/untill
+
+:partners ?/
+
+e :prod/partner-of #orgs.health-samurai
+> e:prod/partner-org
+> e:desc
+> e:prod/champion
+
+:members ?/
+
+e :zd/type #org.Member
+e :org/organization #orgs.health-samurai
+e :org/person p
+
+> p
+> e:org/role
+
+&partner prod.org.partner
+:partner-since "2019"
+:organizations #{ orgs.google .}
+:desc /
+
+We tried few times to partner with Google

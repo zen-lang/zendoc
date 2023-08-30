@@ -1,0 +1,33 @@
+:zd/type orgs
+:orgs/site "site"
+:orgs/location loc.Country
+:orgs/linkedin "?"
+:title "O2"
+:desc /
+
+
+:broken-link link-to-nowhere
+
+&case-big-data
+^badge
+:zd/type prod.Case
+^badge
+:need needs.big-data
+:desc /
+We have 30M of patients
+
+&case-ccd
+^badge
+:zd/type prod.Case
+^badge
+:need needs.hl7
+:case /
+Here is desc
+
+&todo
+:zd/type tasks
+^badge
+:tasks/assignee person.niquola
+^badge
+:tasks/severity tasks.critical
+:title "Update profile"

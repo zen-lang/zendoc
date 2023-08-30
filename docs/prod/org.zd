@@ -1,0 +1,46 @@
+:zd/type zd.class
+:zd/require #{:title :prod.org/kind :prod.org/linkedin }
+:zd/summary [:prod.org/kind :prod.org/number-of-employees]
+:title "Organization"
+:desc /
+Class for organization
+
+
+&site zd.prop
+:zd/annotation zd.link-badge
+
+&location zd.prop
+:zd/annotation zd.badge
+
+&linkedin zd.prop
+:zd/annotation zd.link-badge
+
+&tags zd.prop
+:zd/annotation zd.badge
+:zd/data-type zd.symbol
+
+&number-of-employees zd.prop
+:zd/data-type zd.int
+
+&kind zd.prop
+:title "Type for tags"
+
+&vendor zd.class
+:title "Vendor"
+
+&ehr-vendor zd.class
+:title "EHR Vendor"
+:zd/subclass-of prod.org.vendor
+
+
+&cloud zd.class
+:title "Cloud"
+
+&partner zd.class
+:zd/require #{:organizations :partner-since}
+
+&employee zd.class
+:zd/require #{:emp/organization :emp/person :emp/role}
+
+&CTO zd.class
+:title "CTO"

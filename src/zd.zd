@@ -1,0 +1,73 @@
+:title "Zendoc"
+:desc /
+
+Welcome to zendoc built-in documentation.
+
+
+&class zd.class
+:title "Class"
+:zd/data-type zd.symbol
+:zd/maybe-set? true
+
+&prop zd.class
+:title "Property"
+
+&type zd.prop
+:title ":zd/type"
+:zd/data-type zd.symbol
+:zd/ref-type zd.data-type
+:zd/maybe-set? true
+
+&require zd.prop
+:title ":zd/require"
+:zd/data-type zd.keyword
+:zd/set? true
+
+&summary zd.prop
+:title ":zd/summary"
+:zd/data-type zd.keyword
+:zd/vector? true
+
+
+&data-type zd.prop
+:title ":zd/data-type"
+:zd/data-type zd.symbol
+
+&icon zd.prop
+:title "zd/type"
+:zd/data-type zd.keyword
+:zd/vector? true
+
+&menu-order zd.prop
+:title "zd/type"
+:zd/data-type zd.int
+
+&readonly zd.prop
+:zd/data-type zd.boolean
+
+;; datatypes
+&set zd.class
+&vector zd.class
+&boolean zd.class
+&string zd.class
+&inst zd.class
+&date zd.class
+&number zd.class
+&int zd.class
+&url zd.class
+&symbol zd.class
+&keyword zd.class
+&email zd.class
+
+&annotation zd.prop
+:zd/annotation zd.badge
+
+&annotation-class
+
+&hide zd.annotation-class
+
+&badge zd.annotation-class
+
+&link-badge zd.annotation-class
+
+&attribute zd.annotation-class

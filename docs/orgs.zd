@@ -1,0 +1,24 @@
+:icon [:fa-duotone :fa-building]
+:menu-order 100
+:zd/summary [:orgs/tags ]
+:zd/child-type prod.org
+
+:title "Organizations"
+:desc /
+
+:roadmap ?/
+
+c :zd/type #prod.Case
+c :need n
+
+> n | need
+> (count c) | count
+
+:ctos ?/
+
+e :org/role #org.CTO
+e :org/memberOf o
+e :org/person p
+> p
+> e:org/role
+> o

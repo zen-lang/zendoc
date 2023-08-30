@@ -6,56 +6,45 @@
    [stylo.core :refer [c]]
    [zd.methods :as methods]))
 
+(defmulti annotation (fn [name params] name))
+
+(defmethod annotation :badge [nm params] {:as :badge})
+
+(defmethod annotation :link-badge [nm params] {:as :badge})
+
+(defmethod annotation :hide [nm params] {:as :none})
+
+(defmethod annotation :block [nm params] {:as :block})
+
+(defmethod annotation :attribute [nm params] {:as :attribute})
+
+(defmethod annotation :default [nm params] (assoc {} nm params))
+
+
+(defmulti do-parse (fn [ctx tp s] tp))
+(defmethod do-parse :default [ctx _tp s] (str/trim s))
+
 ;; renders content of a block with :zd/content-type annotation
-(defmulti rendercontent (fn [ztx ctx block]
-                          (get-in block [:ann :zd/content-type])))
+(defmulti rendercontent (fn [ztx ctx block] (or (get-in block [:annotations :type])
+                                               (type (:data block)))))
 
-;; by default just pretty prints the content
 (defmethod rendercontent :default
-  [ztx ctx {:keys [data] :as block}]
-  [:span (with-out-str (pprint/pprint data))])
+  [ztx ctx {data :data annotations :annotations doc :doc :as block}]
+  [:div
+   [:b  (pr-str annotations)]
+   [:span (with-out-str (pprint/pprint data))]])
 
-;; renders key of a document with provided annotation
-;; or by a block name
-(defmulti renderkey (fn [ztx ctx block]
-                      (:key block)))
+(defmulti renderkey (fn [ztx ctx {data :data annotations :annotations doc :doc :as block}] (:key block)))
+
+(defmethod renderkey :icon [& args])
+(defmethod renderkey :zd/icon [& args])
 
 (defn get-anns [block]
   (->> (:ann block)
        (remove (fn [[k _]]
                  (= "zd" (namespace k)))) ))
 
-(defmulti renderann (fn [ztx ctx block]
-                      ;; TODO pub error if more then 1 ann?
-                      (when-let [[block-key _] (first (get-anns block))]
-                        block-key)))
-
-;; by default add a header and renders content of a block
-(defmethod renderkey :default [ztx ctx {kp :key d :data anns :ann :as block}]
-  ;; TODO fix render inline for bb run
-  ;; TODO think if render inline is usable at all
-  (let [render-inline?
-        (and (not (:zd/multiline anns))
-             (= (:zd/content-type anns) :edn)
-             (not (map? d)))
-        basic-style (c [:py 1] [:mb "0.8rem"] :border-b)
-        embedded-style (c :flex :flex-row :items-center)
-        multiline-embedded (c :flex :flex-row :items-baseline [:py 4])
-        cnt (when-not (and (string? d) (str/blank? d))
-              (rendercontent ztx ctx block))]
-    (if (seq (get-anns block))
-      (methods/renderann ztx ctx (assoc block :content cnt))
-      [:div {:class (c [:py 4])}
-       [:div {:class (if (:zd/render-subdoc? anns)
-                       embedded-style
-                       basic-style)}
-        [:span {:class (c :uppercase)} ":"]
-        [:a {:id kp}
-         [:span {:class (c :uppercase {:font-weight "600"})} kp]]]
-       ;; TODO think about rendering flow
-       (try (hiccup/html cnt)
-            (catch Exception e
-              (with-out-str (pprint/pprint cnt))))])))
+(defmulti renderann (fn [ztx ctx block] (get-in block [:annotations :as])))
 
 ;; zentext methods
 (defmulti inline-method   (fn [ztx m arg ctx] (keyword m)))

@@ -1,178 +1,182 @@
 (ns zd.datalog-test
   (:require
-   [zd.test-utils :as tutils]
-   [zen-web.core :as web]
-   [xtdb.api :as xtdb]
-   [zd.api]
    [zd.datalog :as datalog]
    [clojure.test :refer [deftest is testing]]
    [zen.core :as zen]
+   [xtdb.api :as xt]
    [matcho.core :as matcho]))
 
 (def ztx (zen/new-context {}))
 
-(zen/read-ns ztx 'zd)
-(zen/read-ns ztx 'zd.test)
-(zen/start-system ztx 'zd.test/system)
-(xtdb/sync (:node (datalog/get-state ztx)))
+(defmacro match-parse [q pat]
+  `(let [res# (datalog/parse-query ~q)]
+     (matcho/match res# ~pat)
+     res#))
 
-(comment
-  (def ztx (zen/new-context {}))
-  )
+(defmacro match-query [q pat]
+  `(let [res# (datalog/datalog-query ztx  ~q)]
+     (matcho/match res# ~pat)
+     res#))
+
+(defmacro match? [q pat]
+  `(let [res# (datalog/datalog-sugar-query ztx  ~q)]
+     (matcho/match res# ~pat)
+     res#))
+
+(defmacro match-find [cols fnd]
+  `(let [res# (:find (datalog/make-find {:columns ~cols}))]
+     (matcho/match res# ~fnd)
+     res#))
 
 (deftest datalog-engine
 
-  (zen/start-system ztx 'zd.test/system)
-  (xtdb/sync (:node (datalog/get-state ztx)))
+  (match-find  [{:name 'x}] ['x])
+  (match-find  [{:name 'x}] ['x])
+  (match-find '[{:name z, :prop :name, :label "z"}] ['(pull z [:name])])
+  (match-find '[{:name z, :hidden true}] ['z])
 
-  (datalog/query ztx '{:find [?e]
-                       :where [[?e :xt/id ?id]]})
+  (match-parse "z :a 1\nc (count z)\n< desc c" {})
+  (match-parse "z :a 1\n> z:name" {})
 
-  (datalog/query ztx '{:find [?e] :where [[?e :xt/id "'customers"]]})
-
-  (testing "metadata is loaded into xtdb"
-    (matcho/assert
-     #{['customers]}
-     (datalog/query ztx '{:find [?e] :where [[?e :xt/id "'customers"]]})))
-
-  (datalog/query ztx '{:find [e]
-                       :where [[e :parent "'customers"]]})
-
-  (matcho/assert
-   #{'[customers.partners-list] '[customers.flame] '[customers._schema]}
-   (datalog/query ztx '{:find [e]
-                        :where [[e :parent "'customers"]]}))
-
-  (matcho/assert
-   #{[#:xt{:id 'people.john}]}
-   (datalog/query ztx '{:find [(pull e [:xt/id :name])]
-                        :where [[e :role "ceo"]]}))
-
-  )
-
-(deftest xtdb-sync
-
-  (zen/start-system ztx 'zd.test/system)
-
-  (xtdb/sync (:node (datalog/get-state ztx)))
-
-  (datalog/evict-by-query ztx '{:where [[e :xt/id "'people.bob"] ] :find [e]})
-
-  (datalog/query ztx '{:where [[e :xt/id id]] :find [e]})
-
-  (testing "add another person with role = ceo"
-    (matcho/assert
-     #{['people.john]}
-     (datalog/query ztx '{:find [?id]
-                          :where [[?e :role "ceo"] [?e :xt/id ?id]]})
-     )
-
-    (def doc ":zd/docname people.bob\n:title \"Bob Barns\"\n:desc \"bob is the best\"\n:role #{\"ceo\"} ")
-
-    (matcho/assert
-     {:status 200}
-     (web/handle ztx 'zd/api
-                 {:uri "/people._draft/edit"
-                  :request-method :put
-                  :body (tutils/req-body doc)}))
-
-    (is (tutils/read-doc "people/bob.zd"))
-    (xtdb/sync (:node (datalog/get-state ztx)))
-
-    (matcho/assert
-     #{['people.john] ['people.bob]}
-     (datalog/query ztx '{:find [?id]
-                          :where [[?e :role "ceo"] [?e :xt/id ?id]]})))
-
-  (testing "edit bob's role"
-    (def doc ":zd/docname people.bob\n:title \"Bob Barns\"\n:desc \"bob is the best\"\n:role #{\"cpo\"} ")
-
-    (matcho/assert
-     {:status 200}
-     (web/handle ztx 'zd/api
-                 {:uri "/people.bob/edit"
-                  :request-method :put
-                  :body (tutils/req-body doc)}))
-
-    (is (tutils/read-doc "people/bob.zd"))
-    (xtdb/sync (:node (datalog/get-state ztx)))
-
-    (matcho/assert
-     #{['people.john]}
-     (datalog/query ztx '{:find [?id] :where [[?e :role "ceo"] [?e :xt/id ?id]]}))
-
-    (matcho/assert
-     #{['people.bob]}
-     (datalog/query ztx '{:find [?id] :where [[?e :role "cpo"] [?e :xt/id ?id]]})))
-
-  (is (= 200 (:status (web/handle ztx 'zd/api {:uri "/people.bob" :request-method :delete}))))
-
-  (is (nil? (tutils/read-doc "people/bob.zd")))
-
-  ;; (is (empty? (datalog/query ztx '{:find [?id] :where [[?e :role "cpo"] [?e :xt/id ?id]]})))
-
-  )
-
-
-(deftest datalog-sugar
-
-
-  (def q
-    "
-e :parent #organizations
-e :rel #rel.partner
-p :organization e
-p :role #roles.cto
-> d
-> e:xt/id
-> e:rel
-> (count e)
-> (mean e)
-")
-
-  (def q2
-    "
-e :parent #customers
-e :category cat
-(clojure.string/starts-with? cat \"s\")
-e :customer-since since
-e :asc
-
-> e:name
-> (count e)
-"
-    )
-
-  (def q3
-    "
-e :type #customers
-> e
-")
-
-  (datalog/submit ztx {:xt/id "'i1" :type :type})
-  (datalog/submit ztx {:xt/id "'i2" :type :type})
+  (match-parse "x :zd/type c\n>c\n>x \n>(count x) | count" 
+               '{:where [[x :zd/type c]],
+                 :find [c x (count x)],})
 
   (matcho/match
-      (datalog/parse-query q3)
-    '{:where [[e :type "'customers"]],
-      :order []
-      :find [e]})
+      (match-parse "z :a 1\n>z:attr1\n>z:attr2" {})
+    '{:columns [{:name z, :prop :attr1, :label "z"} {:name z, :prop :attr2, :label "z"}]})
 
-  (def q
-    "
-e :title t
-> e
-> t
-> e:title
+  (match-find '[{:name z, :prop :attr1, :label "z"} {:name z, :prop :attr2, :label "z"}]
+              '[(pull z [:attr1]) (pull z [:attr2])])
+
+  (match-parse
+   "x :attr y\n> x"
+   '{:where [[x :attr y]] :find [x]})
+
+  (match-parse
+   "x :attr y\n> x:name"
+   '{:where [[x :attr y]] :find [(pull x [:name])]})
+
+  (match-parse
+   "x :attr y\n> x:*"
+   '{:where [[x :attr y]],
+     :find [(pull x [*])]})
+
+  (match-parse
+   "x :attr y\n> x:?"
+   '{:where [[x :attr y]],
+     :find [(pull x [*])],
+     :index {}})
+
+  (match-parse
+   "
+x :attr y
+y :other z
+> x
+< desc x
+< limit 10
 "
-    )
+   '{:where [[x :attr y] [y :other z]],
+     :order-by [[x :desc]],
+     :limit 10,
+     :find [x x]})
+
+  (match-parse
+   "x :attr #y"
+   '{:where [[x :attr "'y"]],
+     :find [x]})
+
+  (match-parse
+   "
+x :attr y
+> y
+> (count x)
+"
+   '{:where [[x :attr y]],
+     :find [y (count x)]})
+
+  (match-parse
+   "
+x :attr y
+c (count x)
+> y | title
+> c | count
+"
+
+   '{:where [[x :attr y] [c (count x)]],
+     :find [y c]})
+
+  (match-parse
+   "
+x :attr y
+< desc x
+"
+   '{:where [[x :attr y]],
+     :order-by [[x :desc]],
+     :find [x]})
+
+  (matcho/match
+      (match-parse "x :zd/type c\nz (count x)\n> z" {})
+    '{:where [[x :zd/type c] [z (count x)]],
+      :find [z]})
+
+  (match-parse
+   "
+x :attr y
+z (count x)
+> x
+< desc z
+"
+   '{:where [[x :attr y] [z (count x)]],
+     :order-by [[z :desc]],
+     :find [x]})
 
 
-  (datalog/parse-query q)
+  (datalog/datalog-put ztx {:zd/docname 'a :a 1})
 
-  (datalog/sugar-query ztx "
-e :parent #people
-> e:* ")
+  (match-query '{:where [[x :a y]],
+                 :find [x y]
+                 :order-by [[y :desc]],}
+               [['a 1] nil?])
+
+
+  (match? "x :a y\n> x\n> y"
+          '{:result [[a 1]],
+            :query {:where [[x :a y]],
+                    :find [x y]},
+            :columns ["x" "y"]})
+
+  (datalog/datalog-put ztx {:zd/docname 'typed :zd/type 'zd.class})
+
+  (match? "x :zd/type #zd.class\n> x"
+          '{:result [[typed]],
+            :columns ["x"]})
+
+  (match? "x :zd/type c\n> x\n< desc c"
+          '{:result [[typed]],
+            :columns ["x"]})
+
+
+  (match? "x :zd/type c\n> x\n< desc (count c)"
+          '{:result [[typed]],
+            :columns ["x"]})
+
+  (match-parse "x :zd/type c\n> x\n< desc (count c)" {})
+
+  (match-parse "x :zd/type c\n> (count x) | cnt" {})
+
+  (match? "x :zd/type c\n>c \n>(count x) | cnt"
+          '{:result [[zd.class 1]],
+            :query {:where [[x :zd/type c]], :find [c (count x)]},})
+
+  (match? "x :zd/type c\n>c \n>(count x) | cnt\n< desc (count x)"
+          '{:result [[zd.class 1]],
+            :columns ["c" "cnt"]
+            :query {:where [[x :zd/type c]], :find [c (count x)]},})
+
+  (datalog/datalog-query ztx '{:where [[x :zd/type c]]
+                               :find [(pull x [:zd/type]) (pull x [:b])]})
+
 
 
   )

@@ -1,0 +1,122 @@
+:title "Modeling Docs"
+:icon [:fa-duotone :fa-face-cowboy-hat]
+:menu-order 3
+
+:desc /
+
+:absolute-names /
+
+There is a special document Resource, where you can define 
+attributes which should not be prefixed with namespace
+
+```zd
+ :zd/docname Resource
+
+ &name
+ :zd/type zd.Property
+ :zd/data-type zd.string
+
+```
+
+Property `Resource.name` can be used as 
+
+```zd
+ :zd/docname mydoc
+ :name "Just a name"
+```
+
+:intro /
+How to model with zendoc?
+
+In zendoc everything is a resource or document. Some docs may represent
+entities from real world and others are abstract concepts.
+
+Every doc may have multiple types - `:type` property, which is reference to
+other doc.
+
+It's recommended for concepts to have a `:type Class`
+For class you can define a properties with nested docs of type `Property`
+
+```zd
+ :zd/docname person
+ :zd/type zd.Class
+ :zd/required #{ .name, .telegram }
+ 
+ &name
+ :zd/type zd.Property
+ :zd/data-type zd.string
+ :zd/annotation zd.badge
+
+ &telegram
+ :zd/type zd.Property
+ :zd/data-type zd.string
+ :zd/annotation zd.badge
+
+ &male
+ :zd/type zd.Class
+
+ &female
+ :zd/type zd.Class
+
+ &gender
+ :zd/type zd.Property
+ :zd/enum #{ .male .female }
+ :zd/annotation zd.badge
+
+```
+
+
+```zd
+ :zd/docname person.ivan
+ :zd/type person
+ :person/name "Ivan"
+ :person/telegram "ivantelega"
+ :person/gender person.male
+ 
+```
+
+Attribute of name `namespace/name` will look for definition in `namespace.name`.
+
+:subclasses /
+
+While defining Class you may state that this is a subclass of another class.
+That means all instances of this class are instances of superclass.
+Zendoc will be able to use this for inference.
+
+```zd
+ :zd/type zd.Class
+ :zd/subclass person
+
+```
+
+```zd
+ :zd/type Samurai
+```
+
+Now you can search "Nikolai" like a `person`
+
+```datalog
+ e :zd/type person
+ > e
+```
+
+:same-as /
+
+If property has a `zd.same-as` zendoc will do the inference of this attributes.
+
+```zd
+ :zd/type zd.Property
+ :zd/same-as :foaf/name
+
+```
+
+```zd
+ :person.name Nikolai
+```
+
+You may search it as
+
+```zd
+ e :foaf/name "Nikolai"
+ > e
+```

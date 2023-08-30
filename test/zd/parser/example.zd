@@ -1,0 +1,72 @@
+;; oneliners are parsed as edn
+:string "Title"
+:symbol symbol
+:symbols #{a b}
+:zd/require #{ :title :orgs/site :orgs/location :orgs/linkedin :orgs/tags }
+:int 1
+:long 1.0
+:date #inst"2001"
+:map {:a 1, :b 2}
+:vector [1 2 3 4]
+
+;; there are special oneliner for string
+:stringstyle | Here is a long string
+
+;; edn multilne should be started with edn/
+:map-multiline edn/
+
+{:a 1
+ :b 2}
+
+;; zentext is started with `/` or `zentext/`
+:multiline /
+
+String 1
+String 2
+
+;; zentext with block
+:with-block /
+Text
+```
+:key-in-block "value"
+```
+Text
+
+;;annotation is started ^<ann> edn or ^ <ann> | string
+^title "Title"
+:with-title /
+Here is some
+^title | Here is a long title
+:with-title-2 /
+
+Here is a just a text
+
+;; multiple annotations
+^title "Title"
+^hide
+^key {:a 1}
+:multiple-annotations /
+line 1
+line 2
+
+;;datalog query is started with ?/
+:query ?/
+e :zd/type zd.class
+> e
+
+;; subdoc is &<name> or &
+&subdoc-1
+:title "S1"
+:local-ref .
+
+;; after &<name> you can set :zd/type
+
+&subdoc-2 zd/class
+:title "S2"
+
+;; anonimous subdoc will be assigned autoincrement name doc-<i>
+&
+:title "Anonimous1"
+
+& #{zd/task zd/anything}
+:title "Anonimous2"

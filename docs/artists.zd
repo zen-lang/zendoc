@@ -1,0 +1,8 @@
+:zd/menu-order 201
+:title "Artists"
+
+:number-of-songs ?/
+
+s :music/written-by a
+> a
+> (count s)

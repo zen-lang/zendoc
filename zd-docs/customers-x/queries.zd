@@ -1,0 +1,32 @@
+:title "Queries"
+:icon [:fa-brands :fa-searchengin]
+
+:desc /
+
+:menu-order 10
+:query ?/
+
+e :parent #people
+> e
+> e:role
+> e:title
+
+:items ?/
+
+e :type :needs
+e :value v
+
+
+> (min v)
+> (max v)
+> (avg v)
+> (count v)
+
+
+&need-1
+:type :needs
+:value 5
+
+&need-2
+:type :needs
+:value 4

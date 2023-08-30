@@ -38,7 +38,7 @@ var stop = (ev) => {
 };
 
 var is_alphanum = (c) => {
-    return (c || false) && c.match(/[-.a-zA-Z0-9]/i) !== null;
+    return (c || false) && c.match(/[-/.a-zA-Z0-9]/i) !== null;
 };
 
 var is_in_key = (txt, sym) => {
@@ -50,7 +50,7 @@ var is_in_key = (txt, sym) => {
         }
     }
     var lastc = txt[line_start + 1];
-    return (lastc == ':' || lastc == '^') && !(quote_count & 1);
+    return (lastc == ':' || lastc == '^' || lastc == '&') && !(quote_count & 1);
 };
 
 var set = (nel, attrs) => {
@@ -175,8 +175,9 @@ var update_widgets = () => {
     //mermaid.initialize();
 };
 
+// TODO: handle params
 var load_page = (href, do_push) => {
-    fetch(href + '?only-body=true', {
+    fetch(href + '/content', {
         headers: {
             'x-body': 'true',
             'cache-control': 'no-cache'
@@ -250,7 +251,10 @@ var on_link_click = (ev) => {
     }
 };
 
-var open_search = (ev) => {};
+var open_search = (ev) => {
+    console.log('search');
+    window.location.href = "/_search";
+};
 
 var close_search = (ev) => {};
 
@@ -319,8 +323,21 @@ main(() => {
     });
 
     // TODO check prefix to use in browser app
-    // document.addEventListener('keydown', on_hotkey);
-    document.addEventListener('click', on_link_click);
+    document.addEventListener('keydown', on_hotkey);
+    // document.addEventListener('click', on_link_click);
+
+    // setInterval(()=> {
+    //     fetch('/_errors').then((resp)=> {
+    //         if(resp.status == 200){
+    //             _id('errors-link').style.display = "flex";
+    //             resp.text().then((t)=>{
+    //                 _id('errors-count').innerText = t;
+    //             });
+    //         } else {
+    //             _id('errors-link').style.display = "none";
+    //         }
+    //     });
+    // }, 1000 );
 
     toa(document.getElementsByClassName("zd-toggle")).map(function(el){
         el.querySelector('.zd-block-title').addEventListener("click", function () {
