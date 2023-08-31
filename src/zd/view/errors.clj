@@ -11,10 +11,8 @@
    (for [[docname errors] (->> (store/errors ztx)
                                (sort-by #(str (first %))))]
      [:div {:class (c [:py 1] [:mb 1])}
-      [:div {:class (c [:pt 1] [:pb 0.5] :border-b [:mb 1])}
-       [:b (utils/symbol-link ztx docname)]
-       " "
-       (str docname)]
+      [:div {:class (c :flex :items-center [:space-x 4] [:pt 1] [:pb 0.5] :border-b [:mb 1])}
+       (utils/symbol-link ztx docname)]
       (for [e errors]
         [:div {:class (c :flex [:space-x 3] :borer-b :items-baseline)}
          [:div "⚬ " (str (:type e))]

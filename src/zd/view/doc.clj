@@ -62,8 +62,7 @@
                   [:div (pr-str d)]])]))
 
 
-(defmethod methods/renderann :link-badge
-  [ztx ctx {data :data k :key}]
+(defn link-badge [k data]
   [:div {:class (c :border [:m 1]  :inline-flex :rounded [:p 0])}
    [:a {:href data
         :target "_blank"
@@ -77,15 +76,23 @@
                   {:font-weight "400" :border-radius "4px 0 0  4px"})}
     k]])
 
+(defmethod methods/renderann :link-badge
+  [ztx ctx {data :data k :key}]
+  (link-badge k data))
+
 (defmethod methods/renderann :badge
-  [ztx ctx {key :key :as block}]
-  [:div {:class (c :border [:my 1] [:mr 2] :inline-flex :items-center :rounded :shadow-sm)}
-   [:div {:class (c :inline-block [:px 2] [:bg :gray-100] [:py 0.5] :text-sm [:text :gray-700]
-                    :border-r
-                    {:font-weight "400"  :border-radius "4px 0 0  4px"})}
-    key]
-   [:div {:class (c [:px 1] [:py 0.5] :inline-block :text-sm)}
-    (methods/rendercontent ztx ctx block)]])
+  [ztx ctx {ann :annotations data :data key :key :as block}]
+  (if (and (or (nil? (:type ann)) (= :edn (:type ann)))
+           (string? data) (or (str/starts-with? (str/trim data) "http:")
+                              (str/starts-with? (str/trim data) "https:")))
+    (link-badge key data)
+    [:div {:class (c :border [:my 1] [:mr 2] :inline-flex :items-center :rounded :shadow-sm)}
+     [:div {:class (c :inline-block [:px 2] [:bg :gray-100] [:py 0.5] :text-sm [:text :gray-700]
+                      :border-r
+                      {:font-weight "400"  :border-radius "4px 0 0  4px"})}
+      key]
+     [:div {:class (c [:px 1] [:py 0.5] :inline-block :text-sm)}
+      (methods/rendercontent ztx ctx block)]]))
 
 (defn badge [ztx ctx key data]
   [:div {:class (c :border [:my 1] [:mr 2] :inline-flex :items-center :rounded :shadow-sm)}
