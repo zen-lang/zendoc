@@ -3,7 +3,7 @@
 :title "Queries"
 :desc /
 
-You can query documents in knowledge base using xtdb's datalog dialect.
+You can query documents in knowledge base with xtdb's datalog dialect.
 
 ```zd
 :q ?/
