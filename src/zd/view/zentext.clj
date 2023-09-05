@@ -56,8 +56,10 @@
 
 (defmethod methods/inline-method :md/link
   [ztx m s ctx]
-  (let [[txt href] (str/split s #"\]\(" 2)]
-    [:a {:href href :target :_blank :class (c [:text "#4B5BA0"] [:hover [:underline]])} txt]))
+  (if (string? s)
+    (let [[txt href] (str/split s #"\]\(" 2)]
+      [:a {:href href :target :_blank :class (c [:text "#4B5BA0"] [:hover [:underline]])} txt])
+    [:b (str "Error: expected string got: " s)]))
 
 (defmethod methods/inline-method :md/img
   [ztx m s ctx]

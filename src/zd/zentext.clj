@@ -56,7 +56,10 @@
 
 
 (defn get-lines [s]
-  (line-seq (io/reader (StringReader. s))))
+  (println :?s s)
+  (if (string? s)
+    (line-seq (io/reader (StringReader. s)))
+    (println "ERROR: " s)))
 
 (defn process-list [lines]
   (let [res
