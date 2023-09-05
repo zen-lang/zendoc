@@ -10,6 +10,8 @@
    [ring.util.codec]
    [zd.view.core :as view])
   (:import [org.httpkit BytesInputStream]
+           [org.eclipse.jgit.revwalk RevWalk]
+           [org.eclipse.jgit.diff DiffFormatter]
            [java.io ByteArrayOutputStream]))
 
 
@@ -207,17 +209,14 @@
 
   (def ztx (start))
 
-
   (stop ztx)
 
   (:zd/backlinks @ztx)
 
-  (def out (ByteArrayOutputStream.))
+  (git/exec {:dir (:zd/dir @ztx) :exec ["git" "log" "-1"]})
 
-  (-> (.diff (:zd/repo @ztx))
-      (.setShowNameAndStatusOnly true)
-      (.setOutputStream out)
-      (.call))
+  (git/exec {:dir (:zd/dir @ztx) :exec ["git" "diff" "--name-only" "4a569701e759120e8638eb46f8bedd4964b3250a"
+                                        "7b7fa19bd92422ab9a2544599a1deb1360a19a25"]})
 
   (config ztx)
   (store/re-validate ztx)

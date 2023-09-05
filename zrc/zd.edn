@@ -1,29 +1,10 @@
 {:ns zd
  :import #{zen-web zd.engines zd.events}
 
- remote
- {:zen/tags #{zen/schema}
-  :type zen/map
-   ;; TODO use zen-web/url
-  :require #{:from}
-  :keys {:from {:type zen/string}
-         :key {:type zen/string
-               :zen/desc "private ssh key to use"}
-         :keystore {:type zen/string
-                    :zen/desc "ssh keys directory"}
-         :to {:type zen/string}
-         :branch {:type zen/string}}}
-
  zendoc-config
  {:zen/tags #{zen/tag zen/schema}
   :type zen/map
-  :keys {:root {:type zen/string}
-         :paths {:type zen/vector
-                 :every {:type zen/string}}
-         :pull-rate {:type zen/integer}
-         :remote {:confirms #{remote}}
-         :remotes {:type zen/vector
-                   :every {:confirms #{remote}}}}}
+  :keys {:dir {:type zen/string}}}
 
  query
  {:zen/tags #{zen/op}
@@ -136,7 +117,7 @@
   :api api}
 
  zendoc
- {:zen/tags #{zen/start}
+ {:zen/tags #{zen/start zendoc-config}
   :zen/state-key :zd/config
   :dir "docs"}
 

@@ -1,5 +1,6 @@
 (ns zd.store
   (:require [zen.core :as zen]
+            [zd.git :as zgit]
             [clj-jgit.porcelain :as git]
             [zd.parser]
             [xtdb.api :as xt]
@@ -105,7 +106,10 @@
 (defn put-doc
   [ztx {docname :zd/docname :as doc}]
   (if (and doc docname)
-    (swap! ztx assoc-in [:zdb docname] (assoc doc :zd/parent (parent-name docname)))
+    (let [doc* (assoc doc :zd/parent (parent-name docname))]
+      (swap! ztx assoc-in [:zdb docname] doc*)
+      (zen/pub ztx 'zd.events/on-doc-load doc*))
+    ;; TODO emit zen event
     (println :put/error doc))
   doc)
 
@@ -390,6 +394,15 @@
 
 (extract-docname ":a 1\n:zd/docname docname\n:b 1")
 
+(defn last-commit-hash [ztx]
+  (->> {:dir (:zd/dir @ztx) :exec ["git" "log" "-1"]}
+       (zgit/exec)
+       (:stdout)
+       (first)
+       (drop-while #(not= % \space))
+       (rest)
+       (apply str)))
+
 (defn commit-changes
   "commit added, changed files and push"
   [ztx docpath docname]
@@ -397,8 +410,15 @@
     (git/with-identity ident
       (let [;; TODO sync all untracked docs at gitsync start?
             {:keys [untracked modified] :as status} (git/git-status repo)
-            git-config (git/git-config-load repo)]
+            git-config (git/git-config-load repo)
+            ;; TODO use jgit instead of execs, understand interop
+            ours-last (last-commit-hash ztx)]
         (git/git-pull repo {:ff-mode :ff :rebase-mode :none :strategy :ours})
+        (let [their-last (last-commit-hash ztx)]
+          (when (not= ours-last their-last)
+            (zgit/exec {:dir (:zd/dir @ztx)
+                        :exec ["git" "diff" "--name-only" their-last ours-last]})))
+
         (doseq [m (into untracked modified)]
           (when (str/includes? docpath m)
             (let [uname (or (.getString git-config "user" nil "name") "unknown editor")
@@ -486,6 +506,7 @@
   "read docs from filesystem and load into memory"
   [ztx & [dir]]
   (let [dir (or dir (:zd/dir @ztx))]
+    (zen/pub ztx 'zd.events/on-load-start {})
     (load-meta ztx)
     (load-repo ztx)
     (->> (dir-read ztx dir)
@@ -497,7 +518,8 @@
                  (fn [_docname doc]
                    (let [idoc (doc-inference ztx doc)]
                      (re-index-doc ztx idoc)
-                     idoc)))))
+                     idoc)))
+    (zen/pub ztx 'zd.events/on-load-complete {})))
 
 (defn menu
   "return navigation"
