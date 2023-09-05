@@ -56,7 +56,6 @@
 
 
 (defn get-lines [s]
-  (println :?s s)
   (if (string? s)
     (line-seq (io/reader (StringReader. s)))
     (println "ERROR: " s)))
