@@ -34,8 +34,7 @@
     (coll? data)
     (->> data
          (mapv (fn [x] [:div (render-edn ztx ctx x)]))
-         (into [:div {:class (c :flex [:space-x 2] {:flex-wrap "wrap"})}
-                [:div {:class (c [:text :gray-500] :text-sm)} "#"]]))
+         (into [:div {:class (c :flex [:space-x 2] {:text-wrap "nowrap"})}]))
     :else
     [:div {:style {:background "white" :word-wrap "break-word"}}
      (if (string? data)
