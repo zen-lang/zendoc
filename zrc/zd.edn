@@ -85,9 +85,15 @@
  re-validate
  {:zen/tags #{zen-web/op zen/op}}
 
+ auth
+ {:zen/tags #{zen-web/middleware zen/op zen-web/op}
+  :dir #{:in}
+  :zen/desc "call auth hook"}
+
  api
  {:zen/tags #{zen-web/api}
   :engine zen-web/routemap
+  :mw [auth]
   ;; TODO move zen web defaults to zen web core
   ;; :mw [zen-web/defaults]
   "_errors" {:GET check-errors}
