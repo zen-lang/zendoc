@@ -344,14 +344,14 @@
 
 (defn commit-delete
   "remove file from git index and push new commit"
-  [ztx docpath docname]
+  [ztx session docpath docname]
   (when-let [repo (:zd/repo @ztx)]
     (git/with-identity ident
       (git/git-pull repo {:ff-mode :ff :rebase-mode :none :strategy :ours})
       (let [{:keys [missing]} (git/git-status repo)
             git-config (git/git-config-load repo)
-            uname (or (.getString git-config "user" nil "name") "unknown editor")
-            email (or (.getString git-config "user" nil "email") "unknown-editor@zendoc.me")]
+            uname (or (.getString git-config "user" nil "name") (:name session) "unknown editor")
+            email (or (.getString git-config "user" nil "email") (:email session) "unknown-editor@zendoc.me")]
         (doseq [m missing]
           (when (str/includes? docpath m)
             (git/git-rm repo m)
@@ -360,7 +360,7 @@
 
 (defn file-delete
   "save document content into file and recalculate databases"
-  [ztx docname]
+  [ztx docname & [{session :session}]]
   (let [dir (:zd/dir @ztx)
         path (docname-to-path docname)
         docpath (str dir "/" path)
@@ -372,10 +372,10 @@
     (doc-delete ztx docname)
     (clear-menu ztx docname)
     (->> (children ztx docname)
-         (mapv (fn [child] (file-delete ztx child))))
+         (mapv (fn [child] (file-delete ztx child {:session session }))))
     (when (.exists file) (.delete file))
     (when (.exists filedir) (.delete filedir))
-    (commit-delete ztx docpath docname)
+    (commit-delete ztx session docpath docname)
     (->> (backlinked ztx docname)
          (mapv (fn [d] (validate-doc ztx d))))
     doc))
@@ -405,7 +405,7 @@
 
 (defn commit-changes
   "commit added, changed files and push"
-  [ztx docpath docname]
+  [ztx session docpath docname]
   (when-let [repo (:zd/repo @ztx)]
     (git/with-identity ident
       (let [;; TODO sync all untracked docs at gitsync start?
@@ -421,8 +421,8 @@
 
         (doseq [m (into untracked modified)]
           (when (str/includes? docpath m)
-            (let [uname (or (.getString git-config "user" nil "name") "unknown editor")
-                  email (or (.getString git-config "user" nil "email") "unknown-editor@zendoc.me")]
+            (let [uname (or (.getString git-config "user" nil "name") (:name session) "unknown editor")
+                  email (or (.getString git-config "user" nil "email") (:email session) "unknown-editor@zendoc.me")]
               (git/git-add repo m)
               (let [msg (if (contains? untracked m)
                           (str "Create " docname)
@@ -432,7 +432,7 @@
 
 (defn file-save
   "save document content into file and recalculate databases"
-  [ztx docname content & [{dont-validate :dont-validate rename :rename :as opts}]]
+  [ztx docname content & [{dont-validate :dont-validate rename :rename session :session :as opts}]]
   (let [[new-docname content] (extract-docname content)
         new-docname (or new-docname rename docname)
         dir         (:zd/dir @ztx)
@@ -446,14 +446,14 @@
           (->> (children ztx docname)
                (mapv (fn [childname]
                        (let [new-childname (symbol (str new-docname (subs (str childname) (count (str docname)))))]
-                         (file-save ztx childname (file-content ztx childname) {:rename new-childname})))))
-          (file-delete ztx docname))
+                         (file-save ztx childname (file-content ztx childname) {:rename new-childname :session session})))))
+          (file-delete ztx docname {:session session }))
         ;; calculate removed subdocs
         (let [to-remove (clojure.set/difference (into #{} (:zd/subdocs old-doc)) (into #{} (:zd/subdocs doc')))]
           (->> to-remove (mapv #(doc-delete ztx %))))))
     (.mkdirs (io/file (parent-dir docpath)))
     (spit docpath content)
-    (commit-changes ztx docpath new-docname)
+    (commit-changes ztx session docpath new-docname)
     (doc-save ztx doc' opts)
     (->> (:zd/subdocs doc)
          (mapv (fn [subdoc]

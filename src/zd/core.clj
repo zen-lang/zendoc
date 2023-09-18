@@ -104,19 +104,19 @@
      :body (hiccup.core/html (view/preview ztx req doc))}))
 
 (defmethod zen/op 'zd/create-doc
-  [ztx _cfg { body :body} & opts]
+  [ztx _cfg { body :body session :session} & opts]
   (let [content (if (=  BytesInputStream (type body)) (slurp body) body)
         docname (store/extract-docname content)
-        doc (store/file-save ztx docname content)]
+        doc (store/file-save ztx docname content {:session session })]
     {:status 200
      :body (str "/" (:zd/docname doc))}))
 
 
 (defmethod zen/op 'zd/save-doc
-  [ztx _cfg {{id :id} :route-params body :body :as req} & opts]
+  [ztx _cfg {{id :id} :route-params body :body session :session :as req} & opts]
   (let [docname (symbol id)
         content (if (=  BytesInputStream (type body)) (slurp body) body)
-        doc (store/file-save ztx docname content)]
+        doc (store/file-save ztx docname content {:session session })]
     {:status 200
      :body (str "/" (:zd/docname doc))}))
 
@@ -165,9 +165,9 @@
        :body (hiccup.core/html [:div "Error: " id " is not found"])})))
 
 (defmethod zen/op 'zd/delete-doc
-  [ztx _cfg {{:keys [id]} :route-params :as req} & opts]
+  [ztx _cfg {{:keys [id]} :route-params session :session :as req} & opts]
   (let [docname (symbol id)]
-    (store/file-delete ztx docname)
+    (store/file-delete ztx docname {:session session})
     {:status 200
      :body (str (store/parent-name docname))}))
 

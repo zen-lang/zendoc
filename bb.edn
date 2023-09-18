@@ -4,9 +4,6 @@
          :enter       (do)
          :leave       (do)
 
-         run          {:doc "Run on 3333 port with basic auth"
-                       :task (clojure {:extra-env {}} "-M:run")}
-
          repl         {:doc  "Run Clojure repl for Emacs with cider"
                        :task (clojure "-M:nrepl")}
 
