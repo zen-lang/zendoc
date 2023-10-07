@@ -421,8 +421,8 @@
 
         (doseq [m (into untracked modified)]
           (when (str/includes? docpath m)
-            (let [uname (or (.getString git-config "user" nil "name") (:name session) "unknown editor")
-                  email (or (.getString git-config "user" nil "email") (:email session) "unknown-editor@zendoc.me")]
+            (let [uname (or (:name session) (.getString git-config "user" nil "name") "unknown editor")
+                  email (or (:email session) (.getString git-config "user" nil "email") "unknown-editor@zendoc.me")]
               (git/git-add repo m)
               (let [msg (if (contains? untracked m)
                           (str "Create " docname)
