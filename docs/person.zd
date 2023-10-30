@@ -2,7 +2,7 @@
 :zd/type zd.class
 :zd/require #{ :person/email }
 :zd/summary [:person/email :person/telegram ]
-:title :keyword
+:title "Person"
 :icon [:fa-duotone :fa-person]
 :desc /
 
