@@ -23,5 +23,13 @@ m :zd/type #org.Member
 
 &email zd.prop
 :zd/data-type zd.string
+:zd/default ""
 :desc /
 Email of person
+
+&first-name zd.prop
+:zd/data-type zd.string
+:zd/default ""
+:desc / 
+
+Person first name
