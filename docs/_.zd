@@ -1,5 +1,17 @@
 :title "Global Schema"
+:desc / 
+
+this schema defines all "global" properties. It means that all the following properties are included in the new document template by default. Global properties are validated in every document.
 
 
-&date zd.prop
-:zd/data-type zd.date
+&title zd.prop
+:zd/data-type zd.string
+:zd/default "A Document title"
+:desc /
+A document title. Is displayed on every grid.
+
+&about zd.prop
+:zd/data-type zd.zentext
+:zd/default ""
+:desc /
+A document self description.
