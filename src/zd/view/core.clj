@@ -26,7 +26,7 @@
   (layout/layout-with-menu ztx ctx doc (view ztx ctx doc)))
 
 (defn editor [ztx ctx doc content]
-  (layout/layout ztx ctx (zd.view.editor/editor ztx ctx doc  content)))
+  (layout/layout ztx ctx (zd.view.editor/editor ztx ctx doc content)))
 
 (defn timeline [ztx ctx data]
   (layout/layout-with-menu ztx ctx {:zd/docname 'git} (timeline/view ztx data)))

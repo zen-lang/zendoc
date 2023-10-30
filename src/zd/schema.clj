@@ -1,10 +1,10 @@
 (ns zd.schema
   (:require [clojure.string :as str]))
 
-
 (defn to-keyname [docname]
   (let [parts (str/split (str docname) #"\.")
         ns (str/join "." (butlast parts))]
+    ;; TODO rename to _schema.zd ?
     (if (= ns "_")
       (keyword (last parts))
       (keyword ns (last parts)))))
@@ -17,6 +17,32 @@
 (defn remove-class [ztx docname]
   (swap! ztx update :zd/classes dissoc docname)
   docname)
+
+(defn get-class-props [ztx classname]
+  (into (filter (fn [[k v]]
+                  ;; TODO think about different naming for root sch
+                  (= (:zd/parent v) '_))
+                (:zd/props @ztx))
+        (filter (fn [[k v]]
+                  (= (:zd/parent v) classname))
+                (:zd/props @ztx))))
+
+(defn get-class-template [ztx classname]
+  (->> (get-class-props ztx classname)
+       (map (fn [[k {df :zd/default dt :zd/data-type}]]
+              (cond
+                (and (= dt 'zd.string) (str/blank? df))
+                (str k " \"\"")
+
+                (= 'zd.string dt)
+                (format (str k " \"%s\"") df)
+
+                (= 'zd.zentext dt)
+                (format (str k " /\n%s") df)
+
+                :else
+                (format (str k " %s") df))))
+       (str/join "\n")))
 
 (defn get-class [ztx docname]
   (or (get-in @ztx [:zd/classes docname])

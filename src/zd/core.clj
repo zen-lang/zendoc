@@ -89,10 +89,12 @@
 
 (defmethod zen/op 'zd/new-doc
   [ztx _cfg {{docname :docname parent :parent} :params :as req} & opts]
-  {:status 200
-   :body (hiccup.core/html (view/editor ztx req {:zd/docname (cond docname (symbol docname)
-                                                                   parent (symbol (str parent ".<>" ))
-                                                                   :else 'new)} ""))})
+  (let [doc {:zd/parent (symbol parent)
+             :zd/docname (cond docname (symbol docname)
+                               parent (symbol (str parent ".<>"))
+                               :else 'new)}]
+    {:status 200
+     :body (hiccup.core/html (view/editor ztx req doc ""))}))
 
 (defmethod zen/op 'zd/new-preview
   [ztx _cfg {body :body :as req} & opts]
@@ -192,8 +194,14 @@
   (swap! ztx dissoc :zdb :zd/backlinks))
 
 (defmethod zen/op 'zd.events/logger
-  [ztx config {ev-name :ev :as ev} & opts]
-  (println (assoc ev ::ts (str (java.util.Date.)))))
+  [ztx config {ev-name :ev doc :params :as ev} & opts]
+  (let [ev (assoc ev ::ts (str (java.util.Date.)))]
+    (if (= ev-name 'zd.events/on-doc-load)
+      (println (assoc (dissoc ev :params) :docname (:zd/docname doc)))
+      (println ev))))
+
+(defmethod zen-web.core/middleware-in 'zd/auth
+  [ztx config ev & opts])
 
 (defn start [& [dir gitsync]]
   (let [ztx (zen/new-context {:zd/dir dir :zd/gitsync gitsync})]
@@ -210,6 +218,8 @@
   (def ztx (start))
 
   (stop ztx)
+
+  (:zd/props @ztx)
 
   (:zd/backlinks @ztx)
 
