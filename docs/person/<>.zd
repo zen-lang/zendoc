@@ -1,7 +1,0 @@
-
-:person/email "joe.hughes@health-samurai.io"
-:person/first-name "Joe"
-:title "Joe Hughes, a software developer"
-:about /
-
-Joe is a good guy who writes code in clojure.
