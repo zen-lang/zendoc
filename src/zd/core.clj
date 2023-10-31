@@ -89,7 +89,8 @@
 
 (defmethod zen/op 'zd/new-doc
   [ztx _cfg {{docname :docname parent :parent} :params :as req} & opts]
-  (let [doc {:zd/parent (symbol parent)
+  (let [doc {:zd/parent (when (some? parent)
+                          (symbol parent))
              :zd/docname (cond docname (symbol docname)
                                parent (symbol (str parent ".<>"))
                                :else 'new)}]

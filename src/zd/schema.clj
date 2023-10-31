@@ -1,5 +1,6 @@
 (ns zd.schema
-  (:require [clojure.string :as str]))
+  (:require [clojure.pprint :refer [pprint]]
+            [clojure.string :as str]))
 
 (defn to-keyname [docname]
   (let [parts (str/split (str docname) #"\.")
@@ -19,29 +20,41 @@
   docname)
 
 (defn get-class-props [ztx classname]
-  (into (filter (fn [[k v]]
-                  ;; TODO think about different naming for root sch
-                  (= (:zd/parent v) '_))
-                (:zd/props @ztx))
-        (filter (fn [[k v]]
-                  (= (:zd/parent v) classname))
-                (:zd/props @ztx))))
+  ;; TODO impl superclass check
+  (let [{sch-order :zd/subdocs dn :zd/docname :as parent-sch}
+        (get-in @ztx [:zdb (or (get-in @ztx [:zdb classname :zd/child-type]) classname)])
+        sch-props
+        (->> (:zd/props @ztx)
+             (filter (fn [[k {parent :zd/parent}]]
+                       (= parent dn)))
+             (sort-by (fn [[k {prop-name :zd/docname}]]
+                        (.indexOf sch-order prop-name))))
+
+        {gl-order :zd/subdocs :as global-sch} (get-in @ztx [:zdb '_])
+        global-props
+        (->> (:zd/props @ztx)
+             (filter (fn [[k {parent :zd/parent}]]
+                       (= parent '_)))
+             (sort-by (fn [[k {prop-name :zd/docname}]]
+                        (- (.indexOf gl-order prop-name)))))]
+    (into sch-props global-props)))
 
 (defn get-class-template [ztx classname]
   (->> (get-class-props ztx classname)
        (map (fn [[k {df :zd/default dt :zd/data-type}]]
-              (cond
-                (and (= dt 'zd.string) (str/blank? df))
-                (str k " \"\"")
+              (when (some? df)
+                (cond
+                  (and (= dt 'zd.string) (str/blank? df))
+                  (str k " \"\"")
 
-                (= 'zd.string dt)
-                (format (str k " \"%s\"") df)
+                  (= 'zd.string dt)
+                  (format (str k " \"%s\"") df)
 
-                (= 'zd.zentext dt)
-                (format (str k " /\n%s") df)
+                  (= 'zd.zentext dt)
+                  (format (str k " /\n%s") df)
 
-                :else
-                (format (str k " %s") df))))
+                  :else
+                  (format (str k " %s") df)))))
        (str/join "\n")))
 
 (defn get-class [ztx docname]
