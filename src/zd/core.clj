@@ -213,6 +213,9 @@
 (defn stop [ztx]
   (zen/stop-system ztx))
 
+(defn -main [& opts]
+  (start nil false))
+
 (comment
   (def ztx (start nil true))
 
