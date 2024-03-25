@@ -4,7 +4,10 @@
  zendoc-config
  {:zen/tags #{zen/tag zen/schema}
   :type zen/map
-  :keys {:dir {:type zen/string}}}
+  :keys {:dir {:type zen/string}
+         :validator {:type zen/map
+                      :keys {:type {:type zen/string}
+                             :endpoint {:type zen/string}}}}}
 
  query
  {:zen/tags #{zen/op}
